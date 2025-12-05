@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Image, Trophy, LifeBuoy, FileText, Sparkles, Palette, Link } from 'lucide-react';
+import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Image, Trophy, LifeBuoy, FileText, Sparkles, Palette } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSupportTicketStore } from '../../store/supportTicketStore';
 import NotificationBadge from '../ui/NotificationBadge';
@@ -82,11 +82,6 @@ const Sidebar: React.FC = () => {
       icon: <Palette size={20} />,
       label: 'Project Configs',
     },
-    {
-      to: '/admin/jul',
-      icon: <Link size={20} />,
-      label: 'Jul',
-    },
   ];
 
   const links = allLinks.filter(link => {
@@ -97,9 +92,6 @@ const Sidebar: React.FC = () => {
       return canAccessGamification();
     }
     if (link.to === '/admin/project-configurations') {
-      return canAccessGamification(); // Only master_admin
-    }
-    if (link.to === '/admin/jul') {
       return canAccessGamification(); // Only master_admin
     }
     return true;

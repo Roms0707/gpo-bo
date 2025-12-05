@@ -40,7 +40,6 @@ import XPEventsPage from './pages/XPEventsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CountryConfigurationPage from './pages/admin/CountryConfigurationPage';
 import ProjectConfigurationsPage from './pages/admin/ProjectConfigurationsPage';
-import { JulPage } from './pages/admin/JulPage';
 
 function App() {
   const { user, checkSession, isLoading } = useAuthStore();
@@ -204,11 +203,6 @@ function App() {
               key="admin-project-configs"
               path="admin/project-configurations"
               element={<ProjectConfigurationsPage />}
-            />
-            <Route
-              key="admin-jul"
-              path="admin/jul"
-              element={<JulPage />}
             />
             <Route
               key="support-tickets-page"
