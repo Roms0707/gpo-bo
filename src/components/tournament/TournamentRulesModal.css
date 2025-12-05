@@ -1,0 +1,172 @@
+/* Tournament Rules Modal Editor Styles */
+.ql-editor {
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+.dark .ql-editor {
+  color: #f9fafb !important;
+  background-color: #374151 !important;
+}
+
+.ql-editor p {
+  color: inherit !important;
+}
+
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3,
+.ql-editor h4,
+.ql-editor h5,
+.ql-editor h6 {
+  color: inherit !important;
+}
+
+.ql-editor ul li,
+.ql-editor ol li {
+  color: inherit !important;
+}
+
+.ql-editor blockquote {
+  color: #6b7280 !important;
+}
+
+.dark .ql-editor blockquote {
+  color: #9ca3af !important;
+}
+
+.ql-toolbar {
+  background-color: #f8f9fa !important;
+  border-top-left-radius: 0.375rem;
+  border-top-right-radius: 0.375rem;
+  border-color: #d1d5db !important;
+}
+
+.dark .ql-toolbar {
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+}
+
+.ql-container {
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+  border-color: #d1d5db !important;
+}
+
+.dark .ql-container {
+  border-color: #6b7280 !important;
+}
+
+/* Toolbar button styles */
+.ql-toolbar .ql-formats button {
+  color: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-formats button {
+  color: #f9fafb !important;
+}
+
+.ql-toolbar .ql-formats button:hover {
+  background-color: #e5e7eb !important;
+}
+
+.dark .ql-toolbar .ql-formats button:hover {
+  background-color: #6b7280 !important;
+}
+
+/* Dropdown styles */
+.ql-toolbar .ql-picker-label {
+  color: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-picker-label {
+  color: #f9fafb !important;
+}
+
+.ql-toolbar .ql-picker-options {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+}
+
+.dark .ql-toolbar .ql-picker-options {
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+}
+
+.ql-toolbar .ql-picker-item {
+  color: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-picker-item {
+  color: #f9fafb !important;
+}
+
+.ql-toolbar .ql-picker-item:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .ql-toolbar .ql-picker-item:hover {
+  background-color: #4b5563 !important;
+}
+
+/* Active state styles */
+.ql-toolbar .ql-active {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+.dark .ql-toolbar .ql-active {
+  background-color: #1e3a8a !important;
+  color: #93c5fd !important;
+}
+
+/* Stroke styles for SVG icons */
+.ql-toolbar .ql-stroke {
+  stroke: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-stroke {
+  stroke: #f9fafb !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-fill {
+  fill: #f9fafb !important;
+}
+
+/* Even/odd stroke styles */
+.ql-toolbar .ql-even {
+  fill: #374151 !important;
+}
+
+.dark .ql-toolbar .ql-even {
+  fill: #f9fafb !important;
+}
+
+/* Tooltip styles */
+.ql-tooltip {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.dark .ql-tooltip {
+  background-color: #374151 !important;
+  border-color: #6b7280 !important;
+  color: #f9fafb !important;
+}
+
+.ql-tooltip input {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.dark .ql-tooltip input {
+  background-color: #4b5563 !important;
+  border-color: #6b7280 !important;
+  color: #f9fafb !important;
+}

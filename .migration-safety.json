@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Migration Safety Configuration",
+  "description": "Configuration file that defines which databases are allowed for automated migrations",
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-15",
+  "databases": {
+    "main": {
+      "id": "hfjyowydvpqjbtbbzoeu",
+      "name": "MAIN Production Database",
+      "url": "https://hfjyowydvpqjbtbbzoeu.supabase.co",
+      "environment": "production",
+      "allowAutomatedMigrations": false,
+      "description": "Primary production database. Migrations must be applied manually via Supabase Dashboard.",
+      "restrictions": [
+        "No automated migrations allowed",
+        "All changes must be tested on STAGING first",
+        "Manual application via Supabase Dashboard SQL Editor only",
+        "Requires approval from senior developer or DBA",
+        "Always backup before applying changes"
+      ],
+      "warningLevel": "critical"
+    },
+    "staging": {
+      "id": "jpksnvuiaptymrwnwnhn",
+      "name": "STAGING Database",
+      "url": "https://jpksnvuiaptymrwnwnhn.supabase.co",
+      "environment": "staging",
+      "allowAutomatedMigrations": true,
+      "description": "Staging database for testing. All migrations should be tested here first.",
+      "restrictions": [
+        "Test all migrations thoroughly",
+        "Verify data integrity after migrations",
+        "Document all changes",
+        "Ensure rollback plan exists"
+      ],
+      "warningLevel": "normal"
+    }
+  },
+  "rules": {
+    "preMigrationChecks": [
+      "Verify current database connection",
+      "Ensure STAGING database is being used",
+      "Block if MAIN database is detected",
+      "Scan migration files for forbidden references",
+      "Check all .env files for correct configuration"
+    ],
+    "preCommitChecks": [
+      "Scan staged files for database references",
+      "Block commits containing MAIN database URL",
+      "Verify migration files use STAGING database",
+      "Check .env files being committed"
+    ],
+    "allowedOperations": {
+      "staging": [
+        "CREATE TABLE",
+        "ALTER TABLE",
+        "CREATE INDEX",
+        "CREATE POLICY",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "DROP TABLE",
+        "DROP POLICY"
+      ],
+      "main": []
+    }
+  },
+  "contacts": {
+    "databaseAdmin": {
+      "role": "Database Administrator",
+      "responsibilities": [
+        "Approve all MAIN database changes",
+        "Review migration scripts",
+        "Manage database backups",
+        "Handle emergency rollbacks"
+      ]
+    },
+    "seniorDeveloper": {
+      "role": "Senior Developer",
+      "responsibilities": [
+        "Review migration logic",
+        "Approve production deployments",
+        "Coordinate with DBA for MAIN changes"
+      ]
+    }
+  },
+  "emergencyProcedures": {
+    "bypassSafety": {
+      "command": "git commit --no-verify",
+      "warning": "Only use in genuine emergencies with proper authorization",
+      "requiresApproval": true,
+      "mustDocument": true
+    },
+    "rollback": {
+      "steps": [
+        "Identify the problematic migration",
+        "Create a rollback migration script",
+        "Test rollback on STAGING first",
+        "Apply to MAIN via Dashboard if necessary",
+        "Verify data integrity",
+        "Document the incident"
+      ]
+    }
+  },
+  "documentation": {
+    "migrationWorkflow": "See MIGRATION_SAFETY.md for detailed workflow",
+    "testingGuidelines": "All migrations must be tested on STAGING with real-world data scenarios",
+    "approvalProcess": "MAIN migrations require documented approval from DBA or senior developer"
+  }
+}

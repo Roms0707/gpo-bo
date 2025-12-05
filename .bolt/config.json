@@ -1,0 +1,11 @@
+{
+  "name": "Gaming Tournament Manager",
+  "projectId": "59964443",
+  "devCommand": "npm run dev",
+  "buildCommand": "npm run build",
+  "previewCommand": "npm run preview",
+  "installCommand": "npm install",
+  "env": {
+    "VITE_APP_ENV": "STG"
+  }
+}

@@ -1,0 +1,92 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Pre-Push Safety Check
+# Final verification before pushing to remote repository
+# Double-checks that NO MAIN database references exist in the codebase
+
+echo ""
+echo "🔐 Running Pre-Push Database Safety Verification..."
+echo ""
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# Database identifiers
+FORBIDDEN_DB="hfjyowydvpqjbtbbzoeu"
+ALLOWED_DB="jpksnvuiaptymrwnwnhn"
+
+# Scan entire repository for MAIN database references (excluding allowed files and directories)
+echo "${YELLOW}Scanning repository for MAIN database references...${NC}"
+
+FORBIDDEN_FOUND=$(git grep -n "$FORBIDDEN_DB" -- \
+  ':!.env.main.READONLY' \
+  ':!node_modules' \
+  ':!.git' \
+  ':!package-lock.json' \
+  ':!*.log' \
+  ':!MIGRATION_SAFETY.md' \
+  ':!.migration-safety.json' \
+  || true)
+
+if [ -n "$FORBIDDEN_FOUND" ]; then
+  echo ""
+  echo "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
+  echo "${RED}║                                                                ║${NC}"
+  echo "${RED}║  🚨  PUSH BLOCKED - MAIN DATABASE REFERENCES DETECTED  🚨      ║${NC}"
+  echo "${RED}║                                                                ║${NC}"
+  echo "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  echo "${RED}❌ Cannot push to remote. MAIN database references found:${NC}"
+  echo ""
+  echo "$FORBIDDEN_FOUND"
+  echo ""
+  echo "${YELLOW}Critical Issue:${NC}"
+  echo "   • Your codebase contains references to MAIN production database"
+  echo "   • This is extremely dangerous and must be fixed immediately"
+  echo "   • All code must use STAGING database: $ALLOWED_DB"
+  echo ""
+  echo "${YELLOW}Required Actions:${NC}"
+  echo "   1. Review the files listed above"
+  echo "   2. Replace ALL $FORBIDDEN_DB with $ALLOWED_DB"
+  echo "   3. Commit the fixes"
+  echo "   4. Push again"
+  echo ""
+  echo "${YELLOW}For detailed environment check:${NC}"
+  echo "   npm run check:full"
+  echo ""
+  echo "${YELLOW}To bypass (EMERGENCY ONLY - NOT RECOMMENDED):${NC}"
+  echo "   git push --no-verify"
+  echo ""
+  exit 1
+fi
+
+# Additional check: Verify current .env file
+if [ -f ".env" ]; then
+  if grep -q "$FORBIDDEN_DB" ".env"; then
+    echo ""
+    echo "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo "${RED}║                                                                ║${NC}"
+    echo "${RED}║  🚨  PUSH BLOCKED - .env FILE HAS MAIN DATABASE  🚨            ║${NC}"
+    echo "${RED}║                                                                ║${NC}"
+    echo "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo "${RED}❌ Your .env file is configured for MAIN database${NC}"
+    echo ""
+    echo "${YELLOW}Fix immediately:${NC}"
+    echo "   1. Update .env to use STAGING: $ALLOWED_DB"
+    echo "   2. Verify with: npm run check:env"
+    echo "   3. Never commit .env with MAIN credentials"
+    echo ""
+    exit 1
+  fi
+fi
+
+echo "${GREEN}✓ Pre-push safety check passed${NC}"
+echo "${GREEN}✓ No MAIN database references detected${NC}"
+echo "${GREEN}✓ Repository is clean and safe to push${NC}"
+echo ""
+exit 0

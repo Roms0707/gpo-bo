@@ -1,0 +1,86 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Database Safety Check - Pre-commit Hook
+# This hook prevents commits that contain ANY references to the MAIN production database
+# Protects migrations, code, configuration files, and documentation
+
+echo ""
+echo "🔒 Running Comprehensive Database Safety Check..."
+echo ""
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Database identifiers
+FORBIDDEN_DB="hfjyowydvpqjbtbbzoeu"
+ALLOWED_DB="jpksnvuiaptymrwnwnhn"
+
+# Get all staged files (excluding .env.main.READONLY which is allowed)
+ALL_STAGED_FILES=$(git diff --cached --name-only | grep -v "\.env\.main\.READONLY" || true)
+
+if [ -z "$ALL_STAGED_FILES" ]; then
+  echo "${GREEN}✓ No files to check${NC}"
+  exit 0
+fi
+
+# Check ALL staged files for forbidden database reference
+FOUND_FORBIDDEN=0
+FORBIDDEN_FILES=""
+
+for file in $ALL_STAGED_FILES; do
+  if [ -f "$file" ]; then
+    # Skip binary files and node_modules
+    if echo "$file" | grep -qE "node_modules/|\.png$|\.jpg$|\.jpeg$|\.gif$|\.ico$|\.pdf$"; then
+      continue
+    fi
+
+    # Check for forbidden database reference
+    if grep -q "$FORBIDDEN_DB" "$file"; then
+      echo "${RED}🚨 CRITICAL ERROR: MAIN database reference found in $file${NC}"
+      echo "${RED}   Contains: $FORBIDDEN_DB${NC}"
+      echo ""
+      FOUND_FORBIDDEN=1
+      FORBIDDEN_FILES="$FORBIDDEN_FILES\n   • $file"
+    fi
+  fi
+done
+
+# If forbidden references found, block the commit
+if [ $FOUND_FORBIDDEN -eq 1 ]; then
+  echo "${RED}╔════════════════════════════════════════════════════════════════╗${NC}"
+  echo "${RED}║                                                                ║${NC}"
+  echo "${RED}║  🚨  COMMIT BLOCKED - MAIN DATABASE REFERENCE DETECTED  🚨     ║${NC}"
+  echo "${RED}║                                                                ║${NC}"
+  echo "${RED}╚════════════════════════════════════════════════════════════════╝${NC}"
+  echo ""
+  echo "${RED}❌ This commit cannot proceed because:${NC}"
+  echo ""
+  echo "   • References to MAIN production database ($FORBIDDEN_DB) were found in:"
+  echo -e "$FORBIDDEN_FILES"
+  echo ""
+  echo "   • NO files should contain MAIN database references"
+  echo "   • ALL code/config MUST use STAGING database ($ALLOWED_DB)"
+  echo "   • MAIN database changes must be applied manually via Supabase Dashboard"
+  echo ""
+  echo "${YELLOW}Required Actions:${NC}"
+  echo ""
+  echo "   1. Remove ALL references to $FORBIDDEN_DB from staged files"
+  echo "   2. Use STAGING database URL: https://$ALLOWED_DB.supabase.co"
+  echo "   3. Only .env.main.READONLY may contain MAIN references (for documentation)"
+  echo "   4. Test all changes on STAGING first"
+  echo ""
+  echo "${YELLOW}To bypass this check (NOT RECOMMENDED):${NC}"
+  echo "   git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+echo "${GREEN}✓ Database safety check passed${NC}"
+echo "${GREEN}✓ No MAIN database references found in staged files${NC}"
+echo "${GREEN}✓ All files use STAGING database ($ALLOWED_DB)${NC}"
+echo ""
+exit 0
