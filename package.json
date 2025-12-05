@@ -4,22 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx scripts/check-env.ts && vite --mode staging",
-    "dev:staging": "tsx scripts/check-env.ts && VITE_ENV=staging vite --mode staging",
-    "dev:production": "tsx scripts/check-env.ts && VITE_ENV=production vite --mode production",
-    "build": "tsx scripts/check-env.ts && vite build --mode staging",
-    "build:staging": "tsx scripts/check-env.ts && VITE_ENV=staging vite build --mode staging",
-    "build:production": "tsx scripts/check-env.ts && VITE_ENV=production vite build --mode production",
+    "dev": "vite",
+    "build": "vite build",
     "lint": "eslint .",
-    "preview": "tsx scripts/check-env.ts && vite preview",
-    "preview:staging": "tsx scripts/check-env.ts && VITE_ENV=staging vite preview",
-    "preview:production": "tsx scripts/check-env.ts && VITE_ENV=production vite preview",
-    "check:env": "tsx scripts/check-env.ts",
-    "check:full": "tsx scripts/verify-migration-env.ts",
-    "migrate:check": "tsx scripts/verify-migration-env.ts",
-    "migrate:verify": "npm run migrate:check",
-    "preinstall": "npm run migrate:check || true",
-    "prepare": "husky"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -45,10 +33,8 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.11",
     "globals": "^15.9.0",
-    "husky": "^9.1.7",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "tsx": "^4.20.6",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"

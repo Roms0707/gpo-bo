@@ -5,7 +5,7 @@ import {
   fetchDefaultConfiguration,
   fetchProjectConfigurationByConfigId,
 } from '../services/projectConfigService';
-import { isDevelopmentEnvironment, getCurrentDomain } from '../utils/domainValidation';
+import { getCurrentDomain } from '../utils/domainValidation';
 
 interface UseProjectConfigReturn {
   config: ProjectConfiguration | null;
@@ -26,9 +26,9 @@ export function useProjectConfig(): UseProjectConfigReturn {
       setLoading(true);
       setError(null);
 
-      const isDev = isDevelopmentEnvironment();
       const currentDomain = getCurrentDomain();
       setDetectedDomain(currentDomain);
+      const isDev = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
 
       if (isDev) {
         console.log('[useProjectConfig] Development mode detected');

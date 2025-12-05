@@ -1,10 +1,9 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { User, AlertCircle } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { supabase, currentEnvironment } from '../../lib/supabase';
-import Button from '../ui/Button';
+import { supabase } from '../../lib/supabase';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const Header: React.FC = () => {
@@ -52,57 +51,12 @@ const Header: React.FC = () => {
     return 'Gaming Tournaments';
   };
 
-  // Get environment badge color and label
-  const getEnvironmentBadge = () => {
-    switch (currentEnvironment) {
-      case 'MAIN':
-        return {
-          color: 'bg-red-600 text-white border-red-700',
-          label: 'MAIN',
-          tooltip: 'Connected to MAIN database',
-          icon: true
-        };
-      case 'STG':
-        return {
-          color: 'bg-orange-500 text-white border-orange-600',
-          label: 'STG',
-          tooltip: 'Connected to STAGING database',
-          icon: false
-        };
-      case 'PROD':
-        return {
-          color: 'bg-green-600 text-white border-green-700',
-          label: 'PROD',
-          tooltip: 'Connected to PRODUCTION database',
-          icon: false
-        };
-      default:
-        return {
-          color: 'bg-gray-500 text-white border-gray-600',
-          label: 'UNKNOWN',
-          tooltip: 'Unknown environment',
-          icon: true
-        };
-    }
-  };
-
-  const envBadge = getEnvironmentBadge();
-
   return (
     <header className="bg-white dark:bg-dark-200 shadow-sm h-16 fixed top-0 right-0 left-64 z-10 border-b border-gray-200 dark:border-dark-100">
       <div className="h-full px-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{getPageTitle()}</h1>
 
         <div className="flex items-center space-x-3">
-          {/* Environment Badge */}
-          <div
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border-2 ${envBadge.color} font-semibold text-xs shadow-md`}
-            title={envBadge.tooltip}
-          >
-            {envBadge.icon && <AlertCircle size={14} className="animate-pulse" />}
-            <span>{envBadge.label}</span>
-          </div>
-
           <ThemeToggle size="sm" />
           <Link to="/admin" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary-600 text-white">
