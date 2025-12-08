@@ -188,110 +188,115 @@ const ProjectConfigurationsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
-            <Settings className="h-7 w-7 text-primary-500" />
-            Project Configurations
+    <div className="space-y-4 md:space-y-6 max-w-full overflow-hidden px-2 md:px-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-2">
+            <Settings className="h-6 w-6 md:h-7 md:w-7 text-primary-500 flex-shrink-0" />
+            <span className="truncate">Project Configurations</span>
           </h1>
-          <p className="text-gray-400">
+          <p className="text-sm md:text-base text-gray-400">
             Manage project-specific branding, themes, and integrations
           </p>
         </div>
-        <Button leftIcon={<Plus size={18} />} onClick={() => setIsAddModalOpen(true)}>
-          Add Configuration
+        <Button
+          leftIcon={<Plus size={18} />}
+          onClick={() => setIsAddModalOpen(true)}
+          className="w-full sm:w-auto flex-shrink-0"
+        >
+          <span className="hidden sm:inline">Add Configuration</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 
       <DomainTestTool />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-white">{configs.length}</div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">Total Configs</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{configs.length}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">Total</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-success-500">{activeCount}</div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">Active</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-success-500">{activeCount}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">Active</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-primary-500">{withDomainCount}</div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">With Domain</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-primary-500">{withDomainCount}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">Domain</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className="text-2xl md:text-3xl font-bold text-yellow-500">{defaultConfig ? '1' : '0'}</div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">Default</div>
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-yellow-500">{defaultConfig ? '1' : '0'}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">Default</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className={`text-2xl md:text-3xl font-bold ${noDomainCount > 0 ? 'text-warning-500' : 'text-gray-500'}`}>{noDomainCount}</div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">No Domain</div>
+              <div className={`text-xl md:text-2xl lg:text-3xl font-bold ${noDomainCount > 0 ? 'text-warning-500' : 'text-gray-500'}`}>{noDomainCount}</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">No Domain</div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 md:pt-6">
+        <Card className="overflow-hidden">
+          <CardContent className="pt-3 md:pt-4 pb-3 md:pb-4 px-2 md:px-4">
             <div className="text-center">
-              <div className={`text-2xl md:text-3xl font-bold ${completeLegalInfoCount === configs.length ? 'text-success-500' : completeLegalInfoCount > 0 ? 'text-warning-500' : 'text-error-500'}`}>
+              <div className={`text-xl md:text-2xl lg:text-3xl font-bold ${completeLegalInfoCount === configs.length ? 'text-success-500' : completeLegalInfoCount > 0 ? 'text-warning-500' : 'text-error-500'}`}>
                 {completeLegalInfoCount}/{configs.length}
               </div>
-              <div className="text-xs md:text-sm text-gray-400 mt-1">Legal Info</div>
+              <div className="text-[10px] md:text-xs text-gray-400 mt-0.5 md:mt-1 truncate">Legal</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>All Configurations</CardTitle>
-          <div className="flex flex-col md:flex-row gap-3 md:gap-4 mt-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 md:w-5 h-4 md:h-5 text-gray-400" />
+          <div className="flex flex-col gap-2 md:gap-3 mt-3 md:mt-4">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search by config ID, name, brand, or domain..."
+                placeholder="Search configs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full pl-9 pr-3 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
-            <div className="flex gap-3 md:gap-4">
+            <div className="flex gap-2 min-w-0">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as any)}
-                className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm md:text-base text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="flex-1 min-w-0 px-3 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active Only</option>
-                <option value="inactive">Inactive Only</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
               <select
                 value={domainFilter}
                 onChange={(e) => setDomainFilter(e.target.value as any)}
-                className="flex-1 md:flex-none px-3 md:px-4 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm md:text-base text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="flex-1 min-w-0 px-3 py-2 bg-dark-300 border border-dark-200 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="all">All Domains</option>
-                <option value="with-domain">With Domain</option>
+                <option value="with-domain">Domain</option>
                 <option value="default">Default</option>
-                <option value="no-domain">No Domain</option>
+                <option value="no-domain">None</option>
               </select>
             </div>
           </div>
@@ -310,29 +315,29 @@ const ProjectConfigurationsPage: React.FC = () => {
           ) : (
             <>
               {/* Mobile Card Layout */}
-              <div className="lg:hidden space-y-3">
+              <div className="lg:hidden space-y-2 md:space-y-3">
               {filteredConfigs.map((config) => (
                 <div
                   key={config.id}
-                  className="bg-dark-300 border border-dark-200 rounded-lg p-4 space-y-3"
+                  className="bg-dark-300 border border-dark-200 rounded-lg p-3 space-y-2 overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-2 min-w-0">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-white font-semibold text-sm truncate">
                           {config.config_name}
                         </h3>
                         {config.is_active ? (
-                          <Power className="h-4 w-4 text-success-500 flex-shrink-0" />
+                          <Power className="h-3.5 w-3.5 text-success-500 flex-shrink-0" />
                         ) : (
-                          <PowerOff className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                          <PowerOff className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" />
                         )}
                       </div>
-                      <div className="font-mono text-xs text-gray-400 truncate">
+                      <div className="font-mono text-[10px] text-gray-400 truncate">
                         {config.config_id}
                       </div>
                     </div>
-                    <div className="flex gap-1 flex-shrink-0">
+                    <div className="flex gap-0.5 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -340,6 +345,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                           setSelectedConfig(config);
                           setIsRubricModalOpen(true);
                         }}
+                        className="p-1.5"
                       >
                         <Grid3x3 size={14} />
                       </Button>
@@ -350,6 +356,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                           setSelectedConfig(config);
                           setIsEditModalOpen(true);
                         }}
+                        className="p-1.5"
                       >
                         <Edit size={14} />
                       </Button>
@@ -360,34 +367,44 @@ const ProjectConfigurationsPage: React.FC = () => {
                           setSelectedConfig(config);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="text-error-500"
+                        className="text-error-500 p-1.5"
                       >
                         <Trash2 size={14} />
                       </Button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-gray-400">Brand:</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs min-w-0">
+                    <div className="min-w-0">
+                      <span className="text-gray-400 text-[10px]">Brand:</span>
                       <p className="text-white truncate">{config.brand_name}</p>
                     </div>
-                    <div>
-                      <span className="text-gray-400">Domain:</span>
+                    <div className="min-w-0">
+                      <span className="text-gray-400 text-[10px]">Domain:</span>
                       {config.domain ? (
-                        <p className="text-white font-mono truncate">{config.domain}</p>
+                        <p className="text-white font-mono truncate text-[10px]">{config.domain}</p>
                       ) : config.is_default ? (
-                        <Badge variant="success" className="text-xs">Default</Badge>
+                        <Badge variant="success" className="text-[10px] px-1.5 py-0.5">Default</Badge>
                       ) : (
                         <p className="text-gray-500">-</p>
                       )}
                     </div>
+                    <div className="min-w-0">
+                      <span className="text-gray-400 text-[10px]">Legal:</span>
+                      <div className="flex items-center gap-1">
+                        {isLegalInfoComplete(config) ? (
+                          <CheckCircle className="h-3 w-3 text-success-500" />
+                        ) : (
+                          <AlertTriangle className="h-3 w-3 text-warning-500" />
+                        )}
+                      </div>
+                    </div>
                     {config.campaign_id && (
-                      <div>
-                        <span className="text-gray-400">Rubrics:</span>
+                      <div className="min-w-0">
+                        <span className="text-gray-400 text-[10px]">Rubrics:</span>
                         <p className="text-white">
                           {mappingCounts[config.id] !== undefined ? (
-                            <Badge variant={mappingCounts[config.id] > 0 ? 'success' : 'default'}>
+                            <Badge variant={mappingCounts[config.id] > 0 ? 'success' : 'default'} className="text-[10px] px-1.5 py-0.5">
                               {mappingCounts[config.id]}
                             </Badge>
                           ) : (
@@ -398,12 +415,12 @@ const ProjectConfigurationsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-dark-200">
+                  <div className="flex items-center gap-2 pt-2 border-t border-dark-200 min-w-0">
                     {config.logo_path && (
                       <img
                         src={config.logo_path}
                         alt={config.logo_alt_text}
-                        className="h-6 w-auto object-contain"
+                        className="h-5 w-auto object-contain max-w-[60px]"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
@@ -412,7 +429,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                     {getColorPreview(config.primary_color, config.secondary_color)}
                     <button
                       onClick={() => handleToggleActive(config)}
-                      className="ml-auto px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                      className="ml-auto px-2 py-1 rounded text-[10px] font-medium transition-colors flex-shrink-0"
                       style={{
                         backgroundColor: config.is_active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
                         color: config.is_active ? 'rgb(34, 197, 94)' : 'rgb(107, 114, 128)',
@@ -426,54 +443,55 @@ const ProjectConfigurationsPage: React.FC = () => {
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden lg:block -mx-6 overflow-x-auto">
+              <div className="px-6 min-w-max">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Config ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Brand</TableHead>
-                    <TableHead className="hidden xl:table-cell">Logo</TableHead>
-                    <TableHead className="hidden xl:table-cell">Colors</TableHead>
-                    <TableHead className="hidden 2xl:table-cell">Product ID</TableHead>
-                    <TableHead className="hidden 2xl:table-cell">Campaign ID</TableHead>
-                    <TableHead className="hidden xl:table-cell">Rubrics</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden xl:table-cell">Legal Info</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="whitespace-nowrap">Config ID</TableHead>
+                    <TableHead className="whitespace-nowrap">Name</TableHead>
+                    <TableHead className="whitespace-nowrap">Domain</TableHead>
+                    <TableHead className="whitespace-nowrap">Brand</TableHead>
+                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Logo</TableHead>
+                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Colors</TableHead>
+                    <TableHead className="hidden 2xl:table-cell whitespace-nowrap">Product ID</TableHead>
+                    <TableHead className="hidden 2xl:table-cell whitespace-nowrap">Campaign ID</TableHead>
+                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Rubrics</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Legal Info</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredConfigs.map((config) => (
                     <TableRow key={config.id}>
-                      <TableCell>
-                        <div className="font-mono text-xs text-white truncate max-w-[120px]">
+                      <TableCell className="whitespace-nowrap">
+                        <div className="font-mono text-xs text-white truncate max-w-[100px]">
                           {config.config_id}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="text-white text-sm truncate max-w-[150px]">{config.config_name}</div>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="text-white text-sm truncate max-w-[140px]">{config.config_name}</div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {config.domain ? (
-                          <div className="text-sm text-white font-mono truncate max-w-[180px]">{config.domain}</div>
+                          <div className="text-sm text-white font-mono truncate max-w-[160px]">{config.domain}</div>
                         ) : config.is_default ? (
                           <Badge variant="success">Default</Badge>
                         ) : (
                           <span className="text-gray-500 text-sm">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <div className="text-white text-sm truncate max-w-[130px]">{config.brand_name}</div>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="text-white text-sm truncate max-w-[120px]">{config.brand_name}</div>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell">
+                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {config.logo_path ? (
                             <img
                               src={config.logo_path}
                               alt={config.logo_alt_text}
-                              className="h-8 w-auto object-contain"
+                              className="h-8 w-auto object-contain max-w-[80px]"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                               }}
@@ -485,20 +503,20 @@ const ProjectConfigurationsPage: React.FC = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell">
+                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
                         {getColorPreview(config.primary_color, config.secondary_color)}
                       </TableCell>
-                      <TableCell className="hidden 2xl:table-cell">
-                        <div className="text-xs text-gray-400 truncate max-w-[100px]">
+                      <TableCell className="hidden 2xl:table-cell whitespace-nowrap">
+                        <div className="text-xs text-gray-400 truncate max-w-[80px]">
                           {config.product_id || '-'}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden 2xl:table-cell">
-                        <div className="text-xs text-gray-400 truncate max-w-[100px]">
+                      <TableCell className="hidden 2xl:table-cell whitespace-nowrap">
+                        <div className="text-xs text-gray-400 truncate max-w-[80px]">
                           {config.campaign_id || '-'}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell">
+                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {mappingCounts[config.id] !== undefined ? (
                             <Badge variant={mappingCounts[config.id] > 0 ? 'success' : 'default'}>
@@ -509,7 +527,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <button
                           onClick={() => handleToggleActive(config)}
                           className="group"
@@ -522,23 +540,23 @@ const ProjectConfigurationsPage: React.FC = () => {
                           )}
                         </button>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell">
+                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {isLegalInfoComplete(config) ? (
                             <div className="flex items-center gap-1" title="All legal information complete">
                               <CheckCircle className="h-4 w-4 text-success-500" />
-                              <span className="text-xs text-success-500">Complete</span>
+                              <span className="text-xs text-success-500 whitespace-nowrap">Complete</span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1" title="Legal information incomplete">
                               <AlertTriangle className="h-4 w-4 text-warning-500" />
-                              <span className="text-xs text-warning-500">Incomplete</span>
+                              <span className="text-xs text-warning-500 whitespace-nowrap">Incomplete</span>
                             </div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                      <TableCell className="text-right whitespace-nowrap">
+                        <div className="flex justify-end gap-1">
                           <Button
                             size="sm"
                             variant="ghost"
@@ -547,6 +565,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                               setSelectedConfig(config);
                               setIsRubricModalOpen(true);
                             }}
+                            className="p-1.5"
                           >
                             <Grid3x3 size={14} />
                           </Button>
@@ -558,6 +577,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                               setSelectedConfig(config);
                               setIsEditModalOpen(true);
                             }}
+                            className="p-1.5"
                           >
                             <Edit size={14} />
                           </Button>
@@ -569,7 +589,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                               setSelectedConfig(config);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="text-error-500 hover:text-error-600"
+                            className="text-error-500 hover:text-error-600 p-1.5"
                           >
                             <Trash2 size={14} />
                           </Button>
@@ -579,6 +599,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
             </>
           )}
