@@ -14,8 +14,10 @@ import {
   validateConfigId,
   validateHexColor,
   checkDomainAvailability,
+  validateEmail,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
+import { LegalVariablesPreview } from './LegalVariablesPreview';
 
 interface AddProjectConfigModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ const STEPS = [
   { number: 2, label: 'Branding' },
   { number: 3, label: 'Visual Identity' },
   { number: 4, label: 'Integration', optional: true },
+  { number: 5, label: 'Legal Information' },
 ];
 
 const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
@@ -58,6 +61,14 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [checkingDomain, setCheckingDomain] = useState(false);
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
 
+  const [supportEmail, setSupportEmail] = useState('');
+  const [legalEmail, setLegalEmail] = useState('');
+  const [privacyEmail, setPrivacyEmail] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
+
   useEffect(() => {
     if (!isOpen) {
       resetForm();
@@ -83,6 +94,13 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setIsDefault(false);
     setCheckingDomain(false);
     setDomainAvailable(null);
+    setSupportEmail('');
+    setLegalEmail('');
+    setPrivacyEmail('');
+    setCompanyName('');
+    setCompanyAddress('');
+    setPhoneNumber('');
+    setRegistrationNumber('');
     setErrors({});
   };
 
@@ -155,6 +173,42 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
       }
     }
 
+    if (step === 5) {
+      if (!supportEmail.trim()) {
+        newErrors.supportEmail = 'Support email is required';
+      } else if (!validateEmail(supportEmail)) {
+        newErrors.supportEmail = 'Invalid email format';
+      }
+
+      if (!legalEmail.trim()) {
+        newErrors.legalEmail = 'Legal email is required';
+      } else if (!validateEmail(legalEmail)) {
+        newErrors.legalEmail = 'Invalid email format';
+      }
+
+      if (!privacyEmail.trim()) {
+        newErrors.privacyEmail = 'Privacy email is required';
+      } else if (!validateEmail(privacyEmail)) {
+        newErrors.privacyEmail = 'Invalid email format';
+      }
+
+      if (!companyName.trim()) {
+        newErrors.companyName = 'Company name is required';
+      }
+
+      if (!companyAddress.trim()) {
+        newErrors.companyAddress = 'Company address is required';
+      }
+
+      if (!phoneNumber.trim()) {
+        newErrors.phoneNumber = 'Phone number is required';
+      }
+
+      if (!registrationNumber.trim()) {
+        newErrors.registrationNumber = 'Registration number is required';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -188,7 +242,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
       return;
     }
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 5; i++) {
       if (!validateStep(i)) {
         toast.error(`Please complete step ${i} correctly`);
         setCurrentStep(i);
@@ -233,6 +287,13 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         is_default: isDefault,
         is_active: isActive,
         extra_metadata: JSON.parse(extraMetadata),
+        support_email: supportEmail.trim(),
+        legal_email: legalEmail.trim(),
+        privacy_email: privacyEmail.trim(),
+        company_name: companyName.trim(),
+        company_address: companyAddress.trim(),
+        phone_number: phoneNumber.trim(),
+        registration_number: registrationNumber.trim(),
       });
 
       if (error) throw error;
@@ -533,6 +594,131 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
               <p className="text-xs text-gray-400 mt-1">
                 Additional configuration data in JSON format
               </p>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-4">
+            <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Legal Information</h3>
+
+            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+              <h4 className="text-sm font-medium text-white mb-2">Contact Information</h4>
+              <p className="text-xs text-gray-400">
+                These email addresses will be used in legal documents and communications
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+              <Input
+                label="Support Email"
+                type="email"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                error={errors.supportEmail}
+                placeholder="support@example.com"
+                helperText="General support inquiries"
+                required
+              />
+
+              <Input
+                label="Legal Email"
+                type="email"
+                value={legalEmail}
+                onChange={(e) => setLegalEmail(e.target.value)}
+                error={errors.legalEmail}
+                placeholder="legal@example.com"
+                helperText="Legal matters and compliance"
+                required
+              />
+
+              <Input
+                label="Privacy Email"
+                type="email"
+                value={privacyEmail}
+                onChange={(e) => setPrivacyEmail(e.target.value)}
+                error={errors.privacyEmail}
+                placeholder="privacy@example.com"
+                helperText="Privacy-related concerns"
+                required
+              />
+            </div>
+
+            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+              <h4 className="text-sm font-medium text-white mb-2">Company Information</h4>
+              <p className="text-xs text-gray-400">
+                Official company details for legal documents
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <Input
+                label="Company Name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                error={errors.companyName}
+                placeholder="Acme Corporation"
+                helperText="Official registered company name"
+                required
+              />
+
+              <Input
+                label="Registration Number"
+                value={registrationNumber}
+                onChange={(e) => setRegistrationNumber(e.target.value)}
+                error={errors.registrationNumber}
+                placeholder="12345678"
+                helperText="Company registration or tax ID"
+                required
+              />
+            </div>
+
+            <Input
+              label="Phone Number"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              error={errors.phoneNumber}
+              placeholder="+1 (555) 123-4567"
+              helperText="Company contact phone number"
+              required
+            />
+
+            <div>
+              <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                Company Address <span className="text-error-500">*</span>
+              </label>
+              <textarea
+                value={companyAddress}
+                onChange={(e) => setCompanyAddress(e.target.value)}
+                className={`
+                  w-full px-3 py-2 min-h-[80px] text-xs md:text-sm
+                  bg-dark-300
+                  border ${errors.companyAddress ? 'border-error-500' : 'border-dark-200'}
+                  rounded-lg
+                  text-white
+                  focus:outline-none focus:ring-2 focus:ring-primary-500
+                `}
+                placeholder="123 Main Street, Suite 100, City, State, ZIP"
+              />
+              {errors.companyAddress && (
+                <p className="text-xs text-error-500 mt-1">{errors.companyAddress}</p>
+              )}
+              <p className="text-xs text-gray-400 mt-1">
+                Full company address ({companyAddress.length} characters)
+              </p>
+            </div>
+
+            <div className="mt-6">
+              <LegalVariablesPreview
+                supportEmail={supportEmail}
+                legalEmail={legalEmail}
+                privacyEmail={privacyEmail}
+                companyName={companyName}
+                companyAddress={companyAddress}
+                phoneNumber={phoneNumber}
+                registrationNumber={registrationNumber}
+              />
             </div>
           </div>
         );

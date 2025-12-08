@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3 } from 'lucide-react';
+import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -139,6 +139,18 @@ const ProjectConfigurationsPage: React.FC = () => {
     );
   };
 
+  const isLegalInfoComplete = (config: ProjectConfiguration): boolean => {
+    return !!(
+      config.support_email &&
+      config.legal_email &&
+      config.privacy_email &&
+      config.company_name &&
+      config.company_address &&
+      config.phone_number &&
+      config.registration_number
+    );
+  };
+
   const filteredConfigs = configs.filter((config) => {
     const matchesSearch =
       config.config_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -165,6 +177,7 @@ const ProjectConfigurationsPage: React.FC = () => {
   const withDomainCount = configs.filter(c => c.domain).length;
   const defaultConfig = configs.find(c => c.is_default);
   const noDomainCount = configs.filter(c => !c.domain && !c.is_default).length;
+  const completeLegalInfoCount = configs.filter(c => isLegalInfoComplete(c)).length;
 
   if (isLoading) {
     return (
@@ -193,7 +206,7 @@ const ProjectConfigurationsPage: React.FC = () => {
 
       <DomainTestTool />
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         <Card>
           <CardContent className="pt-4 md:pt-6">
             <div className="text-center">
@@ -231,6 +244,16 @@ const ProjectConfigurationsPage: React.FC = () => {
             <div className="text-center">
               <div className={`text-2xl md:text-3xl font-bold ${noDomainCount > 0 ? 'text-warning-500' : 'text-gray-500'}`}>{noDomainCount}</div>
               <div className="text-xs md:text-sm text-gray-400 mt-1">No Domain</div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4 md:pt-6">
+            <div className="text-center">
+              <div className={`text-2xl md:text-3xl font-bold ${completeLegalInfoCount === configs.length ? 'text-success-500' : completeLegalInfoCount > 0 ? 'text-warning-500' : 'text-error-500'}`}>
+                {completeLegalInfoCount}/{configs.length}
+              </div>
+              <div className="text-xs md:text-sm text-gray-400 mt-1">Legal Info</div>
             </div>
           </CardContent>
         </Card>
@@ -417,6 +440,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                     <TableHead className="hidden 2xl:table-cell">Campaign ID</TableHead>
                     <TableHead className="hidden xl:table-cell">Rubrics</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead className="hidden xl:table-cell">Legal Info</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -497,6 +521,21 @@ const ProjectConfigurationsPage: React.FC = () => {
                             <PowerOff className="h-5 w-5 text-gray-500 group-hover:text-gray-400" />
                           )}
                         </button>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-cell">
+                        <div className="flex items-center gap-2">
+                          {isLegalInfoComplete(config) ? (
+                            <div className="flex items-center gap-1" title="All legal information complete">
+                              <CheckCircle className="h-4 w-4 text-success-500" />
+                              <span className="text-xs text-success-500">Complete</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1" title="Legal information incomplete">
+                              <AlertTriangle className="h-4 w-4 text-warning-500" />
+                              <span className="text-xs text-warning-500">Incomplete</span>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

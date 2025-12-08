@@ -17,6 +17,13 @@ export interface ProjectConfiguration {
   domain: string | null;
   is_default: boolean;
   extra_metadata: Record<string, any>;
+  support_email: string;
+  legal_email: string;
+  privacy_email: string;
+  company_name: string;
+  company_address: string;
+  phone_number: string;
+  registration_number: string;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +43,13 @@ export interface CreateProjectConfigData {
   domain?: string | null;
   is_default?: boolean;
   extra_metadata?: Record<string, any>;
+  support_email: string;
+  legal_email: string;
+  privacy_email: string;
+  company_name: string;
+  company_address: string;
+  phone_number: string;
+  registration_number: string;
 }
 
 export interface UpdateProjectConfigData extends Partial<CreateProjectConfigData> {
@@ -48,6 +62,67 @@ export const validateHexColor = (color: string): boolean => {
 
 export const validateConfigId = (configId: string): boolean => {
   return /^[a-z0-9-]{3,50}$/.test(configId);
+};
+
+export const validateEmail = (email: string): boolean => {
+  return /^[^@]+@[^@]+\.[^@]+$/.test(email);
+};
+
+export const validateLegalFields = (data: CreateProjectConfigData | UpdateProjectConfigData): { valid: boolean; error?: string } => {
+  const legalFields = [
+    { key: 'support_email', label: 'Support Email', isEmail: true },
+    { key: 'legal_email', label: 'Legal Email', isEmail: true },
+    { key: 'privacy_email', label: 'Privacy Email', isEmail: true },
+    { key: 'company_name', label: 'Company Name', isEmail: false },
+    { key: 'company_address', label: 'Company Address', isEmail: false },
+    { key: 'phone_number', label: 'Phone Number', isEmail: false },
+    { key: 'registration_number', label: 'Registration Number', isEmail: false },
+  ];
+
+  for (const field of legalFields) {
+    const value = (data as any)[field.key];
+
+    if (value === undefined) continue;
+
+    if (!value || value.trim() === '') {
+      return { valid: false, error: `${field.label} is required` };
+    }
+
+    if (field.isEmail && !validateEmail(value)) {
+      return { valid: false, error: `${field.label} must be a valid email address` };
+    }
+  }
+
+  return { valid: true };
+};
+
+export type LegalVariablePlaceholders = {
+  SUPPORT_EMAIL: string;
+  LEGAL_EMAIL: string;
+  PRIVACY_EMAIL: string;
+  COMPANY_NAME: string;
+  COMPANY_ADDRESS: string;
+  PHONE_NUMBER: string;
+  REGISTRATION_NUMBER: string;
+};
+
+export const replaceLegalVariables = (text: string, config: ProjectConfiguration | CreateProjectConfigData): string => {
+  const placeholders: LegalVariablePlaceholders = {
+    SUPPORT_EMAIL: config.support_email || '[SUPPORT EMAIL]',
+    LEGAL_EMAIL: config.legal_email || '[LEGAL EMAIL]',
+    PRIVACY_EMAIL: config.privacy_email || '[PRIVACY EMAIL]',
+    COMPANY_NAME: config.company_name || '[COMPANY NAME]',
+    COMPANY_ADDRESS: config.company_address || '[COMPANY ADDRESS]',
+    PHONE_NUMBER: config.phone_number || '[PHONE NUMBER]',
+    REGISTRATION_NUMBER: config.registration_number || '[REGISTRATION NUMBER]',
+  };
+
+  let result = text;
+  Object.entries(placeholders).forEach(([key, value]) => {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  });
+
+  return result;
 };
 
 export const uploadFile = async (
@@ -264,6 +339,11 @@ export const createProjectConfiguration = async (
       throw new Error('Invalid secondary_color format. Use #RRGGBB format');
     }
 
+    const legalValidation = validateLegalFields(configData);
+    if (!legalValidation.valid) {
+      throw new Error(legalValidation.error);
+    }
+
     if (configData.domain && configData.is_default) {
       throw new Error('Configuration cannot have both a domain and be set as default');
     }
@@ -322,6 +402,11 @@ export const updateProjectConfiguration = async (
 
     if (configData.secondary_color && !validateHexColor(configData.secondary_color)) {
       throw new Error('Invalid secondary_color format. Use #RRGGBB format');
+    }
+
+    const legalValidation = validateLegalFields(configData);
+    if (!legalValidation.valid) {
+      throw new Error(legalValidation.error);
     }
 
     if (configData.domain !== undefined && configData.is_default) {
