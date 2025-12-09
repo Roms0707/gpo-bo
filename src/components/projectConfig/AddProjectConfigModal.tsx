@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -16,9 +16,16 @@ import {
   checkDomainAvailability,
   validateEmail,
   areColorsSimilar,
+  AuthMethod,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
+
+const AUTH_METHOD_OPTIONS: { value: AuthMethod; label: string; description: string; icon: React.ReactNode }[] = [
+  { value: 'email', label: 'Email/Password', description: 'Traditional email and password authentication', icon: <Mail className="w-4 h-4" /> },
+  { value: 'discord', label: 'Discord', description: 'OAuth authentication via Discord', icon: <MessageCircle className="w-4 h-4" /> },
+  { value: 'kliento', label: 'Kliento', description: 'Phone-based authentication via Kliento (requires Product ID)', icon: <Phone className="w-4 h-4" /> },
+];
 
 interface AddProjectConfigModalProps {
   isOpen: boolean;
@@ -55,6 +62,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [campaignId, setCampaignId] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
@@ -91,6 +99,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setCampaignId('');
     setIsActive(true);
     setExtraMetadata('{}');
+    setAuthMethod('email');
     setLogoFile(null);
     setFaviconFile(null);
     setDomain('');
@@ -133,6 +142,10 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         if (!domainValidation.valid) {
           newErrors.domain = domainValidation.error || 'Invalid domain format';
         }
+      }
+
+      if (authMethod === 'kliento' && !productId.trim()) {
+        newErrors.authMethod = 'Kliento authentication requires a Product ID (configure in Integration step)';
       }
     }
 
@@ -294,6 +307,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         domain: domain.trim() || null,
         is_default: isDefault,
         is_active: isActive,
+        auth_method: authMethod,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
         legal_email: legalEmail.trim(),
@@ -421,6 +435,55 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 )}
               </div>
             )}
+
+            <div className="mt-4">
+              <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                Authentication Method <span className="text-error-500">*</span>
+              </label>
+              <div className="space-y-2">
+                {AUTH_METHOD_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    className={`
+                      flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                      ${authMethod === option.value
+                        ? 'border-primary-500 bg-primary-500/10'
+                        : 'border-dark-200 bg-dark-300 hover:border-dark-100'
+                      }
+                    `}
+                  >
+                    <input
+                      type="radio"
+                      name="authMethod"
+                      value={option.value}
+                      checked={authMethod === option.value}
+                      onChange={(e) => setAuthMethod(e.target.value as AuthMethod)}
+                      className="mt-1 accent-primary-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={authMethod === option.value ? 'text-primary-500' : 'text-gray-400'}>
+                          {option.icon}
+                        </span>
+                        <span className="font-medium text-white text-sm">{option.label}</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-0.5">{option.description}</p>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {errors.authMethod && (
+                <p className="text-xs text-error-500 mt-2">{errors.authMethod}</p>
+              )}
+              {authMethod === 'kliento' && (
+                <div className="flex items-start gap-2 p-3 mt-3 bg-warning-500/10 border border-warning-500/30 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-warning-400">
+                    Kliento authentication requires a Product ID. Make sure to configure it in the Integration step (Step 4).
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pt-2">
               <Checkbox
@@ -636,13 +699,24 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Integration & Advanced</h3>
 
+            {authMethod === 'kliento' && (
+              <div className="flex items-start gap-2 p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg">
+                <Info className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-primary-400">
+                  You selected Kliento authentication. A Product ID is required for this authentication method.
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <Input
                 label="Product ID"
                 value={productId}
                 onChange={(e) => setProductId(e.target.value)}
                 placeholder="product-123"
-                helperText="External product identifier"
+                helperText={authMethod === 'kliento' ? 'Required for Kliento authentication' : 'External product identifier'}
+                required={authMethod === 'kliento'}
+                error={authMethod === 'kliento' && !productId.trim() ? 'Required for Kliento authentication' : undefined}
               />
 
               <Input

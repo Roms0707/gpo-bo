@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle, Mail, MessageCircle, Phone } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -17,7 +17,14 @@ import {
   deleteProjectConfiguration,
   toggleProjectConfigurationActive,
   ProjectConfiguration,
+  AuthMethod,
 } from '../../services/projectConfigService';
+
+const AUTH_METHOD_CONFIG: Record<AuthMethod, { label: string; icon: React.ReactNode; badgeVariant: 'default' | 'primary' | 'success' }> = {
+  email: { label: 'Email', icon: <Mail className="w-3 h-3" />, badgeVariant: 'default' },
+  discord: { label: 'Discord', icon: <MessageCircle className="w-3 h-3" />, badgeVariant: 'primary' },
+  kliento: { label: 'Kliento', icon: <Phone className="w-3 h-3" />, badgeVariant: 'success' },
+};
 
 const ProjectConfigurationsPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -136,6 +143,17 @@ const ProjectConfigurationsPage: React.FC = () => {
           title={`Secondary: ${secondaryColor}`}
         />
       </div>
+    );
+  };
+
+  const getAuthMethodBadge = (config: ProjectConfiguration) => {
+    const authMethod = config.auth_method || 'email';
+    const authConfig = AUTH_METHOD_CONFIG[authMethod];
+    return (
+      <Badge variant={authConfig.badgeVariant} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5">
+        {authConfig.icon}
+        <span>{authConfig.label}</span>
+      </Badge>
     );
   };
 
@@ -390,6 +408,12 @@ const ProjectConfigurationsPage: React.FC = () => {
                       )}
                     </div>
                     <div className="min-w-0">
+                      <span className="text-gray-400 text-[10px]">Auth:</span>
+                      <div className="mt-0.5">
+                        {getAuthMethodBadge(config)}
+                      </div>
+                    </div>
+                    <div className="min-w-0">
                       <span className="text-gray-400 text-[10px]">Legal:</span>
                       <div className="flex items-center gap-1">
                         {isLegalInfoComplete(config) ? (
@@ -451,6 +475,7 @@ const ProjectConfigurationsPage: React.FC = () => {
                     <TableHead className="whitespace-nowrap">Config ID</TableHead>
                     <TableHead className="whitespace-nowrap">Name</TableHead>
                     <TableHead className="whitespace-nowrap">Domain</TableHead>
+                    <TableHead className="whitespace-nowrap">Auth</TableHead>
                     <TableHead className="whitespace-nowrap">Brand</TableHead>
                     <TableHead className="hidden xl:table-cell whitespace-nowrap">Logo</TableHead>
                     <TableHead className="hidden xl:table-cell whitespace-nowrap">Colors</TableHead>
@@ -481,6 +506,9 @@ const ProjectConfigurationsPage: React.FC = () => {
                         ) : (
                           <span className="text-gray-500 text-sm">-</span>
                         )}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {getAuthMethodBadge(config)}
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="text-white text-sm truncate max-w-[120px]">{config.brand_name}</div>

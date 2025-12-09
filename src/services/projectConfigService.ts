@@ -1,6 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { validateDomainFormat, normalizeDomain } from '../utils/domainValidation';
 
+export type AuthMethod = 'email' | 'discord' | 'kliento';
+
+export const AUTH_METHODS: AuthMethod[] = ['email', 'discord', 'kliento'];
+
 export interface ProjectConfiguration {
   id: string;
   config_id: string;
@@ -17,6 +21,7 @@ export interface ProjectConfiguration {
   campaign_id: string | null;
   domain: string | null;
   is_default: boolean;
+  auth_method: AuthMethod;
   extra_metadata: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -44,6 +49,7 @@ export interface CreateProjectConfigData {
   campaign_id?: string | null;
   domain?: string | null;
   is_default?: boolean;
+  auth_method?: AuthMethod;
   extra_metadata?: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -353,6 +359,11 @@ export const fetchProjectConfigurationByConfigId = async (
   }
 };
 
+export const validateAuthMethod = (authMethod: string | undefined): authMethod is AuthMethod => {
+  if (!authMethod) return true;
+  return AUTH_METHODS.includes(authMethod as AuthMethod);
+};
+
 export const createProjectConfiguration = async (
   configData: CreateProjectConfigData
 ): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
@@ -371,6 +382,14 @@ export const createProjectConfiguration = async (
 
     if (configData.accent_color && !validateHexColor(configData.accent_color)) {
       throw new Error('Invalid accent_color format. Use #RRGGBB format');
+    }
+
+    if (configData.auth_method && !validateAuthMethod(configData.auth_method)) {
+      throw new Error('Invalid auth_method. Must be one of: email, discord, kliento');
+    }
+
+    if (configData.auth_method === 'kliento' && !configData.product_id?.trim()) {
+      throw new Error('Kliento authentication requires a Product ID');
     }
 
     const legalValidation = validateLegalFields(configData);
@@ -409,6 +428,7 @@ export const createProjectConfiguration = async (
         extra_metadata: configData.extra_metadata || {},
         domain: configData.domain || null,
         is_default: configData.is_default || false,
+        auth_method: configData.auth_method || 'email',
       }])
       .select()
       .single();
@@ -440,6 +460,14 @@ export const updateProjectConfiguration = async (
 
     if (configData.accent_color && !validateHexColor(configData.accent_color)) {
       throw new Error('Invalid accent_color format. Use #RRGGBB format');
+    }
+
+    if (configData.auth_method && !validateAuthMethod(configData.auth_method)) {
+      throw new Error('Invalid auth_method. Must be one of: email, discord, kliento');
+    }
+
+    if (configData.auth_method === 'kliento' && !configData.product_id?.trim()) {
+      throw new Error('Kliento authentication requires a Product ID');
     }
 
     const legalValidation = validateLegalFields(configData);

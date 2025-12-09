@@ -8,11 +8,12 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message: string | React.ReactNode;
   confirmText?: string;
   cancelText?: string;
   isDestructive?: boolean;
   isLoading?: boolean;
+  variant?: 'default' | 'warning' | 'danger';
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -24,8 +25,19 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   isDestructive = false,
-  isLoading = false
+  isLoading = false,
+  variant = 'default'
 }) => {
+  const getButtonStyle = () => {
+    if (isDestructive || variant === 'danger') {
+      return 'bg-error-600 hover:bg-error-700';
+    }
+    if (variant === 'warning') {
+      return 'bg-warning-600 hover:bg-warning-700';
+    }
+    return '';
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
       <div className="space-y-4">
@@ -38,7 +50,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </div>
         )}
 
-        <p className="text-gray-300">{message}</p>
+        {typeof message === 'string' ? (
+          <p className="text-gray-300">{message}</p>
+        ) : (
+          <div className="text-gray-300">{message}</div>
+        )}
 
         <div className="flex justify-end space-x-3 pt-4">
           <Button
@@ -51,7 +67,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Button
             onClick={onConfirm}
             isLoading={isLoading}
-            className={isDestructive ? 'bg-error-600 hover:bg-error-700' : ''}
+            className={getButtonStyle()}
           >
             {confirmText}
           </Button>
