@@ -274,11 +274,12 @@ export function LegalVariablesPreview({
           value={selectedDocument}
           onChange={(e) => setSelectedDocument(e.target.value as DocumentType)}
           className="w-48"
-        >
-          <option value="terms">Terms of Service</option>
-          <option value="privacy">Privacy Policy</option>
-          <option value="cookies">Cookie Policy</option>
-        </Select>
+          options={[
+            { value: 'terms', label: 'Terms of Service' },
+            { value: 'privacy', label: 'Privacy Policy' },
+            { value: 'cookies', label: 'Cookie Policy' },
+          ]}
+        />
       </div>
 
       <div className="mb-3 flex gap-4 text-sm">
