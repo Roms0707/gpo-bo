@@ -12,6 +12,7 @@ export interface ProjectConfiguration {
   logo_alt_text: string;
   primary_color: string;
   secondary_color: string;
+  accent_color: string | null;
   product_id: string | null;
   campaign_id: string | null;
   domain: string | null;
@@ -38,6 +39,7 @@ export interface CreateProjectConfigData {
   logo_alt_text: string;
   primary_color: string;
   secondary_color: string;
+  accent_color?: string | null;
   product_id?: string | null;
   campaign_id?: string | null;
   domain?: string | null;
@@ -58,6 +60,34 @@ export interface UpdateProjectConfigData extends Partial<CreateProjectConfigData
 
 export const validateHexColor = (color: string): boolean => {
   return /^#[0-9A-Fa-f]{6}$/.test(color);
+};
+
+export const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+};
+
+export const getColorDistance = (color1: string, color2: string): number => {
+  const rgb1 = hexToRgb(color1);
+  const rgb2 = hexToRgb(color2);
+
+  if (!rgb1 || !rgb2) return Infinity;
+
+  const rDiff = rgb1.r - rgb2.r;
+  const gDiff = rgb1.g - rgb2.g;
+  const bDiff = rgb1.b - rgb2.b;
+
+  return Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+};
+
+export const areColorsSimilar = (color1: string, color2: string, threshold: number = 50): boolean => {
+  return getColorDistance(color1, color2) < threshold;
 };
 
 export const validateConfigId = (configId: string): boolean => {
@@ -339,6 +369,10 @@ export const createProjectConfiguration = async (
       throw new Error('Invalid secondary_color format. Use #RRGGBB format');
     }
 
+    if (configData.accent_color && !validateHexColor(configData.accent_color)) {
+      throw new Error('Invalid accent_color format. Use #RRGGBB format');
+    }
+
     const legalValidation = validateLegalFields(configData);
     if (!legalValidation.valid) {
       throw new Error(legalValidation.error);
@@ -402,6 +436,10 @@ export const updateProjectConfiguration = async (
 
     if (configData.secondary_color && !validateHexColor(configData.secondary_color)) {
       throw new Error('Invalid secondary_color format. Use #RRGGBB format');
+    }
+
+    if (configData.accent_color && !validateHexColor(configData.accent_color)) {
+      throw new Error('Invalid accent_color format. Use #RRGGBB format');
     }
 
     const legalValidation = validateLegalFields(configData);

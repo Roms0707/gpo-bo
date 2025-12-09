@@ -15,9 +15,10 @@ import {
   ProjectConfiguration,
   checkDomainAvailability,
   validateEmail,
+  areColorsSimilar,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
 
 interface EditProjectConfigModalProps {
@@ -51,6 +52,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
   const [logoAltText, setLogoAltText] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#FF6B00');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
+  const [accentColor, setAccentColor] = useState('#000000');
   const [productId, setProductId] = useState('');
   const [campaignId, setCampaignId] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -78,6 +80,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setLogoAltText(config.logo_alt_text);
       setPrimaryColor(config.primary_color);
       setSecondaryColor(config.secondary_color);
+      setAccentColor(config.accent_color || '#000000');
       setProductId(config.product_id || '');
       setCampaignId(config.campaign_id || '');
       setIsActive(config.is_active);
@@ -145,6 +148,10 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
 
       if (!validateHexColor(secondaryColor)) {
         newErrors.secondaryColor = 'Invalid color format. Use #RRGGBB';
+      }
+
+      if (accentColor && accentColor !== '#000000' && !validateHexColor(accentColor)) {
+        newErrors.accentColor = 'Invalid color format. Use #RRGGBB';
       }
     }
 
@@ -263,6 +270,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         logo_alt_text: logoAltText.trim(),
         primary_color: primaryColor,
         secondary_color: secondaryColor,
+        accent_color: accentColor && accentColor !== '#000000' ? accentColor : null,
         product_id: productId.trim() || null,
         campaign_id: campaignId.trim() || null,
         domain: domain.trim() || null,
@@ -457,11 +465,15 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         );
 
       case 3:
+        const accentSimilarToPrimary = accentColor && accentColor !== '#000000' && areColorsSimilar(accentColor, primaryColor);
+        const accentSimilarToSecondary = accentColor && accentColor !== '#000000' && areColorsSimilar(accentColor, secondaryColor);
+        const showAccentWarning = accentSimilarToPrimary || accentSimilarToSecondary;
+
         return (
           <div className="space-y-4">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Visual Identity</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <ColorPickerInput
                 label="Primary Color"
                 value={primaryColor}
@@ -479,11 +491,29 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                 helperText="Supporting brand color"
                 required
               />
+
+              <ColorPickerInput
+                label="Accent Color"
+                value={accentColor}
+                onChange={setAccentColor}
+                error={errors.accentColor}
+                helperText="Optional - For text variations and accents"
+              />
             </div>
+
+            {showAccentWarning && (
+              <div className="flex items-start gap-2 p-3 bg-warning-500/10 border border-warning-500/30 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-warning-400">
+                  The accent color is very similar to your {accentSimilarToPrimary ? 'primary' : 'secondary'} color.
+                  Consider choosing a more distinct color for better visual contrast.
+                </p>
+              </div>
+            )}
 
             <div className="mt-4 md:mt-6 p-3 md:p-4 bg-dark-200 rounded-lg border border-dark-100">
               <h4 className="text-xs md:text-sm font-medium text-white mb-2 md:mb-3">Color Preview</h4>
-              <div className="grid grid-cols-3 gap-2 md:gap-3">
+              <div className="grid grid-cols-4 gap-2 md:gap-3">
                 <div className="flex-1">
                   <div
                     className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg"
@@ -500,6 +530,13 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                 </div>
                 <div className="flex-1">
                   <div
+                    className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg"
+                    style={{ backgroundColor: accentColor }}
+                  />
+                  <p className="text-xs text-center text-gray-400 mt-1 md:mt-2">Accent</p>
+                </div>
+                <div className="flex-1">
+                  <div
                     className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg flex items-center justify-center"
                     style={{ backgroundColor: primaryColor }}
                   >
@@ -510,6 +547,52 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                   <p className="text-xs text-center text-gray-400 mt-1 md:mt-2">Combined</p>
                 </div>
               </div>
+
+              {accentColor && accentColor !== '#000000' && (
+                <>
+                  <h4 className="text-xs md:text-sm font-medium text-white mt-4 mb-2 md:mb-3">Accent Color Usage Examples</h4>
+                  <div className="grid grid-cols-4 gap-2 md:gap-3">
+                    <div className="flex-1">
+                      <div
+                        className="h-12 md:h-14 rounded-lg border border-dark-100 flex items-center justify-center"
+                        style={{ backgroundColor: '#1a1a2e' }}
+                      >
+                        <span style={{ color: accentColor }} className="font-semibold text-xs md:text-sm">
+                          Accent Text
+                        </span>
+                      </div>
+                      <p className="text-xs text-center text-gray-400 mt-1">Text Color</p>
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className="h-12 md:h-14 rounded-lg border border-dark-100 flex items-center justify-center"
+                        style={{ backgroundColor: `${accentColor}80` }}
+                      >
+                        <span className="text-white font-semibold text-xs md:text-sm">50% Opacity</span>
+                      </div>
+                      <p className="text-xs text-center text-gray-400 mt-1">Opacity Variant</p>
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className="h-12 md:h-14 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: '#1a1a2e', border: `2px solid ${accentColor}` }}
+                      >
+                        <span className="text-white font-semibold text-xs md:text-sm">Border</span>
+                      </div>
+                      <p className="text-xs text-center text-gray-400 mt-1">As Border</p>
+                    </div>
+                    <div className="flex-1">
+                      <div
+                        className="h-12 md:h-14 rounded-lg border border-dark-100 flex items-center justify-center"
+                        style={{ backgroundColor: `${accentColor}20` }}
+                      >
+                        <span style={{ color: accentColor }} className="font-semibold text-xs md:text-sm">Subtle BG</span>
+                      </div>
+                      <p className="text-xs text-center text-gray-400 mt-1">Background Tint</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         );

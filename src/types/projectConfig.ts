@@ -9,6 +9,7 @@ export interface ProjectConfiguration {
   logo_alt_text: string;
   primary_color: string;
   secondary_color: string;
+  accent_color: string | null;
   product_id: string | null;
   campaign_id: string | null;
   domain: string | null;
@@ -28,6 +29,7 @@ export interface CreateProjectConfigData {
   logo_alt_text: string;
   primary_color: string;
   secondary_color: string;
+  accent_color?: string | null;
   product_id?: string | null;
   campaign_id?: string | null;
   domain?: string | null;
