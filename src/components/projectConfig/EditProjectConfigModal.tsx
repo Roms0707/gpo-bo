@@ -17,6 +17,7 @@ import {
   checkDomainAvailability,
   validateEmail,
   areColorsSimilar,
+  validateDiscordUrl,
   AuthMethod,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
@@ -88,6 +89,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
   const [companyAddress, setCompanyAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
+  const [discordUrl, setDiscordUrl] = useState('');
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [originalAuthMethod, setOriginalAuthMethod] = useState<AuthMethod>('email');
@@ -117,6 +119,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setCompanyAddress(config.company_address || '');
       setPhoneNumber(config.phone_number || '');
       setRegistrationNumber(config.registration_number || '');
+      setDiscordUrl(config.discord_url || '');
       const configAuthMethod = config.auth_method || 'email';
       setAuthMethod(configAuthMethod);
       setOriginalAuthMethod(configAuthMethod);
@@ -248,6 +251,10 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       if (!registrationNumber.trim()) {
         newErrors.registrationNumber = 'Registration number is required';
       }
+
+      if (discordUrl.trim() && !validateDiscordUrl(discordUrl)) {
+        newErrors.discordUrl = 'Invalid Discord URL format. Use https://discord.gg/[invite-code]';
+      }
     }
 
     setErrors(newErrors);
@@ -360,6 +367,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         company_address: companyAddress.trim(),
         phone_number: phoneNumber.trim(),
         registration_number: registrationNumber.trim(),
+        discord_url: discordUrl.trim() || null,
       });
 
       if (error) throw error;
@@ -912,6 +920,22 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
               </p>
             </div>
 
+            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+              <h4 className="text-sm font-medium text-white mb-2">Community Links</h4>
+              <p className="text-xs text-gray-400">
+                Social and community links displayed on the Contact page
+              </p>
+            </div>
+
+            <Input
+              label="Discord Invite URL"
+              value={discordUrl}
+              onChange={(e) => setDiscordUrl(e.target.value)}
+              error={errors.discordUrl}
+              placeholder="https://discord.gg/your-server"
+              helperText="Discord server invite link for the Contact page (optional)"
+            />
+
             <div className="mt-6">
               <LegalVariablesPreview
                 supportEmail={supportEmail}
@@ -921,6 +945,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                 companyAddress={companyAddress}
                 phoneNumber={phoneNumber}
                 registrationNumber={registrationNumber}
+                discordUrl={discordUrl}
               />
             </div>
           </div>

@@ -11,9 +11,10 @@ interface LegalVariablesPreviewProps {
   companyAddress: string;
   phoneNumber: string;
   registrationNumber: string;
+  discordUrl?: string;
 }
 
-type DocumentType = 'terms' | 'privacy' | 'cookies';
+type DocumentType = 'terms' | 'privacy' | 'cookies' | 'contact';
 
 const DOCUMENT_TEMPLATES: Record<DocumentType, { title: string; template: string }> = {
   terms: {
@@ -151,6 +152,47 @@ For legal matters: {{LEGAL_EMAIL}}
 
 This Cookie Policy is provided by {{COMPANY_NAME}}, company registration number {{REGISTRATION_NUMBER}}.`,
   },
+  contact: {
+    title: 'Contact Page',
+    template: `CONTACT US
+
+We're here to help! Get in touch with us through any of the channels below.
+
+1. COMPANY INFORMATION
+
+{{COMPANY_NAME}}
+Registration Number: {{REGISTRATION_NUMBER}}
+
+2. ADDRESS
+
+{{COMPANY_ADDRESS}}
+
+3. PHONE
+
+{{PHONE_NUMBER}}
+
+4. EMAIL CONTACTS
+
+General Support: {{SUPPORT_EMAIL}}
+Legal Inquiries: {{LEGAL_EMAIL}}
+Privacy Concerns: {{PRIVACY_EMAIL}}
+
+5. COMMUNITY
+
+Join our Discord community to connect with other users, get help, and stay updated on the latest news.
+
+Discord: {{DISCORD_URL}}
+
+6. SUPPORT HOURS
+
+Our support team is available Monday through Friday, 9:00 AM to 6:00 PM (local time).
+
+For urgent matters outside of business hours, please email {{SUPPORT_EMAIL}} and we will respond as soon as possible.
+
+---
+
+{{COMPANY_NAME}} is committed to providing excellent customer service. We aim to respond to all inquiries within 24-48 business hours.`,
+  },
 };
 
 export function LegalVariablesPreview({
@@ -161,6 +203,7 @@ export function LegalVariablesPreview({
   companyAddress,
   phoneNumber,
   registrationNumber,
+  discordUrl,
 }: LegalVariablesPreviewProps) {
   const [selectedDocument, setSelectedDocument] = useState<DocumentType>('terms');
 
@@ -172,7 +215,8 @@ export function LegalVariablesPreview({
       .replace(/{{COMPANY_NAME}}/g, companyName || '[COMPANY NAME]')
       .replace(/{{COMPANY_ADDRESS}}/g, companyAddress || '[COMPANY ADDRESS]')
       .replace(/{{PHONE_NUMBER}}/g, phoneNumber || '[PHONE NUMBER]')
-      .replace(/{{REGISTRATION_NUMBER}}/g, registrationNumber || '[REGISTRATION NUMBER]');
+      .replace(/{{REGISTRATION_NUMBER}}/g, registrationNumber || '[REGISTRATION NUMBER]')
+      .replace(/{{DISCORD_URL}}/g, discordUrl || '[DISCORD URL]');
   };
 
   const highlightReplacedVariables = (text: string): JSX.Element[] => {
@@ -184,6 +228,7 @@ export function LegalVariablesPreview({
       { placeholder: '[COMPANY ADDRESS]', value: companyAddress },
       { placeholder: '[PHONE NUMBER]', value: phoneNumber },
       { placeholder: '[REGISTRATION NUMBER]', value: registrationNumber },
+      { placeholder: '[DISCORD URL]', value: discordUrl },
     ];
 
     const parts: JSX.Element[] = [];
@@ -278,6 +323,7 @@ export function LegalVariablesPreview({
             { value: 'terms', label: 'Terms of Service' },
             { value: 'privacy', label: 'Privacy Policy' },
             { value: 'cookies', label: 'Cookie Policy' },
+            { value: 'contact', label: 'Contact Page' },
           ]}
         />
       </div>

@@ -31,6 +31,7 @@ export interface ProjectConfiguration {
   company_address: string;
   phone_number: string;
   registration_number: string;
+  discord_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +61,7 @@ export interface CreateProjectConfigData {
   company_address: string;
   phone_number: string;
   registration_number: string;
+  discord_url?: string | null;
 }
 
 export interface UpdateProjectConfigData extends Partial<CreateProjectConfigData> {
@@ -142,6 +144,12 @@ export type LegalVariablePlaceholders = {
   COMPANY_ADDRESS: string;
   PHONE_NUMBER: string;
   REGISTRATION_NUMBER: string;
+  DISCORD_URL: string;
+};
+
+export const validateDiscordUrl = (url: string): boolean => {
+  if (!url || !url.trim()) return true;
+  return /^https:\/\/discord\.gg\/[a-zA-Z0-9]+$/.test(url.trim());
 };
 
 export const replaceLegalVariables = (text: string, config: ProjectConfiguration | CreateProjectConfigData): string => {
@@ -153,6 +161,7 @@ export const replaceLegalVariables = (text: string, config: ProjectConfiguration
     COMPANY_ADDRESS: config.company_address || '[COMPANY ADDRESS]',
     PHONE_NUMBER: config.phone_number || '[PHONE NUMBER]',
     REGISTRATION_NUMBER: config.registration_number || '[REGISTRATION NUMBER]',
+    DISCORD_URL: config.discord_url || '[DISCORD URL]',
   };
 
   let result = text;
