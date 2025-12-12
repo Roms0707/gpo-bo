@@ -22,6 +22,7 @@ export interface ProjectConfiguration {
   domain: string | null;
   is_default: boolean;
   auth_method: AuthMethod;
+  subscription_redirect_url: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -50,6 +51,7 @@ export interface CreateProjectConfigData {
   domain?: string | null;
   is_default?: boolean;
   auth_method?: AuthMethod;
+  subscription_redirect_url?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
   legal_email: string;
