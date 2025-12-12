@@ -2,8 +2,10 @@ import { supabase } from '../lib/supabase';
 import { validateDomainFormat, normalizeDomain } from '../utils/domainValidation';
 
 export type AuthMethod = 'email' | 'discord' | 'kliento';
+export type KlientoAuthType = 'password' | 'otp';
 
 export const AUTH_METHODS: AuthMethod[] = ['email', 'discord', 'kliento'];
+export const KLIENTO_AUTH_TYPES: KlientoAuthType[] = ['password', 'otp'];
 
 export interface ProjectConfiguration {
   id: string;
@@ -22,6 +24,7 @@ export interface ProjectConfiguration {
   domain: string | null;
   is_default: boolean;
   auth_method: AuthMethod;
+  kliento_auth_type: KlientoAuthType | null;
   subscription_redirect_url: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
@@ -52,6 +55,7 @@ export interface CreateProjectConfigData {
   domain?: string | null;
   is_default?: boolean;
   auth_method?: AuthMethod;
+  kliento_auth_type?: KlientoAuthType | null;
   subscription_redirect_url?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
@@ -375,6 +379,11 @@ export const validateAuthMethod = (authMethod: string | undefined): authMethod i
   return AUTH_METHODS.includes(authMethod as AuthMethod);
 };
 
+export const validateKlientoAuthType = (klientoAuthType: string | undefined | null): klientoAuthType is KlientoAuthType => {
+  if (!klientoAuthType) return true;
+  return KLIENTO_AUTH_TYPES.includes(klientoAuthType as KlientoAuthType);
+};
+
 export const createProjectConfiguration = async (
   configData: CreateProjectConfigData
 ): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
@@ -401,6 +410,10 @@ export const createProjectConfiguration = async (
 
     if (configData.auth_method === 'kliento' && !configData.product_id?.trim()) {
       throw new Error('Kliento authentication requires a Product ID');
+    }
+
+    if (configData.kliento_auth_type && !validateKlientoAuthType(configData.kliento_auth_type)) {
+      throw new Error('Invalid kliento_auth_type. Must be one of: password, otp');
     }
 
     const legalValidation = validateLegalFields(configData);
@@ -440,6 +453,7 @@ export const createProjectConfiguration = async (
         domain: configData.domain || null,
         is_default: configData.is_default || false,
         auth_method: configData.auth_method || 'email',
+        kliento_auth_type: configData.auth_method === 'kliento' ? (configData.kliento_auth_type || 'password') : null,
       }])
       .select()
       .single();
@@ -479,6 +493,10 @@ export const updateProjectConfiguration = async (
 
     if (configData.auth_method === 'kliento' && !configData.product_id?.trim()) {
       throw new Error('Kliento authentication requires a Product ID');
+    }
+
+    if (configData.kliento_auth_type && !validateKlientoAuthType(configData.kliento_auth_type)) {
+      throw new Error('Invalid kliento_auth_type. Must be one of: password, otp');
     }
 
     const legalValidation = validateLegalFields(configData);

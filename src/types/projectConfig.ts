@@ -1,4 +1,5 @@
 export type AuthMethod = 'email' | 'discord' | 'kliento';
+export type KlientoAuthType = 'password' | 'otp';
 
 export interface ProjectConfiguration {
   id: string;
@@ -17,6 +18,7 @@ export interface ProjectConfiguration {
   domain: string | null;
   is_default: boolean;
   auth_method: AuthMethod;
+  kliento_auth_type: KlientoAuthType | null;
   extra_metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -38,6 +40,7 @@ export interface CreateProjectConfigData {
   domain?: string | null;
   is_default?: boolean;
   auth_method?: AuthMethod;
+  kliento_auth_type?: KlientoAuthType | null;
   extra_metadata?: Record<string, any>;
 }
 

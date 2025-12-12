@@ -18,6 +18,7 @@ import {
   areColorsSimilar,
   validateDiscordUrl,
   AuthMethod,
+  KlientoAuthType,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
@@ -26,6 +27,11 @@ const AUTH_METHOD_OPTIONS: { value: AuthMethod; label: string; description: stri
   { value: 'email', label: 'Email/Password', description: 'Traditional email and password authentication', icon: <Mail className="w-4 h-4" /> },
   { value: 'discord', label: 'Discord', description: 'OAuth authentication via Discord', icon: <MessageCircle className="w-4 h-4" /> },
   { value: 'kliento', label: 'Kliento', description: 'Phone-based authentication via Kliento (requires Product ID)', icon: <Phone className="w-4 h-4" /> },
+];
+
+const KLIENTO_AUTH_TYPE_OPTIONS: { value: KlientoAuthType; label: string; description: string }[] = [
+  { value: 'password', label: 'Password', description: 'Traditional password-based login' },
+  { value: 'otp', label: 'OTP (Phone)', description: '4-digit code sent via SMS (60s expiry)' },
 ];
 
 interface AddProjectConfigModalProps {
@@ -66,6 +72,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  const [klientoAuthType, setKlientoAuthType] = useState<KlientoAuthType>('password');
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
@@ -106,6 +113,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setIsActive(true);
     setExtraMetadata('{}');
     setAuthMethod('email');
+    setKlientoAuthType('password');
     setLogoFile(null);
     setFaviconFile(null);
     setDomain('');
@@ -338,6 +346,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         is_default: isDefault,
         is_active: isActive,
         auth_method: authMethod,
+        kliento_auth_type: authMethod === 'kliento' ? klientoAuthType : null,
         subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
@@ -508,12 +517,47 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 <p className="text-xs text-error-500 mt-2">{errors.authMethod}</p>
               )}
               {authMethod === 'kliento' && (
-                <div className="flex items-start gap-2 p-3 mt-3 bg-warning-500/10 border border-warning-500/30 rounded-lg">
-                  <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-warning-400">
-                    Kliento authentication requires a Product ID. Make sure to configure it in the Integration step (Step 4).
-                  </p>
-                </div>
+                <>
+                  <div className="flex items-start gap-2 p-3 mt-3 bg-warning-500/10 border border-warning-500/30 rounded-lg">
+                    <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-warning-400">
+                      Kliento authentication requires a Product ID. Make sure to configure it in the Integration step (Step 4).
+                    </p>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                      Kliento Authentication Type
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {KLIENTO_AUTH_TYPE_OPTIONS.map((option) => (
+                        <label
+                          key={option.value}
+                          className={`
+                            flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                            ${klientoAuthType === option.value
+                              ? 'border-primary-500 bg-primary-500/10'
+                              : 'border-dark-200 bg-dark-300 hover:border-dark-100'
+                            }
+                          `}
+                        >
+                          <input
+                            type="radio"
+                            name="klientoAuthType"
+                            value={option.value}
+                            checked={klientoAuthType === option.value}
+                            onChange={(e) => setKlientoAuthType(e.target.value as KlientoAuthType)}
+                            className="mt-1 accent-primary-500"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-white text-sm">{option.label}</span>
+                            <p className="text-xs text-gray-400 mt-0.5">{option.description}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
 
