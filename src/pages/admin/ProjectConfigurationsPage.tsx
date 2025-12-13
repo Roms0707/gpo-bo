@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle, Mail, MessageCircle, Phone } from 'lucide-react';
+import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle, Mail, MessageCircle, Phone, Files } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -16,9 +16,11 @@ import {
   fetchProjectConfigurations,
   deleteProjectConfiguration,
   toggleProjectConfigurationActive,
+  duplicateProjectConfiguration,
   ProjectConfiguration,
   AuthMethod,
 } from '../../services/projectConfigService';
+import Input from '../../components/ui/Input';
 
 const AUTH_METHOD_CONFIG: Record<AuthMethod, { label: string; icon: React.ReactNode; badgeVariant: 'default' | 'primary' | 'success' }> = {
   email: { label: 'Email', icon: <Mail className="w-3 h-3" />, badgeVariant: 'default' },
@@ -40,6 +42,9 @@ const ProjectConfigurationsPage: React.FC = () => {
   const [selectedConfig, setSelectedConfig] = useState<ProjectConfiguration | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [mappingCounts, setMappingCounts] = useState<Record<string, number>>({});
+  const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const [newConfigId, setNewConfigId] = useState('');
 
   if (user?.role !== 'master_admin') {
     return (
@@ -127,6 +132,34 @@ const ProjectConfigurationsPage: React.FC = () => {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleDuplicate = async () => {
+    if (!selectedConfig || !newConfigId.trim()) return;
+
+    try {
+      setIsDuplicating(true);
+      const { error } = await duplicateProjectConfiguration(selectedConfig, newConfigId.trim());
+
+      if (error) throw error;
+
+      toast.success('Configuration duplicated successfully');
+      setIsDuplicateModalOpen(false);
+      setSelectedConfig(null);
+      setNewConfigId('');
+      loadConfigurations();
+    } catch (error) {
+      console.error('Error duplicating configuration:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to duplicate configuration');
+    } finally {
+      setIsDuplicating(false);
+    }
+  };
+
+  const openDuplicateModal = (config: ProjectConfiguration) => {
+    setSelectedConfig(config);
+    setNewConfigId(`${config.config_id}-copy`);
+    setIsDuplicateModalOpen(true);
   };
 
   const getColorPreview = (primaryColor: string, secondaryColor: string) => {
@@ -370,6 +403,14 @@ const ProjectConfigurationsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => openDuplicateModal(config)}
+                        className="p-1.5"
+                      >
+                        <Files size={14} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => {
                           setSelectedConfig(config);
                           setIsEditModalOpen(true);
@@ -600,6 +641,15 @@ const ProjectConfigurationsPage: React.FC = () => {
                           <Button
                             size="sm"
                             variant="ghost"
+                            title="Duplicate Configuration"
+                            onClick={() => openDuplicateModal(config)}
+                            className="p-1.5"
+                          >
+                            <Files size={14} />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
                             title="Edit Configuration"
                             onClick={() => {
                               setSelectedConfig(config);
@@ -711,6 +761,73 @@ const ProjectConfigurationsPage: React.FC = () => {
                   <p className="text-white">{selectedConfig.brand_name}</p>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={isDuplicateModalOpen}
+        onClose={() => {
+          setIsDuplicateModalOpen(false);
+          setSelectedConfig(null);
+          setNewConfigId('');
+        }}
+        title="Duplicate Configuration"
+        footer={
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setIsDuplicateModalOpen(false);
+                setSelectedConfig(null);
+                setNewConfigId('');
+              }}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDuplicate}
+              isLoading={isDuplicating}
+              leftIcon={<Files size={16} />}
+              disabled={!newConfigId.trim()}
+              className="w-full sm:w-auto"
+            >
+              Duplicate
+            </Button>
+          </div>
+        }
+      >
+        {selectedConfig && (
+          <div className="space-y-4">
+            <p className="text-gray-300">
+              Create a copy of this configuration with a new Config ID.
+            </p>
+            <div className="bg-dark-200 p-3 md:p-4 rounded-lg">
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs md:text-sm text-gray-400">Source Config:</span>
+                  <p className="font-mono text-white text-sm truncate">{selectedConfig.config_id}</p>
+                </div>
+                <div>
+                  <span className="text-xs md:text-sm text-gray-400">Name:</span>
+                  <p className="text-white text-sm truncate">{selectedConfig.config_name}</p>
+                </div>
+              </div>
+            </div>
+            <Input
+              label="New Config ID"
+              value={newConfigId}
+              onChange={(e) => setNewConfigId(e.target.value.toLowerCase())}
+              placeholder="new-config-id"
+              helperText="Lowercase alphanumeric with hyphens (3-50 chars)"
+              required
+            />
+            <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-3">
+              <p className="text-xs md:text-sm text-primary-300">
+                The duplicate will be created as inactive with no domain assigned. You can edit it after creation.
+              </p>
             </div>
           </div>
         )}

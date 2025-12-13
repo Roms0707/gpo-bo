@@ -626,3 +626,62 @@ export const toggleProjectConfigurationActive = async (
     return { data: null, error: error as Error };
   }
 };
+
+export const duplicateProjectConfiguration = async (
+  sourceConfig: ProjectConfiguration,
+  newConfigId: string
+): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
+  try {
+    if (!validateConfigId(newConfigId)) {
+      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens (3-50 chars)');
+    }
+
+    const existingConfig = await fetchProjectConfigurationByConfigId(newConfigId);
+    if (existingConfig.data) {
+      throw new Error(`Configuration with config_id "${newConfigId}" already exists`);
+    }
+
+    const duplicateData: CreateProjectConfigData = {
+      config_id: newConfigId,
+      config_name: `${sourceConfig.config_name} (Copy)`,
+      brand_name: sourceConfig.brand_name,
+      logo_path: sourceConfig.logo_path,
+      favicon_path: sourceConfig.favicon_path,
+      logo_alt_text: sourceConfig.logo_alt_text,
+      primary_color: sourceConfig.primary_color,
+      secondary_color: sourceConfig.secondary_color,
+      accent_color: sourceConfig.accent_color,
+      product_id: sourceConfig.product_id,
+      campaign_id: sourceConfig.campaign_id,
+      subscription_redirect_url: sourceConfig.subscription_redirect_url,
+      domain: null,
+      is_default: false,
+      is_active: false,
+      auth_method: sourceConfig.auth_method || 'email',
+      kliento_auth_type: sourceConfig.kliento_auth_type,
+      kliento_otp_sms_template: sourceConfig.kliento_otp_sms_template,
+      extra_metadata: sourceConfig.extra_metadata || {},
+      support_email: sourceConfig.support_email,
+      legal_email: sourceConfig.legal_email,
+      privacy_email: sourceConfig.privacy_email,
+      company_name: sourceConfig.company_name,
+      company_address: sourceConfig.company_address,
+      phone_number: sourceConfig.phone_number,
+      registration_number: sourceConfig.registration_number,
+      discord_url: sourceConfig.discord_url,
+    };
+
+    const { data, error } = await supabase
+      .from('project_configurations')
+      .insert([duplicateData])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return { data: data as ProjectConfiguration, error: null };
+  } catch (error) {
+    console.error('Error duplicating project configuration:', error);
+    return { data: null, error: error as Error };
+  }
+};
