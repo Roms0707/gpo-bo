@@ -6,7 +6,7 @@ export type KlientoAuthType = 'password' | 'otp';
 
 export const AUTH_METHODS: AuthMethod[] = ['email', 'discord', 'kliento'];
 export const KLIENTO_AUTH_TYPES: KlientoAuthType[] = ['password', 'otp'];
-export const DEFAULT_OTP_SMS_TEMPLATE = 'Your OTP is {{OTP_CODE}}';
+export const DEFAULT_OTP_SMS_TEMPLATE = '{{BRAND_NAME}}: Your OTP is {{OTP_CODE}}';
 export const OTP_SMS_TEMPLATE_MAX_LENGTH = 160;
 
 export interface ProjectConfiguration {

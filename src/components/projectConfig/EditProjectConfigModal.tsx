@@ -593,15 +593,19 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                           text-white
                           focus:outline-none focus:ring-2 focus:ring-primary-500
                         `}
-                        placeholder="Your OTP is {{OTP_CODE}}"
+                        placeholder="{{BRAND_NAME}}: Your OTP is {{OTP_CODE}}"
                       />
                       {errors.klientoOtpSmsTemplate && (
                         <p className="text-xs text-error-500 mt-1">{errors.klientoOtpSmsTemplate}</p>
                       )}
                       <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-gray-400">
-                          Use <code className="bg-dark-200 px-1 py-0.5 rounded text-primary-400">{'{{OTP_CODE}}'}</code> where the verification code should appear
-                        </p>
+                        <div className="text-xs text-gray-400">
+                          <span>Available placeholders: </span>
+                          <code className="bg-dark-200 px-1 py-0.5 rounded text-primary-400">{'{{OTP_CODE}}'}</code>
+                          <span className="text-gray-500"> (required)</span>
+                          <span className="mx-1">and</span>
+                          <code className="bg-dark-200 px-1 py-0.5 rounded text-primary-400">{'{{BRAND_NAME}}'}</code>
+                        </div>
                         <span className={`text-xs ${klientoOtpSmsTemplate.length > OTP_SMS_TEMPLATE_MAX_LENGTH ? 'text-warning-500' : 'text-gray-500'}`}>
                           {klientoOtpSmsTemplate.length}/{OTP_SMS_TEMPLATE_MAX_LENGTH}
                         </span>
@@ -614,6 +618,16 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                           </p>
                         </div>
                       )}
+                      <div className="mt-3 p-3 bg-dark-200 rounded-lg border border-dark-100">
+                        <p className="text-xs text-gray-400 mb-2">Preview:</p>
+                        <div className="bg-gray-700 rounded-2xl rounded-tl-sm px-3 py-2 max-w-[280px]">
+                          <p className="text-sm text-white break-words">
+                            {klientoOtpSmsTemplate
+                              .replace(/\{\{BRAND_NAME\}\}/g, brandName || 'Brand')
+                              .replace(/\{\{OTP_CODE\}\}/g, '1234')}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
