@@ -1070,7 +1070,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
       title="Create Project Configuration"
       size="4xl"
       footer={
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0">
           <div>
             {currentStep > 1 && (
               <Button
@@ -1078,19 +1078,21 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 onClick={handlePrevious}
                 leftIcon={<ArrowLeft size={16} />}
                 disabled={isSubmitting}
+                className="w-full sm:w-auto"
               >
                 Previous
               </Button>
             )}
           </div>
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button variant="ghost" onClick={handleClose} disabled={isSubmitting} className="w-full sm:w-auto order-2 sm:order-1">
               Cancel
             </Button>
             {currentStep < STEPS.length ? (
               <Button
                 onClick={handleNext}
                 rightIcon={<ArrowRight size={16} />}
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
                 Next
               </Button>
@@ -1099,15 +1101,17 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 onClick={handleSubmit}
                 isLoading={isSubmitting}
                 leftIcon={<Plus size={16} />}
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
-                Create Configuration
+                <span className="hidden sm:inline">Create Configuration</span>
+                <span className="sm:hidden">Create</span>
               </Button>
             )}
           </div>
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <WizardStepIndicator
           steps={STEPS}
           currentStep={currentStep}
@@ -1115,7 +1119,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
           onStepClick={handleStepClick}
         />
 
-        <div className="min-h-[400px]">
+        <div className="min-h-[300px] md:min-h-[400px]">
           {renderStep()}
         </div>
       </div>

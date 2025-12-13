@@ -103,3 +103,13 @@
 .bracket-container::-webkit-scrollbar-thumb:hover {
   background: rgba(96, 165, 250, 0.8);
 }
+
+/* Hide scrollbar utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
