@@ -6,6 +6,8 @@ export type KlientoAuthType = 'password' | 'otp';
 
 export const AUTH_METHODS: AuthMethod[] = ['email', 'discord', 'kliento'];
 export const KLIENTO_AUTH_TYPES: KlientoAuthType[] = ['password', 'otp'];
+export const DEFAULT_OTP_SMS_TEMPLATE = 'Your OTP is {{OTP_CODE}}';
+export const OTP_SMS_TEMPLATE_MAX_LENGTH = 160;
 
 export interface ProjectConfiguration {
   id: string;
@@ -25,6 +27,7 @@ export interface ProjectConfiguration {
   is_default: boolean;
   auth_method: AuthMethod;
   kliento_auth_type: KlientoAuthType | null;
+  kliento_otp_sms_template: string | null;
   subscription_redirect_url: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
@@ -56,6 +59,7 @@ export interface CreateProjectConfigData {
   is_default?: boolean;
   auth_method?: AuthMethod;
   kliento_auth_type?: KlientoAuthType | null;
+  kliento_otp_sms_template?: string | null;
   subscription_redirect_url?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
@@ -154,6 +158,16 @@ export type LegalVariablePlaceholders = {
 export const validateDiscordUrl = (url: string): boolean => {
   if (!url || !url.trim()) return true;
   return /^https:\/\/discord\.gg\/[a-zA-Z0-9]+$/.test(url.trim());
+};
+
+export const validateOtpSmsTemplate = (template: string): { valid: boolean; error?: string } => {
+  if (!template || !template.trim()) {
+    return { valid: false, error: 'SMS template is required' };
+  }
+  if (!template.includes('{{OTP_CODE}}')) {
+    return { valid: false, error: 'SMS template must contain {{OTP_CODE}} placeholder' };
+  }
+  return { valid: true };
 };
 
 export const replaceLegalVariables = (text: string, config: ProjectConfiguration | CreateProjectConfigData): string => {
@@ -416,6 +430,14 @@ export const createProjectConfiguration = async (
       throw new Error('Invalid kliento_auth_type. Must be one of: password, otp');
     }
 
+    if (configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp') {
+      const template = configData.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE;
+      const templateValidation = validateOtpSmsTemplate(template);
+      if (!templateValidation.valid) {
+        throw new Error(templateValidation.error);
+      }
+    }
+
     const legalValidation = validateLegalFields(configData);
     if (!legalValidation.valid) {
       throw new Error(legalValidation.error);
@@ -445,6 +467,8 @@ export const createProjectConfiguration = async (
       throw new Error(`Configuration with config_id "${configData.config_id}" already exists`);
     }
 
+    const isKlientoOtp = configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp';
+
     const { data, error } = await supabase
       .from('project_configurations')
       .insert([{
@@ -454,6 +478,7 @@ export const createProjectConfiguration = async (
         is_default: configData.is_default || false,
         auth_method: configData.auth_method || 'email',
         kliento_auth_type: configData.auth_method === 'kliento' ? (configData.kliento_auth_type || 'password') : null,
+        kliento_otp_sms_template: isKlientoOtp ? (configData.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE) : null,
       }])
       .select()
       .single();
@@ -499,6 +524,14 @@ export const updateProjectConfiguration = async (
       throw new Error('Invalid kliento_auth_type. Must be one of: password, otp');
     }
 
+    if (configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp') {
+      const template = configData.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE;
+      const templateValidation = validateOtpSmsTemplate(template);
+      if (!templateValidation.valid) {
+        throw new Error(templateValidation.error);
+      }
+    }
+
     const legalValidation = validateLegalFields(configData);
     if (!legalValidation.valid) {
       throw new Error(legalValidation.error);
@@ -524,6 +557,10 @@ export const updateProjectConfiguration = async (
     }
 
     const { id, ...updateData } = configData;
+    const isKlientoOtp = configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp';
+    if (!isKlientoOtp && updateData.kliento_otp_sms_template !== undefined) {
+      updateData.kliento_otp_sms_template = null;
+    }
 
     const { data, error } = await supabase
       .from('project_configurations')

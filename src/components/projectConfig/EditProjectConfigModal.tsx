@@ -18,8 +18,11 @@ import {
   validateEmail,
   areColorsSimilar,
   validateDiscordUrl,
+  validateOtpSmsTemplate,
   AuthMethod,
   KlientoAuthType,
+  DEFAULT_OTP_SMS_TEMPLATE,
+  OTP_SMS_TEMPLATE_MAX_LENGTH,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
@@ -99,6 +102,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
 
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [klientoAuthType, setKlientoAuthType] = useState<KlientoAuthType>('password');
+  const [klientoOtpSmsTemplate, setKlientoOtpSmsTemplate] = useState(DEFAULT_OTP_SMS_TEMPLATE);
   const [originalAuthMethod, setOriginalAuthMethod] = useState<AuthMethod>('email');
   const [showAuthChangeConfirm, setShowAuthChangeConfirm] = useState(false);
   const [pendingAuthMethod, setPendingAuthMethod] = useState<AuthMethod | null>(null);
@@ -130,6 +134,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       const configAuthMethod = config.auth_method || 'email';
       setAuthMethod(configAuthMethod);
       setKlientoAuthType(config.kliento_auth_type || 'password');
+      setKlientoOtpSmsTemplate(config.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE);
       setOriginalAuthMethod(configAuthMethod);
       setPendingAuthMethod(null);
       setShowAuthChangeConfirm(false);
@@ -186,6 +191,13 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
 
       if (authMethod === 'kliento' && !productId.trim()) {
         newErrors.authMethod = 'Kliento authentication requires a Product ID (configure in Integration step)';
+      }
+
+      if (authMethod === 'kliento' && klientoAuthType === 'otp') {
+        const templateValidation = validateOtpSmsTemplate(klientoOtpSmsTemplate);
+        if (!templateValidation.valid) {
+          newErrors.klientoOtpSmsTemplate = templateValidation.error || 'Invalid SMS template';
+        }
       }
     }
 
@@ -367,6 +379,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         is_active: isActive,
         auth_method: authMethod,
         kliento_auth_type: authMethod === 'kliento' ? klientoAuthType : null,
+        kliento_otp_sms_template: authMethod === 'kliento' && klientoAuthType === 'otp' ? klientoOtpSmsTemplate.trim() : null,
         subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
@@ -563,6 +576,46 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                       ))}
                     </div>
                   </div>
+
+                  {klientoAuthType === 'otp' && (
+                    <div className="mt-4">
+                      <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                        SMS Template <span className="text-error-500">*</span>
+                      </label>
+                      <textarea
+                        value={klientoOtpSmsTemplate}
+                        onChange={(e) => setKlientoOtpSmsTemplate(e.target.value)}
+                        className={`
+                          w-full px-3 py-2 min-h-[80px] text-xs md:text-sm
+                          bg-dark-300
+                          border ${errors.klientoOtpSmsTemplate ? 'border-error-500' : klientoOtpSmsTemplate.length > OTP_SMS_TEMPLATE_MAX_LENGTH ? 'border-warning-500' : 'border-dark-200'}
+                          rounded-lg
+                          text-white
+                          focus:outline-none focus:ring-2 focus:ring-primary-500
+                        `}
+                        placeholder="Your OTP is {{OTP_CODE}}"
+                      />
+                      {errors.klientoOtpSmsTemplate && (
+                        <p className="text-xs text-error-500 mt-1">{errors.klientoOtpSmsTemplate}</p>
+                      )}
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs text-gray-400">
+                          Use <code className="bg-dark-200 px-1 py-0.5 rounded text-primary-400">{'{{OTP_CODE}}'}</code> where the verification code should appear
+                        </p>
+                        <span className={`text-xs ${klientoOtpSmsTemplate.length > OTP_SMS_TEMPLATE_MAX_LENGTH ? 'text-warning-500' : 'text-gray-500'}`}>
+                          {klientoOtpSmsTemplate.length}/{OTP_SMS_TEMPLATE_MAX_LENGTH}
+                        </span>
+                      </div>
+                      {klientoOtpSmsTemplate.length > OTP_SMS_TEMPLATE_MAX_LENGTH && (
+                        <div className="flex items-start gap-2 mt-2 p-2 bg-warning-500/10 border border-warning-500/30 rounded-lg">
+                          <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-warning-400">
+                            Messages over 160 characters may be split into multiple SMS, which could affect delivery and cost.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </div>
