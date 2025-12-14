@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon, Video } from 'lucide-react';
+import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon, Video, Type } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -82,6 +82,8 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
   const [subscriptionRedirectUrl, setSubscriptionRedirectUrl] = useState('');
   const [subscriptionUrlWarning, setSubscriptionUrlWarning] = useState('');
   const [defaultTrailerUrl, setDefaultTrailerUrl] = useState('');
+  const [typewriterPhrase1, setTypewriterPhrase1] = useState('');
+  const [typewriterPhrase2, setTypewriterPhrase2] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
 
@@ -121,6 +123,8 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setSubscriptionRedirectUrl(config.subscription_redirect_url || '');
       setSubscriptionUrlWarning('');
       setDefaultTrailerUrl(config.default_trailer_url || '');
+      setTypewriterPhrase1(config.typewriter_phrase_1 || '');
+      setTypewriterPhrase2(config.typewriter_phrase_2 || '');
       setIsActive(config.is_active);
       setDomain(config.domain || '');
       setIsDefault(config.is_default || false);
@@ -384,6 +388,8 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         kliento_otp_sms_template: authMethod === 'kliento' && klientoAuthType === 'otp' ? klientoOtpSmsTemplate.trim() : null,
         subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
         default_trailer_url: defaultTrailerUrl.trim() || null,
+        typewriter_phrase_1: typewriterPhrase1.trim() || null,
+        typewriter_phrase_2: typewriterPhrase2.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
         legal_email: legalEmail.trim(),
@@ -841,6 +847,39 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                 </>
               )}
             </div>
+
+            <div className="mt-6 pt-6 border-t border-dark-200">
+              <h4 className="text-sm font-medium text-white mb-4">Media & Content</h4>
+
+              <Input
+                label="Default Trailer URL"
+                value={defaultTrailerUrl}
+                onChange={(e) => setDefaultTrailerUrl(e.target.value)}
+                placeholder="https://example.com/default-trailer.mp4"
+                helperText="Default video trailer shown in the hero carousel when no game/tournament trailer is available"
+                leftIcon={<Video className="w-4 h-4 text-gray-400" />}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4">
+                <Input
+                  label="Typewriter Phrase 1"
+                  value={typewriterPhrase1}
+                  onChange={(e) => setTypewriterPhrase1(e.target.value)}
+                  placeholder="Play. Compete. Win."
+                  helperText="First animated phrase in hero section"
+                  leftIcon={<Type className="w-4 h-4 text-gray-400" />}
+                />
+
+                <Input
+                  label="Typewriter Phrase 2"
+                  value={typewriterPhrase2}
+                  onChange={(e) => setTypewriterPhrase2(e.target.value)}
+                  placeholder="Join the competition!"
+                  helperText="Second animated phrase in hero section"
+                  leftIcon={<Type className="w-4 h-4 text-gray-400" />}
+                />
+              </div>
+            </div>
           </div>
         );
 
@@ -895,15 +934,6 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                 )}
               </div>
             )}
-
-            <Input
-              label="Default Trailer URL"
-              value={defaultTrailerUrl}
-              onChange={(e) => setDefaultTrailerUrl(e.target.value)}
-              placeholder="https://example.com/default-trailer.mp4"
-              helperText="Default video trailer shown in the hero carousel when no game/tournament trailer is available"
-              leftIcon={<Video className="w-4 h-4 text-gray-400" />}
-            />
 
             <div className="mt-3 md:mt-4">
               <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">

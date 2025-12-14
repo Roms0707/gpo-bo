@@ -30,6 +30,8 @@ export interface ProjectConfiguration {
   kliento_otp_sms_template: string | null;
   subscription_redirect_url: string | null;
   default_trailer_url: string | null;
+  typewriter_phrase_1: string | null;
+  typewriter_phrase_2: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -63,6 +65,8 @@ export interface CreateProjectConfigData {
   kliento_otp_sms_template?: string | null;
   subscription_redirect_url?: string | null;
   default_trailer_url?: string | null;
+  typewriter_phrase_1?: string | null;
+  typewriter_phrase_2?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -657,6 +661,8 @@ export const duplicateProjectConfiguration = async (
       campaign_id: sourceConfig.campaign_id,
       subscription_redirect_url: sourceConfig.subscription_redirect_url,
       default_trailer_url: sourceConfig.default_trailer_url,
+      typewriter_phrase_1: sourceConfig.typewriter_phrase_1,
+      typewriter_phrase_2: sourceConfig.typewriter_phrase_2,
       domain: null,
       is_default: false,
       is_active: false,
