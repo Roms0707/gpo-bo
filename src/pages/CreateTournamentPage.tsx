@@ -357,6 +357,7 @@ const CreateTournamentPage: React.FC = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
+        const selectedGame = games.find(g => g.id === selectedGameId);
         return (
           <TournamentBasicInfo
             tournamentType={tournamentType}
@@ -375,6 +376,7 @@ const CreateTournamentPage: React.FC = () => {
             setMaxPlayersPerTeam={setMaxPlayersPerTeam}
             isFeatured={isFeatured}
             setIsFeatured={setIsFeatured}
+            selectedGameTrailerUrl={selectedGame?.trailer_url}
           />
         );
       case 2:

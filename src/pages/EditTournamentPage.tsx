@@ -13,6 +13,7 @@ import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../compone
 import Select from '../components/ui/Select';
 import Checkbox from '../components/ui/Checkbox';
 import Modal from '../components/ui/Modal';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 import PrizeManager from '../components/tournament/PrizeManager';
 import CountrySelector from '../components/tournament/CountrySelector';
 import { countries } from '../../src/data/countries';
@@ -60,7 +61,9 @@ const EditTournamentPage: React.FC = () => {
   const [eligibleCountries, setEligibleCountries] = useState<string[]>([]);
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
   const [isFeatured, setIsFeatured] = useState(false);
-  
+  const [showFeaturedConfirmModal, setShowFeaturedConfirmModal] = useState(false);
+  const [pendingFeaturedAction, setPendingFeaturedAction] = useState<'enable' | 'disable' | null>(null);
+
   // Step 2: Game Information
   const [selectedGameId, setSelectedGameId] = useState('');
   const [selectedBattleRoyaleGame, setSelectedBattleRoyaleGame] = useState('');
@@ -377,6 +380,30 @@ const EditTournamentPage: React.FC = () => {
     setPreview(null);
   };
 
+  const handleFeaturedToggleClick = () => {
+    const newAction = isFeatured ? 'disable' : 'enable';
+    setPendingFeaturedAction(newAction);
+    setShowFeaturedConfirmModal(true);
+  };
+
+  const handleFeaturedConfirm = () => {
+    if (pendingFeaturedAction === 'enable') {
+      setIsFeatured(true);
+    } else if (pendingFeaturedAction === 'disable') {
+      setIsFeatured(false);
+    }
+    setShowFeaturedConfirmModal(false);
+    setPendingFeaturedAction(null);
+  };
+
+  const handleFeaturedCancel = () => {
+    setShowFeaturedConfirmModal(false);
+    setPendingFeaturedAction(null);
+  };
+
+  const selectedGameForTrailer = games.find(g => g.id === selectedGameId);
+  const hasTrailerUrl = selectedGameForTrailer?.trailer_url && selectedGameForTrailer.trailer_url.trim() !== '';
+
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     try {
       if (!file) return null;
@@ -665,7 +692,7 @@ const EditTournamentPage: React.FC = () => {
             type="button"
             role="switch"
             aria-checked={isFeatured}
-            onClick={() => setIsFeatured(!isFeatured)}
+            onClick={handleFeaturedToggleClick}
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
               transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-300
@@ -1103,6 +1130,33 @@ const EditTournamentPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmationModal
+        isOpen={showFeaturedConfirmModal}
+        onClose={handleFeaturedCancel}
+        onConfirm={handleFeaturedConfirm}
+        title={pendingFeaturedAction === 'enable' ? 'Enable Featured Tournament' : 'Remove from Featured'}
+        message={
+          pendingFeaturedAction === 'enable' ? (
+            <div className="space-y-3">
+              <p>This tournament will appear in the hero carousel on the homepage, giving it prominent visibility to all users.</p>
+              {!hasTrailerUrl && (
+                <div className="flex items-start gap-2 p-3 bg-warning-900/20 border border-warning-500/30 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-warning-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-warning-300">
+                    The selected game does not have a trailer URL configured. The featured tournament will display without a video background.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            'This tournament will be removed from the hero carousel and will no longer have featured visibility on the homepage.'
+          )
+        }
+        confirmText={pendingFeaturedAction === 'enable' ? 'Enable' : 'Remove'}
+        cancelText="Cancel"
+        isDestructive={pendingFeaturedAction === 'disable'}
+      />
     </div>
   );
 };
