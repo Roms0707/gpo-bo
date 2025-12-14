@@ -16,8 +16,9 @@ import Modal from '../components/ui/Modal';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import PrizeManager from '../components/tournament/PrizeManager';
 import CountrySelector from '../components/tournament/CountrySelector';
+import { ProjectConfigSelector } from '../components/tournament/ProjectConfigSelector';
 import { countries } from '../../src/data/countries';
-import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle, Star } from 'lucide-react';
+import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle, Star, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Database } from '../types/supabase';
 
@@ -61,6 +62,7 @@ const EditTournamentPage: React.FC = () => {
   const [eligibleCountries, setEligibleCountries] = useState<string[]>([]);
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [configId, setConfigId] = useState<string | null>(null);
   const [showFeaturedConfirmModal, setShowFeaturedConfirmModal] = useState(false);
   const [pendingFeaturedAction, setPendingFeaturedAction] = useState<'enable' | 'disable' | null>(null);
 
@@ -249,8 +251,13 @@ const EditTournamentPage: React.FC = () => {
           console.log('DEBUG: Setting for non-Battle Royale - selectedGameId:', data.game_id, 'selectedBattleRoyaleGame: cleared');
         }
         
-        // Load eligible countries if they exist
-        if (data.eligible_countries) {
+        // Load config_id if it exists
+        if (data.config_id) {
+          setConfigId(data.config_id);
+        }
+
+        // Load eligible countries if they exist (only if no config_id)
+        if (data.eligible_countries && !data.config_id) {
           setEligibleCountries(data.eligible_countries.split(','));
         }
         
@@ -380,6 +387,15 @@ const EditTournamentPage: React.FC = () => {
     setPreview(null);
   };
 
+  const handleConfigChange = (newConfigId: string | null) => {
+    setConfigId(newConfigId);
+    if (newConfigId !== null) {
+      setEligibleCountries([]);
+    }
+  };
+
+  const isCountrySelectorDisabled = configId !== null;
+
   const handleFeaturedToggleClick = () => {
     const newAction = isFeatured ? 'disable' : 'enable';
     setPendingFeaturedAction(newAction);
@@ -466,7 +482,7 @@ const EditTournamentPage: React.FC = () => {
       }
       
       const devicesString = compatibleDevices.length > 0 ? compatibleDevices.join(',') : null;
-      const countriesString = eligibleCountries.length > 0 ? eligibleCountries.join(',') : null;
+      const countriesString = configId ? null : (eligibleCountries.length > 0 ? eligibleCountries.join(',') : null);
       
       // Prepare tournament format string with player count information
       let finalTournamentFormat = tournamentFormat;
@@ -516,10 +532,11 @@ const EditTournamentPage: React.FC = () => {
         allow_backups: allowBackups,
         max_backup_players: allowBackups && maxBackupPlayers ? parseInt(maxBackupPlayers) : null,
         is_featured: isFeatured,
+        config_id: configId,
       });
-      
+
       if (result.error) throw result.error;
-      
+
       // Update field values if needed
       if (JSON.stringify(selectedFields.sort()) !== JSON.stringify((await supabase
         .from('tournament_field_values')
@@ -710,18 +727,42 @@ const EditTournamentPage: React.FC = () => {
         </div>
       </div>
 
-      <div>
+      <ProjectConfigSelector
+        value={configId}
+        onChange={handleConfigChange}
+        label="Project Configuration"
+        helpText="Select a project to limit this tournament to a specific frontend, or choose Worldwide for all projects."
+      />
+
+      <div className={isCountrySelectorDisabled ? 'opacity-50' : ''}>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Eligible Countries
         </label>
-        <CountrySelector
-          selectedCountries={eligibleCountries}
-          onChange={setEligibleCountries}
-          countries={countries}
-        />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Select countries eligible for this tournament. Leave empty to allow all countries.
-        </p>
+        {isCountrySelectorDisabled ? (
+          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-blue-300 font-medium">Country restrictions overridden</p>
+                <p className="text-xs text-blue-400/80 mt-1">
+                  When a project configuration is selected, country eligibility is managed by the project.
+                  Select "Worldwide (All Projects)" to manually configure country restrictions.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <CountrySelector
+              selectedCountries={eligibleCountries}
+              onChange={setEligibleCountries}
+              countries={countries}
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Select countries eligible for this tournament. Leave empty to allow all countries.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

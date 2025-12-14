@@ -46,6 +46,7 @@ const CreateTournamentPage: React.FC = () => {
   const [eligibleCountries, setEligibleCountries] = useState<string[]>([]);
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [configId, setConfigId] = useState<string | null>(null);
   
   // Step 2: Game Information
   const [selectedGameId, setSelectedGameId] = useState('');
@@ -242,7 +243,7 @@ const CreateTournamentPage: React.FC = () => {
       }
       
       const devicesString = compatibleDevices.length > 0 ? compatibleDevices.join(',') : null;
-      const countriesString = eligibleCountries.length > 0 ? eligibleCountries.join(',') : null;
+      const countriesString = configId ? null : (eligibleCountries.length > 0 ? eligibleCountries.join(',') : null);
       
       // Prepare tournament format string with player count information
       let finalTournamentFormat = tournamentFormat;
@@ -292,6 +293,7 @@ const CreateTournamentPage: React.FC = () => {
         allow_backups: allowBackups,
         max_backup_players: allowBackups && maxBackupPlayers ? parseInt(maxBackupPlayers) : null,
         is_featured: isFeatured,
+        config_id: configId,
       });
       
       if (result.error) throw result.error;
@@ -377,6 +379,8 @@ const CreateTournamentPage: React.FC = () => {
             isFeatured={isFeatured}
             setIsFeatured={setIsFeatured}
             selectedGameTrailerUrl={selectedGame?.trailer_url}
+            configId={configId}
+            setConfigId={setConfigId}
           />
         );
       case 2:

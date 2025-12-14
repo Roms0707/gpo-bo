@@ -18,7 +18,7 @@ interface TournamentState {
   deleteTournament: (id: string) => Promise<void>;
   updateTournamentRules: (id: string, rules: string) => Promise<void>;
   updateBracketStatus: (id: string, status: 'draft' | 'live') => Promise<void>;
-  duplicateTournament: (id: string) => Promise<{ data: Tournament; error: null } | { data: null; error: any }>;
+  duplicateTournament: (id: string, targetConfigId?: string | null) => Promise<{ data: Tournament; error: null } | { data: null; error: any }>;
   resetBracket: (id: string) => Promise<boolean>;
 }
 
@@ -347,7 +347,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
     }
   },
 
-  duplicateTournament: async (id) => {
+  duplicateTournament: async (id, targetConfigId) => {
     try {
       set({ isLoading: true, error: null });
 
@@ -399,7 +399,9 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         compatible_devices: sourceTournament.compatible_devices,
         discord_url: sourceTournament.discord_url,
         tournament_format: sourceTournament.tournament_format,
-        eligible_countries: sourceTournament.eligible_countries,
+        eligible_countries: targetConfigId !== undefined
+          ? (targetConfigId ? null : sourceTournament.eligible_countries)
+          : sourceTournament.eligible_countries,
         minimum_age: sourceTournament.minimum_age,
         required_documents_under_18: sourceTournament.required_documents_under_18,
         max_players_per_team: sourceTournament.max_players_per_team,
@@ -413,6 +415,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         actual_participants: null,
         registration_locked: false,
         bracket_launched_at: null,
+        config_id: targetConfigId !== undefined ? targetConfigId : sourceTournament.config_id,
       };
 
       const { data: newTournament, error: createError } = await supabase

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Globe, ArrowLeft, Star, AlertTriangle } from 'lucide-react';
+import { Globe, ArrowLeft, Star, AlertTriangle, Building2, Info } from 'lucide-react';
 import Input from '../ui/Input';
 import RadioGroup from '../ui/RadioGroup';
 import CountrySelector from './CountrySelector';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import { ProjectConfigSelector } from './ProjectConfigSelector';
 import { countries } from '../../data/countries';
 
 interface TournamentBasicInfoProps {
@@ -24,6 +25,8 @@ interface TournamentBasicInfoProps {
   isFeatured: boolean;
   setIsFeatured: (featured: boolean) => void;
   selectedGameTrailerUrl?: string | null;
+  configId: string | null;
+  setConfigId: (configId: string | null) => void;
 }
 
 const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
@@ -43,10 +46,21 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
   setMaxPlayersPerTeam,
   isFeatured,
   setIsFeatured,
-  selectedGameTrailerUrl
+  selectedGameTrailerUrl,
+  configId,
+  setConfigId,
 }) => {
   const [showFeaturedConfirmModal, setShowFeaturedConfirmModal] = useState(false);
   const [pendingFeaturedAction, setPendingFeaturedAction] = useState<'enable' | 'disable' | null>(null);
+
+  const handleConfigChange = (newConfigId: string | null) => {
+    setConfigId(newConfigId);
+    if (newConfigId !== null) {
+      setEligibleCountries([]);
+    }
+  };
+
+  const isCountrySelectorDisabled = configId !== null;
 
   const handleFeaturedToggleClick = () => {
     const newAction = isFeatured ? 'disable' : 'enable';
@@ -198,18 +212,42 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
         </div>
       </div>
 
-      <div>
+      <ProjectConfigSelector
+        value={configId}
+        onChange={handleConfigChange}
+        label="Project Configuration"
+        helpText="Select a project to limit this tournament to a specific frontend, or choose Worldwide for all projects."
+      />
+
+      <div className={isCountrySelectorDisabled ? 'opacity-50' : ''}>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Eligible Countries
         </label>
-        <CountrySelector 
-          selectedCountries={eligibleCountries}
-          onChange={setEligibleCountries}
-          countries={countries}
-        />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Select countries eligible for this tournament. Leave empty to allow all countries.
-        </p>
+        {isCountrySelectorDisabled ? (
+          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-blue-300 font-medium">Country restrictions overridden</p>
+                <p className="text-xs text-blue-400/80 mt-1">
+                  When a project configuration is selected, country eligibility is managed by the project.
+                  Select "Worldwide (All Projects)" to manually configure country restrictions.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <CountrySelector
+              selectedCountries={eligibleCountries}
+              onChange={setEligibleCountries}
+              countries={countries}
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Select countries eligible for this tournament. Leave empty to allow all countries.
+            </p>
+          </>
+        )}
       </div>
 
       <ConfirmationModal

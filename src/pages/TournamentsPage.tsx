@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Search, Eye, Edit, Trash2, Trophy, Twitch, TowerControl as GameController, Calendar, Clock, Users, Filter, Book, Copy } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, Trophy, Twitch, TowerControl as GameController, Calendar, Clock, Users, Filter, Book, Copy, Globe, Building2 } from 'lucide-react';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useGameStore } from '../store/gameStore';
 import Button from '../components/ui/Button';
@@ -10,9 +10,11 @@ import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import TournamentRulesModal from '../components/tournament/TournamentRulesModal';
+import { ProjectConfigSelector } from '../components/tournament/ProjectConfigSelector';
 import { formatDate } from '../utils/dateUtils';
 import { useAuthStore } from '../store/authStore';
 import { getCountryDisplay } from '../utils/countryUtils';
+import { fetchProjectConfigurationByConfigId, ProjectConfiguration } from '../services/projectConfigService';
 
 const TournamentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,10 +37,34 @@ const TournamentsPage: React.FC = () => {
   const [selectedTournamentForRules, setSelectedTournamentForRules] = useState<any>(null);
   const [isSavingRules, setIsSavingRules] = useState(false);
 
+  // Duplicate with config selection
+  const [duplicateTargetConfigId, setDuplicateTargetConfigId] = useState<string | null>(null);
+
+  // Config cache for badges
+  const [configsCache, setConfigsCache] = useState<Record<string, ProjectConfiguration>>({});
+
   useEffect(() => {
     fetchTournaments();
     fetchGames();
   }, []);
+
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      const configIds = [...new Set(tournaments.map(t => t.config_id).filter(Boolean))] as string[];
+      const missingIds = configIds.filter(id => !configsCache[id]);
+
+      for (const configId of missingIds) {
+        const result = await fetchProjectConfigurationByConfigId(configId);
+        if (result.data) {
+          setConfigsCache(prev => ({ ...prev, [configId]: result.data! }));
+        }
+      }
+    };
+
+    if (tournaments.length > 0) {
+      fetchConfigs();
+    }
+  }, [tournaments]);
 
   const filteredTournaments = tournaments.filter(tournament => {
     const matchesSearch = tournament.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -79,18 +105,42 @@ const TournamentsPage: React.FC = () => {
   };
 
   const handleDuplicateClick = (id: string) => {
+    const tournament = tournaments.find(t => t.id === id);
     setSelectedTournamentForDuplicate(id);
+    setDuplicateTargetConfigId(tournament?.config_id || null);
     setDuplicateModalOpen(true);
   };
 
   const confirmDuplicate = async () => {
     if (selectedTournamentForDuplicate) {
-      const result = await duplicateTournament(selectedTournamentForDuplicate);
+      const result = await duplicateTournament(selectedTournamentForDuplicate, duplicateTargetConfigId);
       setDuplicateModalOpen(false);
+      setDuplicateTargetConfigId(null);
       if (result.data) {
         navigate(`/tournaments/edit/${result.data.id}`);
       }
     }
+  };
+
+  const getConfigBadge = (configId: string | null) => {
+    if (!configId) {
+      return (
+        <div className="flex items-center gap-1">
+          <Globe size={14} className="text-blue-400" />
+          <span className="text-xs text-blue-400">Worldwide</span>
+        </div>
+      );
+    }
+
+    const config = configsCache[configId];
+    return (
+      <div className="flex items-center gap-1">
+        <Building2 size={14} className="text-emerald-400" />
+        <span className="text-xs text-emerald-400 truncate max-w-[100px]">
+          {config?.brand_name || configId}
+        </span>
+      </div>
+    );
   };
 
   const getStatusBadge = (status: string) => {
@@ -163,7 +213,8 @@ const TournamentsPage: React.FC = () => {
             <div className="flex flex-wrap gap-2 mb-3 mt-2">
               {getStatusBadge(tournament.status)}
               {getTypeBadge(tournament.type)}
-              {(() => {
+              {getConfigBadge(tournament.config_id)}
+              {!tournament.config_id && (() => {
                 const countryInfo = getCountryDisplay(tournament.eligible_countries);
                 return countryInfo ? (
                   <div className="flex items-center">
@@ -272,6 +323,9 @@ const TournamentsPage: React.FC = () => {
               Game
             </th>
             <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+              Project
+            </th>
+            <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden xl:table-cell">
               Country
             </th>
             <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
@@ -325,7 +379,12 @@ const TournamentsPage: React.FC = () => {
                 </div>
               </td>
               <td className="px-3 py-4 whitespace-nowrap hidden lg:table-cell">
-                {(() => {
+                {getConfigBadge(tournament.config_id)}
+              </td>
+              <td className="px-3 py-4 whitespace-nowrap hidden xl:table-cell">
+                {tournament.config_id ? (
+                  <span className="text-gray-400 text-xs italic">Overridden</span>
+                ) : (() => {
                   const countryInfo = getCountryDisplay(tournament.eligible_countries);
                   return countryInfo ? (
                     <div className="flex items-center">
@@ -535,11 +594,17 @@ const TournamentsPage: React.FC = () => {
 
       <Modal
         isOpen={duplicateModalOpen}
-        onClose={() => setDuplicateModalOpen(false)}
-        title="Confirm Duplication"
+        onClose={() => {
+          setDuplicateModalOpen(false);
+          setDuplicateTargetConfigId(null);
+        }}
+        title="Duplicate Tournament"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button variant="ghost" onClick={() => setDuplicateModalOpen(false)}>
+            <Button variant="ghost" onClick={() => {
+              setDuplicateModalOpen(false);
+              setDuplicateTargetConfigId(null);
+            }}>
               Cancel
             </Button>
             <Button variant="primary" onClick={confirmDuplicate} isLoading={isLoading}>
@@ -548,7 +613,20 @@ const TournamentsPage: React.FC = () => {
           </div>
         }
       >
-        <p className="text-white">Are you sure you want to duplicate this tournament? A copy will be created and you will be redirected to edit it.</p>
+        <div className="space-y-4">
+          <p className="text-gray-300">
+            A copy of this tournament will be created and you will be redirected to edit it.
+          </p>
+
+          <div className="pt-2">
+            <ProjectConfigSelector
+              value={duplicateTargetConfigId}
+              onChange={(configId) => setDuplicateTargetConfigId(configId)}
+              label="Target Project Configuration"
+              helpText="Select the project for the duplicated tournament. Choosing a specific project will override country restrictions."
+            />
+          </div>
+        </div>
       </Modal>
       
       {/* Tournament Rules Modal */}

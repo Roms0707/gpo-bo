@@ -135,6 +135,7 @@ export interface Database {
           registration_locked: boolean
           bracket_launched_at: string | null
           is_featured: boolean | null
+          config_id: string | null
         }
         Insert: {
           id?: string
@@ -175,6 +176,7 @@ export interface Database {
           registration_locked?: boolean
           bracket_launched_at?: string | null
           is_featured?: boolean | null
+          config_id?: string | null
         }
         Update: {
           id?: string
@@ -215,6 +217,7 @@ export interface Database {
           registration_locked?: boolean
           bracket_launched_at?: string | null
           is_featured?: boolean | null
+          config_id?: string | null
         }
       }
       tournament_prizes: {

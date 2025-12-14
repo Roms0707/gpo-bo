@@ -9,9 +9,10 @@ import Badge from '../components/ui/Badge';
 import PrizeDisplay from '../components/tournament/PrizeDisplay';
 import TournamentRulesModal from '../components/tournament/TournamentRulesModal';
 import BattleRoyaleLeaderboard from '../components/battleRoyale/BattleRoyaleLeaderboard';
-import { Calendar, Users, Trophy, Twitch, MessageSquare, Gamepad, ArrowLeft, Edit, Clock, Globe, AlertTriangle, CheckCircle, MapPin, TowerControl as GameController, User, FileText, Book, Copy, Check, Key, Lock, Unlock, Target } from 'lucide-react';
+import { Calendar, Users, Trophy, Twitch, MessageSquare, Gamepad, ArrowLeft, Edit, Clock, Globe, AlertTriangle, CheckCircle, MapPin, TowerControl as GameController, User, FileText, Book, Copy, Check, Key, Lock, Unlock, Target, Building2 } from 'lucide-react';
 import { Database } from '../types/supabase';
 import { formatDateWithTime } from '../utils/dateUtils';
+import { fetchProjectConfigurationByConfigId, ProjectConfiguration } from '../services/projectConfigService';
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import toast from 'react-hot-toast';
 import { getRegistrationStatus, getRegistrationStatusLabel, getRegistrationStatusColor } from '../utils/tournamentValidation';
@@ -59,6 +60,7 @@ const TournamentDetailPage: React.FC = () => {
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isSavingRules, setIsSavingRules] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfiguration | null>(null);
 
   const isBattleRoyaleTournament = () => {
     return tournament?.tournament_format === 'Battle Royale';
@@ -133,6 +135,21 @@ const TournamentDetailPage: React.FC = () => {
       fetchTournamentDetails();
     }
   }, [id, games]);
+
+  useEffect(() => {
+    const loadProjectConfig = async () => {
+      if (tournament?.config_id) {
+        const result = await fetchProjectConfigurationByConfigId(tournament.config_id);
+        if (result.data) {
+          setProjectConfig(result.data);
+        }
+      } else {
+        setProjectConfig(null);
+      }
+    };
+
+    loadProjectConfig();
+  }, [tournament?.config_id]);
 
   const fetchGamePublisherIds = async (gameId: string) => {
     try {
@@ -265,8 +282,12 @@ const TournamentDetailPage: React.FC = () => {
   };
   
   const getEligibleCountries = () => {
+    if (tournament?.config_id) {
+      return null;
+    }
+
     if (!tournament?.eligible_countries) return 'All countries';
-    
+
     const countryMap: Record<string, string> = {
       'US': 'United States',
       'CA': 'Canada',
@@ -287,7 +308,7 @@ const TournamentDetailPage: React.FC = () => {
       'SG': 'Singapore',
       'AE': 'United Arab Emirates'
     };
-    
+
     return tournament.eligible_countries
       .split(',')
       .map(code => countryMap[code] || code)
@@ -709,15 +730,50 @@ const TournamentDetailPage: React.FC = () => {
               <div>
                 <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Eligibility Requirements</h3>
                 <div className="space-y-2">
-                  <div className="flex items-start">
-                    <Globe className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Eligible Countries</p>
-                      <p className="text-gray-700 dark:text-gray-300">
-                        {getEligibleCountries()}
-                      </p>
+                  {tournament.config_id ? (
+                    <div className="flex items-start">
+                      <Building2 className="h-5 w-5 text-emerald-500 mr-2 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Project Configuration</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-emerald-400 font-medium">
+                            {projectConfig?.brand_name || tournament.config_id}
+                          </span>
+                          <Badge variant="secondary" className="text-xs">
+                            {tournament.config_id}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Country restrictions are managed by the project configuration
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-start">
+                      <Globe className="h-5 w-5 text-blue-400 mr-2 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Project Scope</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-blue-400 font-medium">Worldwide</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Tournament is visible on all frontends
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!tournament.config_id && (
+                    <div className="flex items-start">
+                      <Globe className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Eligible Countries</p>
+                        <p className="text-gray-700 dark:text-gray-300">
+                          {getEligibleCountries()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="flex items-start">
                     <Users className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
