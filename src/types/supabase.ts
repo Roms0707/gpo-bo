@@ -134,6 +134,7 @@ export interface Database {
           actual_participants: number | null
           registration_locked: boolean
           bracket_launched_at: string | null
+          is_featured: boolean | null
         }
         Insert: {
           id?: string
@@ -173,6 +174,7 @@ export interface Database {
           actual_participants?: number | null
           registration_locked?: boolean
           bracket_launched_at?: string | null
+          is_featured?: boolean | null
         }
         Update: {
           id?: string
@@ -212,6 +214,7 @@ export interface Database {
           actual_participants?: number | null
           registration_locked?: boolean
           bracket_launched_at?: string | null
+          is_featured?: boolean | null
         }
       }
       tournament_prizes: {
@@ -354,6 +357,7 @@ export interface Database {
           created_at: string
           has_an_api: boolean | null
           api_key: string | null
+          trailer_url: string | null
         }
         Insert: {
           id?: string
@@ -363,6 +367,7 @@ export interface Database {
           created_at?: string
           has_an_api?: boolean | null
           api_key?: string | null
+          trailer_url?: string | null
         }
         Update: {
           id?: string
@@ -372,6 +377,7 @@ export interface Database {
           created_at?: string
           has_an_api?: boolean | null
           api_key?: string | null
+          trailer_url?: string | null
         }
       }
       teams: {
