@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe, ArrowLeft } from 'lucide-react';
+import { Globe, ArrowLeft, Star } from 'lucide-react';
 import Input from '../ui/Input';
 import RadioGroup from '../ui/RadioGroup';
 import CountrySelector from './CountrySelector';
@@ -20,6 +20,8 @@ interface TournamentBasicInfoProps {
   setEligibleCountries: (countries: string[]) => void;
   maxPlayersPerTeam: number;
   setMaxPlayersPerTeam: (count: number) => void;
+  isFeatured: boolean;
+  setIsFeatured: (featured: boolean) => void;
 }
 
 const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
@@ -36,7 +38,9 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
   eligibleCountries,
   setEligibleCountries,
   maxPlayersPerTeam,
-  setMaxPlayersPerTeam
+  setMaxPlayersPerTeam,
+  isFeatured,
+  setIsFeatured
 }) => {
   return (
     <div className="space-y-6">
@@ -126,7 +130,45 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
           placeholder="Describe your tournament..."
         />
       </div>
-      
+
+      <div className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-lg">
+              <Star className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <label htmlFor="featured-toggle" className="block text-sm font-medium text-white cursor-pointer">
+                Featured Tournament
+              </label>
+              <p className="text-xs text-gray-400">
+                Featured tournaments appear in the hero carousel on the homepage
+              </p>
+            </div>
+          </div>
+          <button
+            id="featured-toggle"
+            type="button"
+            role="switch"
+            aria-checked={isFeatured}
+            onClick={() => setIsFeatured(!isFeatured)}
+            className={`
+              relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+              transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-300
+              ${isFeatured ? 'bg-amber-500' : 'bg-dark-200'}
+            `}
+          >
+            <span
+              className={`
+                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                transition duration-200 ease-in-out
+                ${isFeatured ? 'translate-x-5' : 'translate-x-0'}
+              `}
+            />
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Eligible Countries

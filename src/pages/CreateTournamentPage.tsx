@@ -45,6 +45,7 @@ const CreateTournamentPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [eligibleCountries, setEligibleCountries] = useState<string[]>([]);
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
+  const [isFeatured, setIsFeatured] = useState(false);
   
   // Step 2: Game Information
   const [selectedGameId, setSelectedGameId] = useState('');
@@ -273,7 +274,7 @@ const CreateTournamentPage: React.FC = () => {
         registration_start_date: registrationStartDate || null,
         registration_end_date: registrationEndDate || null,
         created_by: user.id,
-        status: new Date() < new Date(startDate) ? 'upcoming' : 
+        status: new Date() < new Date(startDate) ? 'upcoming' :
                 (new Date() >= new Date(startDate) && new Date() <= new Date(endDate)) ? 'active' : 'past',
         icon_url: iconUrl,
         header_url: headerUrl,
@@ -290,6 +291,7 @@ const CreateTournamentPage: React.FC = () => {
         max_nb_players: parseInt(maxNbPlayers) || null,
         allow_backups: allowBackups,
         max_backup_players: allowBackups && maxBackupPlayers ? parseInt(maxBackupPlayers) : null,
+        is_featured: isFeatured,
       });
       
       if (result.error) throw result.error;
@@ -371,6 +373,8 @@ const CreateTournamentPage: React.FC = () => {
             setEligibleCountries={setEligibleCountries}
             maxPlayersPerTeam={maxPlayersPerTeam}
             setMaxPlayersPerTeam={setMaxPlayersPerTeam}
+            isFeatured={isFeatured}
+            setIsFeatured={setIsFeatured}
           />
         );
       case 2:

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Edit, Trash2, Upload, X, User, Key } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Upload, X, User, Key, Video } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -34,7 +34,8 @@ const GamesPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [hasApi, setHasApi] = useState(false);
   const [apiKey, setApiKey] = useState('');
-  
+  const [trailerUrl, setTrailerUrl] = useState('');
+
   // Edit form state
   const [editGameName, setEditGameName] = useState('');
   const [editPublisherName, setEditPublisherName] = useState('');
@@ -42,6 +43,7 @@ const GamesPage: React.FC = () => {
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [editHasApi, setEditHasApi] = useState(false);
   const [editApiKey, setEditApiKey] = useState('');
+  const [editTrailerUrl, setEditTrailerUrl] = useState('');
   
   // Publisher IDs state
   const [publisherIds, setPublisherIds] = useState<GamePublisherId[]>([]);
@@ -140,6 +142,7 @@ const GamesPage: React.FC = () => {
         image_url: imageUrl,
         has_an_api: hasApi,
         api_key: hasApi ? apiKey : null,
+        trailer_url: trailerUrl || null,
       });
       
       if (error) throw error;
@@ -182,6 +185,7 @@ const GamesPage: React.FC = () => {
       setEditImageFile(null);
       setEditHasApi(gameToEdit.has_an_api || false);
       setEditApiKey(gameToEdit.api_key || '');
+      setEditTrailerUrl(gameToEdit.trailer_url || '');
       setIsEditModalOpen(true);
     }
   };
@@ -218,6 +222,7 @@ const GamesPage: React.FC = () => {
         image_url: imageUrl,
         has_an_api: editHasApi,
         api_key: editHasApi ? editApiKey : null,
+        trailer_url: editTrailerUrl || null,
       });
       
       // Reset form and close modal
@@ -254,6 +259,7 @@ const GamesPage: React.FC = () => {
     setImagePreview(null);
     setHasApi(false);
     setApiKey('');
+    setTrailerUrl('');
   };
   
   const resetEditForm = () => {
@@ -263,6 +269,7 @@ const GamesPage: React.FC = () => {
     setEditImagePreview(null);
     setEditHasApi(false);
     setEditApiKey('');
+    setEditTrailerUrl('');
     setSelectedGameId(null);
     setPublisherIds([]);
     setNewPublisherIdLabel('');
@@ -546,6 +553,15 @@ const GamesPage: React.FC = () => {
             </div>
           </div>
 
+          <Input
+            label="Trailer URL"
+            value={trailerUrl}
+            onChange={(e) => setTrailerUrl(e.target.value)}
+            placeholder="https://example.com/trailer.mp4"
+            leftIcon={<Video className="h-5 w-5 text-gray-400" />}
+            helperText="Video URL for the game trailer (used in hero carousel)"
+          />
+
           <div className="space-y-2">
             <div className="flex items-center">
               <input
@@ -559,7 +575,7 @@ const GamesPage: React.FC = () => {
                 Game has an API
               </label>
             </div>
-            
+
             {hasApi && (
               <Input
                 label="API Key"
@@ -570,7 +586,7 @@ const GamesPage: React.FC = () => {
               />
             )}
           </div>
-          
+
           <div className="pt-2 border-t border-gray-200 dark:border-dark-200 mt-4">
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
               After creating the game, you'll be able to add publisher ID types that players need to provide.
@@ -660,6 +676,15 @@ const GamesPage: React.FC = () => {
             </div>
           </div>
 
+          <Input
+            label="Trailer URL"
+            value={editTrailerUrl}
+            onChange={(e) => setEditTrailerUrl(e.target.value)}
+            placeholder="https://example.com/trailer.mp4"
+            leftIcon={<Video className="h-5 w-5 text-gray-400" />}
+            helperText="Video URL for the game trailer (used in hero carousel)"
+          />
+
           <div className="space-y-2">
             <div className="flex items-center">
               <input
@@ -673,7 +698,7 @@ const GamesPage: React.FC = () => {
                 Game has an API
               </label>
             </div>
-            
+
             {editHasApi && (
               <Input
                 label="API Key"
@@ -684,7 +709,7 @@ const GamesPage: React.FC = () => {
               />
             )}
           </div>
-          
+
           {/* Publisher IDs section */}
           <div className="pt-4 border-t border-gray-200 dark:border-dark-200 mt-4">
             <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">

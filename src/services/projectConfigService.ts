@@ -29,6 +29,7 @@ export interface ProjectConfiguration {
   kliento_auth_type: KlientoAuthType | null;
   kliento_otp_sms_template: string | null;
   subscription_redirect_url: string | null;
+  default_trailer_url: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -61,6 +62,7 @@ export interface CreateProjectConfigData {
   kliento_auth_type?: KlientoAuthType | null;
   kliento_otp_sms_template?: string | null;
   subscription_redirect_url?: string | null;
+  default_trailer_url?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -654,6 +656,7 @@ export const duplicateProjectConfiguration = async (
       product_id: sourceConfig.product_id,
       campaign_id: sourceConfig.campaign_id,
       subscription_redirect_url: sourceConfig.subscription_redirect_url,
+      default_trailer_url: sourceConfig.default_trailer_url,
       domain: null,
       is_default: false,
       is_active: false,

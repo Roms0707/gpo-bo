@@ -16,7 +16,7 @@ import Modal from '../components/ui/Modal';
 import PrizeManager from '../components/tournament/PrizeManager';
 import CountrySelector from '../components/tournament/CountrySelector';
 import { countries } from '../../src/data/countries';
-import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle } from 'lucide-react';
+import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Database } from '../types/supabase';
 
@@ -59,6 +59,7 @@ const EditTournamentPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [eligibleCountries, setEligibleCountries] = useState<string[]>([]);
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
+  const [isFeatured, setIsFeatured] = useState(false);
   
   // Step 2: Game Information
   const [selectedGameId, setSelectedGameId] = useState('');
@@ -264,11 +265,14 @@ const EditTournamentPage: React.FC = () => {
         if (data.compatible_devices) {
           setCompatibleDevices(data.compatible_devices.split(','));
         }
-        
+
         // Load private server code if it exists
         if (data.private_server_code) {
           setPrivateServerCode(data.private_server_code);
         }
+
+        // Load is_featured if it exists
+        setIsFeatured(data.is_featured || false);
         
         // Set image previews from existing URLs
         if (data.icon_url) {
@@ -466,7 +470,7 @@ const EditTournamentPage: React.FC = () => {
         end_date: endDate,
         registration_start_date: registrationStartDate || null,
         registration_end_date: registrationEndDate || null,
-        status: new Date() < new Date(startDate) ? 'upcoming' : 
+        status: new Date() < new Date(startDate) ? 'upcoming' :
                (new Date() >= new Date(startDate) && new Date() <= new Date(endDate)) ? 'active' : 'past',
         icon_url: iconUrl,
         header_url: headerUrl,
@@ -484,6 +488,7 @@ const EditTournamentPage: React.FC = () => {
         private_server_code: privateServerCode || null,
         allow_backups: allowBackups,
         max_backup_players: allowBackups && maxBackupPlayers ? parseInt(maxBackupPlayers) : null,
+        is_featured: isFeatured,
       });
       
       if (result.error) throw result.error;
@@ -639,12 +644,50 @@ const EditTournamentPage: React.FC = () => {
           placeholder="Describe your tournament..."
         />
       </div>
-      
+
+      <div className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 rounded-lg">
+              <Star className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <label htmlFor="featured-toggle-edit" className="block text-sm font-medium text-white cursor-pointer">
+                Featured Tournament
+              </label>
+              <p className="text-xs text-gray-400">
+                Featured tournaments appear in the hero carousel on the homepage
+              </p>
+            </div>
+          </div>
+          <button
+            id="featured-toggle-edit"
+            type="button"
+            role="switch"
+            aria-checked={isFeatured}
+            onClick={() => setIsFeatured(!isFeatured)}
+            className={`
+              relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+              transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-300
+              ${isFeatured ? 'bg-amber-500' : 'bg-dark-200'}
+            `}
+          >
+            <span
+              className={`
+                pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                transition duration-200 ease-in-out
+                ${isFeatured ? 'translate-x-5' : 'translate-x-0'}
+              `}
+            />
+          </button>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Eligible Countries
         </label>
-        <CountrySelector 
+        <CountrySelector
           selectedCountries={eligibleCountries}
           onChange={setEligibleCountries}
           countries={countries}
