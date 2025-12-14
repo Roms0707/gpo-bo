@@ -16,6 +16,8 @@ import TournamentBasicInfo from '../components/tournament/TournamentBasicInfo';
 import TournamentGameInfo from '../components/tournament/TournamentGameInfo';
 import TournamentRegistrationInfo from '../components/tournament/TournamentRegistrationInfo';
 import PrizeManager from '../components/tournament/PrizeManager';
+import TournamentFeaturedInfo from '../components/tournament/TournamentFeaturedInfo';
+import { gameTrailerService } from '../services/gameTrailerService';
 
 interface Prize {
   position: number;
@@ -35,7 +37,7 @@ const CreateTournamentPage: React.FC = () => {
   
   // Step management
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
   
   // Step 1: Basic Information
   const [tournamentType, setTournamentType] = useState<'solo' | 'team'>('solo');
@@ -79,7 +81,12 @@ const CreateTournamentPage: React.FC = () => {
   
   // Step 4: Prizes
   const [prizes, setPrizes] = useState<Prize[]>([]);
-  
+
+  // Step 5: Featured Tournament
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [featuredVideoUrl, setFeaturedVideoUrl] = useState('');
+  const [featuredTitle, setFeaturedTitle] = useState('');
+
   // Image uploads
   const [iconFile, setIconFile] = useState<File | null>(null);
   const [headerFile, setHeaderFile] = useState<File | null>(null);
@@ -333,17 +340,32 @@ const CreateTournamentPage: React.FC = () => {
           field_id: fieldId,
           value: 'default'
         }));
-        
+
         const { error: fieldValueError } = await supabase
           .from('tournament_field_values')
           .insert(fieldValues);
-          
+
         if (fieldValueError) {
           console.error('Error saving field values:', fieldValueError);
           toast.error('Tournament created but failed to save custom field values');
         }
       }
-      
+
+      if (isFeatured && featuredVideoUrl && newTournament) {
+        const { error: trailerError } = await gameTrailerService.create({
+          tournament_id: newTournament.id,
+          game_id: finalGameId || '',
+          video_url: featuredVideoUrl,
+          is_featured: true,
+          title: featuredTitle || null,
+        });
+
+        if (trailerError) {
+          console.error('Error saving game trailer:', trailerError);
+          toast.error('Tournament created but failed to save featured trailer');
+        }
+      }
+
       toast.success('Tournament created successfully!');
       navigate('/');
     } catch (error) {
@@ -453,6 +475,17 @@ const CreateTournamentPage: React.FC = () => {
             />
           </div>
         );
+      case 5:
+        return (
+          <TournamentFeaturedInfo
+            isFeatured={isFeatured}
+            setIsFeatured={setIsFeatured}
+            videoUrl={featuredVideoUrl}
+            setVideoUrl={setFeaturedVideoUrl}
+            featuredTitle={featuredTitle}
+            setFeaturedTitle={setFeaturedTitle}
+          />
+        );
       default:
         return null;
     }
@@ -472,6 +505,11 @@ const CreateTournamentPage: React.FC = () => {
       case 3:
         return startDate !== '' && endDate !== '';
       case 4:
+        return true;
+      case 5:
+        if (isFeatured) {
+          return featuredVideoUrl.trim() !== '';
+        }
         return true;
       default:
         return false;

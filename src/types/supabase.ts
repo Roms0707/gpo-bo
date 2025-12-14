@@ -1612,6 +1612,44 @@ export interface Database {
           created_at?: string
         }
       }
+      game_trailers: {
+        Row: {
+          id: string
+          tournament_id: string
+          game_id: string
+          video_url: string
+          is_featured: boolean
+          is_default: boolean
+          title: string | null
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tournament_id: string
+          game_id: string
+          video_url: string
+          is_featured?: boolean
+          is_default?: boolean
+          title?: string | null
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tournament_id?: string
+          game_id?: string
+          video_url?: string
+          is_featured?: boolean
+          is_default?: boolean
+          title?: string | null
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
