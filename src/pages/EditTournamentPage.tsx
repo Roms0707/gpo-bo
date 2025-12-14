@@ -15,8 +15,6 @@ import Checkbox from '../components/ui/Checkbox';
 import Modal from '../components/ui/Modal';
 import PrizeManager from '../components/tournament/PrizeManager';
 import CountrySelector from '../components/tournament/CountrySelector';
-import TournamentFeaturedInfo from '../components/tournament/TournamentFeaturedInfo';
-import { gameTrailerService } from '../services/gameTrailerService';
 import { countries } from '../../src/data/countries';
 import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -46,7 +44,7 @@ const EditTournamentPage: React.FC = () => {
   // Modal and step management
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
   
   // Tournament state
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -93,13 +91,7 @@ const EditTournamentPage: React.FC = () => {
   
   // Step 4: Prizes
   const [prizes, setPrizes] = useState<Prize[]>([]);
-
-  // Step 5: Featured Tournament
-  const [isFeatured, setIsFeatured] = useState(false);
-  const [featuredVideoUrl, setFeaturedVideoUrl] = useState('');
-  const [featuredTitle, setFeaturedTitle] = useState('');
-  const [existingTrailerId, setExistingTrailerId] = useState<string | null>(null);
-
+  
   // Private server code
   const [privateServerCode, setPrivateServerCode] = useState('');
   
@@ -296,20 +288,11 @@ const EditTournamentPage: React.FC = () => {
           .from('tournament_field_values')
           .select('field_id')
           .eq('tournament_id', id);
-
+          
         if (!fieldError && fieldValues) {
           setSelectedFields(fieldValues.map(fv => fv.field_id));
         }
-
-        // Load existing game trailer
-        const existingTrailer = await gameTrailerService.getByTournamentId(id);
-        if (existingTrailer) {
-          setExistingTrailerId(existingTrailer.id);
-          setIsFeatured(existingTrailer.is_featured);
-          setFeaturedVideoUrl(existingTrailer.video_url || '');
-          setFeaturedTitle(existingTrailer.title || '');
-        }
-
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching tournament:', error);
@@ -526,41 +509,13 @@ const EditTournamentPage: React.FC = () => {
             field_id: fieldId,
             value: 'default'
           }));
-
+          
           await supabase
             .from('tournament_field_values')
             .insert(fieldValues);
         }
       }
-
-      // Handle game trailer
-      if (existingTrailerId) {
-        const { error: trailerError } = await gameTrailerService.update(existingTrailerId, {
-          is_featured: isFeatured,
-          video_url: featuredVideoUrl,
-          title: featuredTitle || null,
-          game_id: finalGameId || undefined,
-        });
-
-        if (trailerError) {
-          console.error('Error updating game trailer:', trailerError);
-          toast.error('Tournament updated but failed to update featured trailer');
-        }
-      } else if (isFeatured && featuredVideoUrl) {
-        const { error: trailerError } = await gameTrailerService.create({
-          tournament_id: id!,
-          game_id: finalGameId || '',
-          video_url: featuredVideoUrl,
-          is_featured: true,
-          title: featuredTitle || null,
-        });
-
-        if (trailerError) {
-          console.error('Error creating game trailer:', trailerError);
-          toast.error('Tournament updated but failed to save featured trailer');
-        }
-      }
-
+      
       toast.success('Tournament updated successfully!');
       handleCloseModal();
     } catch (error) {
@@ -967,17 +922,6 @@ const EditTournamentPage: React.FC = () => {
     </div>
   );
 
-  const renderStep5 = () => (
-    <TournamentFeaturedInfo
-      isFeatured={isFeatured}
-      setIsFeatured={setIsFeatured}
-      videoUrl={featuredVideoUrl}
-      setVideoUrl={setFeaturedVideoUrl}
-      featuredTitle={featuredTitle}
-      setFeaturedTitle={setFeaturedTitle}
-    />
-  );
-
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -988,8 +932,6 @@ const EditTournamentPage: React.FC = () => {
         return renderStep3();
       case 4:
         return renderStep4();
-      case 5:
-        return renderStep5();
       default:
         return renderStep1();
     }
@@ -1007,11 +949,6 @@ const EditTournamentPage: React.FC = () => {
       case 3:
         return startDate !== '' && endDate !== '';
       case 4:
-        return true;
-      case 5:
-        if (isFeatured) {
-          return featuredVideoUrl.trim() !== '';
-        }
         return true;
       default:
         return false;
