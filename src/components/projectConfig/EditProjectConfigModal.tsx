@@ -28,7 +28,7 @@ import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidat
 import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
 import SearchableCountrySelect from '../ui/SearchableCountrySelect';
-import { isValidCountryIsoFromAll } from '../../data/allCountries';
+import { isValidCountryIsoFromAll, getDialCodeNumeric } from '../../data/allCountries';
 
 const AUTH_METHOD_OPTIONS: { value: AuthMethod; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'email', label: 'Email/Password', description: 'Traditional email and password authentication', icon: <Mail className="w-4 h-4" /> },
@@ -371,6 +371,10 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         faviconPath = faviconResult.path;
       }
 
+      const isKlientoOtp = authMethod === 'kliento' && klientoAuthType === 'otp';
+      const phoneCountryIso = isKlientoOtp ? defaultPhoneCountryIso : null;
+      const phoneCountryCode = phoneCountryIso ? getDialCodeNumeric(phoneCountryIso) : null;
+
       const { error } = await updateProjectConfiguration({
         id: config.id,
         config_name: configName.trim(),
@@ -388,8 +392,9 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         is_active: isActive,
         auth_method: authMethod,
         kliento_auth_type: authMethod === 'kliento' ? klientoAuthType : null,
-        kliento_otp_sms_template: authMethod === 'kliento' && klientoAuthType === 'otp' ? klientoOtpSmsTemplate.trim() : null,
-        default_phone_country_iso: authMethod === 'kliento' && klientoAuthType === 'otp' ? defaultPhoneCountryIso : null,
+        kliento_otp_sms_template: isKlientoOtp ? klientoOtpSmsTemplate.trim() : null,
+        default_phone_country_iso: phoneCountryIso,
+        default_phone_country_code: phoneCountryCode,
         subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),

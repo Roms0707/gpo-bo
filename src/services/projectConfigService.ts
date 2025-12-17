@@ -29,6 +29,7 @@ export interface ProjectConfiguration {
   kliento_auth_type: KlientoAuthType | null;
   kliento_otp_sms_template: string | null;
   default_phone_country_iso: string | null;
+  default_phone_country_code: string | null;
   subscription_redirect_url: string | null;
   default_trailer_url: string | null;
   typewriter_phrase_1: string | null;
@@ -65,6 +66,7 @@ export interface CreateProjectConfigData {
   kliento_auth_type?: KlientoAuthType | null;
   kliento_otp_sms_template?: string | null;
   default_phone_country_iso?: string | null;
+  default_phone_country_code?: string | null;
   subscription_redirect_url?: string | null;
   default_trailer_url?: string | null;
   typewriter_phrase_1?: string | null;
@@ -678,6 +680,7 @@ export const duplicateProjectConfiguration = async (
       kliento_auth_type: sourceConfig.kliento_auth_type,
       kliento_otp_sms_template: sourceConfig.kliento_otp_sms_template,
       default_phone_country_iso: sourceConfig.default_phone_country_iso,
+      default_phone_country_code: sourceConfig.default_phone_country_code,
       extra_metadata: sourceConfig.extra_metadata || {},
       support_email: sourceConfig.support_email,
       legal_email: sourceConfig.legal_email,

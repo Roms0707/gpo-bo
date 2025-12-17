@@ -315,6 +315,12 @@ export function getCountryByIso(iso: string): CountryData | undefined {
   return allCountries.find(c => c.value === iso);
 }
 
+export function getDialCodeNumeric(iso: string): string | null {
+  const country = allCountries.find(c => c.value === iso);
+  if (!country) return null;
+  return country.dialCode.replace(/^\+/, '');
+}
+
 export function isValidCountryIsoFromAll(iso: string): boolean {
   return allCountries.some(c => c.value === iso);
 }
