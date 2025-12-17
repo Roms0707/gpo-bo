@@ -1,0 +1,320 @@
+export interface CountryData {
+  value: string;
+  label: string;
+  flag: string;
+  dialCode: string;
+}
+
+export const popularCountries: CountryData[] = [
+  { value: 'CI', label: "Cote d'Ivoire", flag: '🇨🇮', dialCode: '+225' },
+  { value: 'SN', label: 'Senegal', flag: '🇸🇳', dialCode: '+221' },
+  { value: 'CM', label: 'Cameroon', flag: '🇨🇲', dialCode: '+237' },
+  { value: 'ML', label: 'Mali', flag: '🇲🇱', dialCode: '+223' },
+  { value: 'BF', label: 'Burkina Faso', flag: '🇧🇫', dialCode: '+226' },
+  { value: 'GN', label: 'Guinea', flag: '🇬🇳', dialCode: '+224' },
+  { value: 'BJ', label: 'Benin', flag: '🇧🇯', dialCode: '+229' },
+  { value: 'TG', label: 'Togo', flag: '🇹🇬', dialCode: '+228' },
+  { value: 'NE', label: 'Niger', flag: '🇳🇪', dialCode: '+227' },
+  { value: 'GA', label: 'Gabon', flag: '🇬🇦', dialCode: '+241' },
+  { value: 'CD', label: 'DR Congo', flag: '🇨🇩', dialCode: '+243' },
+  { value: 'CG', label: 'Congo', flag: '🇨🇬', dialCode: '+242' },
+  { value: 'MA', label: 'Morocco', flag: '🇲🇦', dialCode: '+212' },
+  { value: 'DZ', label: 'Algeria', flag: '🇩🇿', dialCode: '+213' },
+  { value: 'TN', label: 'Tunisia', flag: '🇹🇳', dialCode: '+216' },
+];
+
+export const allCountries: CountryData[] = [
+  { value: 'AF', label: 'Afghanistan', flag: '🇦🇫', dialCode: '+93' },
+  { value: 'AL', label: 'Albania', flag: '🇦🇱', dialCode: '+355' },
+  { value: 'DZ', label: 'Algeria', flag: '🇩🇿', dialCode: '+213' },
+  { value: 'AS', label: 'American Samoa', flag: '🇦🇸', dialCode: '+1684' },
+  { value: 'AD', label: 'Andorra', flag: '🇦🇩', dialCode: '+376' },
+  { value: 'AO', label: 'Angola', flag: '🇦🇴', dialCode: '+244' },
+  { value: 'AI', label: 'Anguilla', flag: '🇦🇮', dialCode: '+1264' },
+  { value: 'AG', label: 'Antigua and Barbuda', flag: '🇦🇬', dialCode: '+1268' },
+  { value: 'AR', label: 'Argentina', flag: '🇦🇷', dialCode: '+54' },
+  { value: 'AM', label: 'Armenia', flag: '🇦🇲', dialCode: '+374' },
+  { value: 'AW', label: 'Aruba', flag: '🇦🇼', dialCode: '+297' },
+  { value: 'AU', label: 'Australia', flag: '🇦🇺', dialCode: '+61' },
+  { value: 'AT', label: 'Austria', flag: '🇦🇹', dialCode: '+43' },
+  { value: 'AZ', label: 'Azerbaijan', flag: '🇦🇿', dialCode: '+994' },
+  { value: 'BS', label: 'Bahamas', flag: '🇧🇸', dialCode: '+1242' },
+  { value: 'BH', label: 'Bahrain', flag: '🇧🇭', dialCode: '+973' },
+  { value: 'BD', label: 'Bangladesh', flag: '🇧🇩', dialCode: '+880' },
+  { value: 'BB', label: 'Barbados', flag: '🇧🇧', dialCode: '+1246' },
+  { value: 'BY', label: 'Belarus', flag: '🇧🇾', dialCode: '+375' },
+  { value: 'BE', label: 'Belgium', flag: '🇧🇪', dialCode: '+32' },
+  { value: 'BZ', label: 'Belize', flag: '🇧🇿', dialCode: '+501' },
+  { value: 'BJ', label: 'Benin', flag: '🇧🇯', dialCode: '+229' },
+  { value: 'BM', label: 'Bermuda', flag: '🇧🇲', dialCode: '+1441' },
+  { value: 'BT', label: 'Bhutan', flag: '🇧🇹', dialCode: '+975' },
+  { value: 'BO', label: 'Bolivia', flag: '🇧🇴', dialCode: '+591' },
+  { value: 'BA', label: 'Bosnia and Herzegovina', flag: '🇧🇦', dialCode: '+387' },
+  { value: 'BW', label: 'Botswana', flag: '🇧🇼', dialCode: '+267' },
+  { value: 'BR', label: 'Brazil', flag: '🇧🇷', dialCode: '+55' },
+  { value: 'IO', label: 'British Indian Ocean Territory', flag: '🇮🇴', dialCode: '+246' },
+  { value: 'VG', label: 'British Virgin Islands', flag: '🇻🇬', dialCode: '+1284' },
+  { value: 'BN', label: 'Brunei', flag: '🇧🇳', dialCode: '+673' },
+  { value: 'BG', label: 'Bulgaria', flag: '🇧🇬', dialCode: '+359' },
+  { value: 'BF', label: 'Burkina Faso', flag: '🇧🇫', dialCode: '+226' },
+  { value: 'BI', label: 'Burundi', flag: '🇧🇮', dialCode: '+257' },
+  { value: 'KH', label: 'Cambodia', flag: '🇰��', dialCode: '+855' },
+  { value: 'CM', label: 'Cameroon', flag: '🇨🇲', dialCode: '+237' },
+  { value: 'CA', label: 'Canada', flag: '🇨🇦', dialCode: '+1' },
+  { value: 'CV', label: 'Cape Verde', flag: '🇨🇻', dialCode: '+238' },
+  { value: 'KY', label: 'Cayman Islands', flag: '🇰🇾', dialCode: '+1345' },
+  { value: 'CF', label: 'Central African Republic', flag: '🇨🇫', dialCode: '+236' },
+  { value: 'TD', label: 'Chad', flag: '🇹🇩', dialCode: '+235' },
+  { value: 'CL', label: 'Chile', flag: '🇨🇱', dialCode: '+56' },
+  { value: 'CN', label: 'China', flag: '🇨🇳', dialCode: '+86' },
+  { value: 'CX', label: 'Christmas Island', flag: '🇨🇽', dialCode: '+61' },
+  { value: 'CC', label: 'Cocos Islands', flag: '🇨🇨', dialCode: '+61' },
+  { value: 'CO', label: 'Colombia', flag: '🇨🇴', dialCode: '+57' },
+  { value: 'KM', label: 'Comoros', flag: '🇰🇲', dialCode: '+269' },
+  { value: 'CK', label: 'Cook Islands', flag: '🇨🇰', dialCode: '+682' },
+  { value: 'CR', label: 'Costa Rica', flag: '🇨🇷', dialCode: '+506' },
+  { value: 'HR', label: 'Croatia', flag: '🇭🇷', dialCode: '+385' },
+  { value: 'CU', label: 'Cuba', flag: '🇨🇺', dialCode: '+53' },
+  { value: 'CW', label: 'Curacao', flag: '🇨🇼', dialCode: '+599' },
+  { value: 'CY', label: 'Cyprus', flag: '🇨🇾', dialCode: '+357' },
+  { value: 'CZ', label: 'Czech Republic', flag: '🇨🇿', dialCode: '+420' },
+  { value: 'CD', label: 'DR Congo', flag: '🇨🇩', dialCode: '+243' },
+  { value: 'DK', label: 'Denmark', flag: '🇩🇰', dialCode: '+45' },
+  { value: 'DJ', label: 'Djibouti', flag: '🇩🇯', dialCode: '+253' },
+  { value: 'DM', label: 'Dominica', flag: '🇩🇲', dialCode: '+1767' },
+  { value: 'DO', label: 'Dominican Republic', flag: '🇩🇴', dialCode: '+1809' },
+  { value: 'TL', label: 'East Timor', flag: '🇹🇱', dialCode: '+670' },
+  { value: 'EC', label: 'Ecuador', flag: '🇪🇨', dialCode: '+593' },
+  { value: 'EG', label: 'Egypt', flag: '🇪🇬', dialCode: '+20' },
+  { value: 'SV', label: 'El Salvador', flag: '🇸🇻', dialCode: '+503' },
+  { value: 'GQ', label: 'Equatorial Guinea', flag: '🇬🇶', dialCode: '+240' },
+  { value: 'ER', label: 'Eritrea', flag: '🇪🇷', dialCode: '+291' },
+  { value: 'EE', label: 'Estonia', flag: '🇪🇪', dialCode: '+372' },
+  { value: 'SZ', label: 'Eswatini', flag: '🇸🇿', dialCode: '+268' },
+  { value: 'ET', label: 'Ethiopia', flag: '🇪🇹', dialCode: '+251' },
+  { value: 'FK', label: 'Falkland Islands', flag: '🇫🇰', dialCode: '+500' },
+  { value: 'FO', label: 'Faroe Islands', flag: '🇫🇴', dialCode: '+298' },
+  { value: 'FJ', label: 'Fiji', flag: '🇫🇯', dialCode: '+679' },
+  { value: 'FI', label: 'Finland', flag: '🇫🇮', dialCode: '+358' },
+  { value: 'FR', label: 'France', flag: '🇫🇷', dialCode: '+33' },
+  { value: 'GF', label: 'French Guiana', flag: '🇬🇫', dialCode: '+594' },
+  { value: 'PF', label: 'French Polynesia', flag: '🇵🇫', dialCode: '+689' },
+  { value: 'GA', label: 'Gabon', flag: '🇬🇦', dialCode: '+241' },
+  { value: 'GM', label: 'Gambia', flag: '🇬🇲', dialCode: '+220' },
+  { value: 'GE', label: 'Georgia', flag: '🇬🇪', dialCode: '+995' },
+  { value: 'DE', label: 'Germany', flag: '🇩🇪', dialCode: '+49' },
+  { value: 'GH', label: 'Ghana', flag: '🇬🇭', dialCode: '+233' },
+  { value: 'GI', label: 'Gibraltar', flag: '🇬🇮', dialCode: '+350' },
+  { value: 'GR', label: 'Greece', flag: '🇬🇷', dialCode: '+30' },
+  { value: 'GL', label: 'Greenland', flag: '🇬🇱', dialCode: '+299' },
+  { value: 'GD', label: 'Grenada', flag: '🇬🇩', dialCode: '+1473' },
+  { value: 'GP', label: 'Guadeloupe', flag: '🇬🇵', dialCode: '+590' },
+  { value: 'GU', label: 'Guam', flag: '🇬🇺', dialCode: '+1671' },
+  { value: 'GT', label: 'Guatemala', flag: '🇬🇹', dialCode: '+502' },
+  { value: 'GG', label: 'Guernsey', flag: '🇬🇬', dialCode: '+44' },
+  { value: 'GN', label: 'Guinea', flag: '🇬🇳', dialCode: '+224' },
+  { value: 'GW', label: 'Guinea-Bissau', flag: '🇬🇼', dialCode: '+245' },
+  { value: 'GY', label: 'Guyana', flag: '🇬🇾', dialCode: '+592' },
+  { value: 'HT', label: 'Haiti', flag: '🇭🇹', dialCode: '+509' },
+  { value: 'HN', label: 'Honduras', flag: '🇭🇳', dialCode: '+504' },
+  { value: 'HK', label: 'Hong Kong', flag: '🇭🇰', dialCode: '+852' },
+  { value: 'HU', label: 'Hungary', flag: '🇭🇺', dialCode: '+36' },
+  { value: 'IS', label: 'Iceland', flag: '🇮🇸', dialCode: '+354' },
+  { value: 'IN', label: 'India', flag: '🇮🇳', dialCode: '+91' },
+  { value: 'ID', label: 'Indonesia', flag: '🇮🇩', dialCode: '+62' },
+  { value: 'IR', label: 'Iran', flag: '🇮🇷', dialCode: '+98' },
+  { value: 'IQ', label: 'Iraq', flag: '🇮🇶', dialCode: '+964' },
+  { value: 'IE', label: 'Ireland', flag: '🇮🇪', dialCode: '+353' },
+  { value: 'IM', label: 'Isle of Man', flag: '🇮🇲', dialCode: '+44' },
+  { value: 'IL', label: 'Israel', flag: '🇮🇱', dialCode: '+972' },
+  { value: 'IT', label: 'Italy', flag: '🇮🇹', dialCode: '+39' },
+  { value: 'CI', label: "Cote d'Ivoire", flag: '🇨🇮', dialCode: '+225' },
+  { value: 'JM', label: 'Jamaica', flag: '🇯🇲', dialCode: '+1876' },
+  { value: 'JP', label: 'Japan', flag: '🇯🇵', dialCode: '+81' },
+  { value: 'JE', label: 'Jersey', flag: '🇯🇪', dialCode: '+44' },
+  { value: 'JO', label: 'Jordan', flag: '🇯🇴', dialCode: '+962' },
+  { value: 'KZ', label: 'Kazakhstan', flag: '🇰🇿', dialCode: '+7' },
+  { value: 'KE', label: 'Kenya', flag: '🇰🇪', dialCode: '+254' },
+  { value: 'KI', label: 'Kiribati', flag: '🇰🇮', dialCode: '+686' },
+  { value: 'XK', label: 'Kosovo', flag: '🇽🇰', dialCode: '+383' },
+  { value: 'KW', label: 'Kuwait', flag: '🇰🇼', dialCode: '+965' },
+  { value: 'KG', label: 'Kyrgyzstan', flag: '🇰🇬', dialCode: '+996' },
+  { value: 'LA', label: 'Laos', flag: '🇱🇦', dialCode: '+856' },
+  { value: 'LV', label: 'Latvia', flag: '🇱🇻', dialCode: '+371' },
+  { value: 'LB', label: 'Lebanon', flag: '🇱🇧', dialCode: '+961' },
+  { value: 'LS', label: 'Lesotho', flag: '🇱🇸', dialCode: '+266' },
+  { value: 'LR', label: 'Liberia', flag: '🇱🇷', dialCode: '+231' },
+  { value: 'LY', label: 'Libya', flag: '🇱🇾', dialCode: '+218' },
+  { value: 'LI', label: 'Liechtenstein', flag: '🇱🇮', dialCode: '+423' },
+  { value: 'LT', label: 'Lithuania', flag: '🇱🇹', dialCode: '+370' },
+  { value: 'LU', label: 'Luxembourg', flag: '🇱🇺', dialCode: '+352' },
+  { value: 'MO', label: 'Macau', flag: '🇲🇴', dialCode: '+853' },
+  { value: 'MG', label: 'Madagascar', flag: '🇲🇬', dialCode: '+261' },
+  { value: 'MW', label: 'Malawi', flag: '🇲🇼', dialCode: '+265' },
+  { value: 'MY', label: 'Malaysia', flag: '🇲🇾', dialCode: '+60' },
+  { value: 'MV', label: 'Maldives', flag: '🇲🇻', dialCode: '+960' },
+  { value: 'ML', label: 'Mali', flag: '🇲🇱', dialCode: '+223' },
+  { value: 'MT', label: 'Malta', flag: '🇲🇹', dialCode: '+356' },
+  { value: 'MH', label: 'Marshall Islands', flag: '🇲🇭', dialCode: '+692' },
+  { value: 'MQ', label: 'Martinique', flag: '🇲🇶', dialCode: '+596' },
+  { value: 'MR', label: 'Mauritania', flag: '🇲🇷', dialCode: '+222' },
+  { value: 'MU', label: 'Mauritius', flag: '🇲🇺', dialCode: '+230' },
+  { value: 'YT', label: 'Mayotte', flag: '🇾🇹', dialCode: '+262' },
+  { value: 'MX', label: 'Mexico', flag: '🇲🇽', dialCode: '+52' },
+  { value: 'FM', label: 'Micronesia', flag: '🇫🇲', dialCode: '+691' },
+  { value: 'MD', label: 'Moldova', flag: '🇲🇩', dialCode: '+373' },
+  { value: 'MC', label: 'Monaco', flag: '🇲🇨', dialCode: '+377' },
+  { value: 'MN', label: 'Mongolia', flag: '🇲🇳', dialCode: '+976' },
+  { value: 'ME', label: 'Montenegro', flag: '🇲🇪', dialCode: '+382' },
+  { value: 'MS', label: 'Montserrat', flag: '🇲🇸', dialCode: '+1664' },
+  { value: 'MA', label: 'Morocco', flag: '🇲🇦', dialCode: '+212' },
+  { value: 'MZ', label: 'Mozambique', flag: '🇲🇿', dialCode: '+258' },
+  { value: 'MM', label: 'Myanmar', flag: '🇲🇲', dialCode: '+95' },
+  { value: 'NA', label: 'Namibia', flag: '🇳🇦', dialCode: '+264' },
+  { value: 'NR', label: 'Nauru', flag: '🇳🇷', dialCode: '+674' },
+  { value: 'NP', label: 'Nepal', flag: '🇳🇵', dialCode: '+977' },
+  { value: 'NL', label: 'Netherlands', flag: '🇳🇱', dialCode: '+31' },
+  { value: 'NC', label: 'New Caledonia', flag: '🇳🇨', dialCode: '+687' },
+  { value: 'NZ', label: 'New Zealand', flag: '🇳🇿', dialCode: '+64' },
+  { value: 'NI', label: 'Nicaragua', flag: '🇳🇮', dialCode: '+505' },
+  { value: 'NE', label: 'Niger', flag: '🇳🇪', dialCode: '+227' },
+  { value: 'NG', label: 'Nigeria', flag: '🇳🇬', dialCode: '+234' },
+  { value: 'NU', label: 'Niue', flag: '🇳🇺', dialCode: '+683' },
+  { value: 'NF', label: 'Norfolk Island', flag: '🇳🇫', dialCode: '+672' },
+  { value: 'KP', label: 'North Korea', flag: '🇰🇵', dialCode: '+850' },
+  { value: 'MK', label: 'North Macedonia', flag: '🇲🇰', dialCode: '+389' },
+  { value: 'MP', label: 'Northern Mariana Islands', flag: '🇲🇵', dialCode: '+1670' },
+  { value: 'NO', label: 'Norway', flag: '🇳🇴', dialCode: '+47' },
+  { value: 'OM', label: 'Oman', flag: '🇴🇲', dialCode: '+968' },
+  { value: 'PK', label: 'Pakistan', flag: '🇵🇰', dialCode: '+92' },
+  { value: 'PW', label: 'Palau', flag: '🇵🇼', dialCode: '+680' },
+  { value: 'PS', label: 'Palestine', flag: '🇵🇸', dialCode: '+970' },
+  { value: 'PA', label: 'Panama', flag: '🇵🇦', dialCode: '+507' },
+  { value: 'PG', label: 'Papua New Guinea', flag: '🇵🇬', dialCode: '+675' },
+  { value: 'PY', label: 'Paraguay', flag: '🇵🇾', dialCode: '+595' },
+  { value: 'PE', label: 'Peru', flag: '🇵🇪', dialCode: '+51' },
+  { value: 'PH', label: 'Philippines', flag: '🇵🇭', dialCode: '+63' },
+  { value: 'PL', label: 'Poland', flag: '🇵🇱', dialCode: '+48' },
+  { value: 'PT', label: 'Portugal', flag: '🇵🇹', dialCode: '+351' },
+  { value: 'PR', label: 'Puerto Rico', flag: '🇵🇷', dialCode: '+1787' },
+  { value: 'QA', label: 'Qatar', flag: '🇶🇦', dialCode: '+974' },
+  { value: 'CG', label: 'Congo', flag: '🇨🇬', dialCode: '+242' },
+  { value: 'RE', label: 'Reunion', flag: '🇷🇪', dialCode: '+262' },
+  { value: 'RO', label: 'Romania', flag: '🇷🇴', dialCode: '+40' },
+  { value: 'RU', label: 'Russia', flag: '🇷🇺', dialCode: '+7' },
+  { value: 'RW', label: 'Rwanda', flag: '🇷🇼', dialCode: '+250' },
+  { value: 'BL', label: 'Saint Barthelemy', flag: '🇧🇱', dialCode: '+590' },
+  { value: 'SH', label: 'Saint Helena', flag: '🇸🇭', dialCode: '+290' },
+  { value: 'KN', label: 'Saint Kitts and Nevis', flag: '🇰🇳', dialCode: '+1869' },
+  { value: 'LC', label: 'Saint Lucia', flag: '🇱🇨', dialCode: '+1758' },
+  { value: 'MF', label: 'Saint Martin', flag: '🇲🇫', dialCode: '+590' },
+  { value: 'PM', label: 'Saint Pierre and Miquelon', flag: '🇵🇲', dialCode: '+508' },
+  { value: 'VC', label: 'Saint Vincent and the Grenadines', flag: '🇻🇨', dialCode: '+1784' },
+  { value: 'WS', label: 'Samoa', flag: '🇼🇸', dialCode: '+685' },
+  { value: 'SM', label: 'San Marino', flag: '🇸🇲', dialCode: '+378' },
+  { value: 'ST', label: 'Sao Tome and Principe', flag: '🇸🇹', dialCode: '+239' },
+  { value: 'SA', label: 'Saudi Arabia', flag: '🇸🇦', dialCode: '+966' },
+  { value: 'SN', label: 'Senegal', flag: '🇸🇳', dialCode: '+221' },
+  { value: 'RS', label: 'Serbia', flag: '🇷🇸', dialCode: '+381' },
+  { value: 'SC', label: 'Seychelles', flag: '🇸🇨', dialCode: '+248' },
+  { value: 'SL', label: 'Sierra Leone', flag: '🇸🇱', dialCode: '+232' },
+  { value: 'SG', label: 'Singapore', flag: '🇸🇬', dialCode: '+65' },
+  { value: 'SX', label: 'Sint Maarten', flag: '🇸🇽', dialCode: '+1721' },
+  { value: 'SK', label: 'Slovakia', flag: '🇸🇰', dialCode: '+421' },
+  { value: 'SI', label: 'Slovenia', flag: '🇸🇮', dialCode: '+386' },
+  { value: 'SB', label: 'Solomon Islands', flag: '🇸🇧', dialCode: '+677' },
+  { value: 'SO', label: 'Somalia', flag: '🇸🇴', dialCode: '+252' },
+  { value: 'ZA', label: 'South Africa', flag: '🇿🇦', dialCode: '+27' },
+  { value: 'KR', label: 'South Korea', flag: '🇰🇷', dialCode: '+82' },
+  { value: 'SS', label: 'South Sudan', flag: '🇸🇸', dialCode: '+211' },
+  { value: 'ES', label: 'Spain', flag: '🇪🇸', dialCode: '+34' },
+  { value: 'LK', label: 'Sri Lanka', flag: '🇱🇰', dialCode: '+94' },
+  { value: 'SD', label: 'Sudan', flag: '🇸🇩', dialCode: '+249' },
+  { value: 'SR', label: 'Suriname', flag: '🇸🇷', dialCode: '+597' },
+  { value: 'SE', label: 'Sweden', flag: '🇸🇪', dialCode: '+46' },
+  { value: 'CH', label: 'Switzerland', flag: '🇨🇭', dialCode: '+41' },
+  { value: 'SY', label: 'Syria', flag: '🇸🇾', dialCode: '+963' },
+  { value: 'TW', label: 'Taiwan', flag: '🇹🇼', dialCode: '+886' },
+  { value: 'TJ', label: 'Tajikistan', flag: '🇹🇯', dialCode: '+992' },
+  { value: 'TZ', label: 'Tanzania', flag: '🇹🇿', dialCode: '+255' },
+  { value: 'TH', label: 'Thailand', flag: '🇹🇭', dialCode: '+66' },
+  { value: 'TG', label: 'Togo', flag: '🇹🇬', dialCode: '+228' },
+  { value: 'TK', label: 'Tokelau', flag: '🇹🇰', dialCode: '+690' },
+  { value: 'TO', label: 'Tonga', flag: '🇹🇴', dialCode: '+676' },
+  { value: 'TT', label: 'Trinidad and Tobago', flag: '🇹🇹', dialCode: '+1868' },
+  { value: 'TN', label: 'Tunisia', flag: '🇹🇳', dialCode: '+216' },
+  { value: 'TR', label: 'Turkey', flag: '🇹🇷', dialCode: '+90' },
+  { value: 'TM', label: 'Turkmenistan', flag: '🇹🇲', dialCode: '+993' },
+  { value: 'TC', label: 'Turks and Caicos Islands', flag: '🇹🇨', dialCode: '+1649' },
+  { value: 'TV', label: 'Tuvalu', flag: '🇹🇻', dialCode: '+688' },
+  { value: 'VI', label: 'U.S. Virgin Islands', flag: '🇻🇮', dialCode: '+1340' },
+  { value: 'UG', label: 'Uganda', flag: '🇺🇬', dialCode: '+256' },
+  { value: 'UA', label: 'Ukraine', flag: '🇺🇦', dialCode: '+380' },
+  { value: 'AE', label: 'United Arab Emirates', flag: '🇦🇪', dialCode: '+971' },
+  { value: 'GB', label: 'United Kingdom', flag: '🇬🇧', dialCode: '+44' },
+  { value: 'US', label: 'United States', flag: '🇺🇸', dialCode: '+1' },
+  { value: 'UY', label: 'Uruguay', flag: '🇺🇾', dialCode: '+598' },
+  { value: 'UZ', label: 'Uzbekistan', flag: '🇺🇿', dialCode: '+998' },
+  { value: 'VU', label: 'Vanuatu', flag: '🇻🇺', dialCode: '+678' },
+  { value: 'VA', label: 'Vatican City', flag: '🇻🇦', dialCode: '+379' },
+  { value: 'VE', label: 'Venezuela', flag: '🇻🇪', dialCode: '+58' },
+  { value: 'VN', label: 'Vietnam', flag: '🇻🇳', dialCode: '+84' },
+  { value: 'WF', label: 'Wallis and Futuna', flag: '🇼🇫', dialCode: '+681' },
+  { value: 'EH', label: 'Western Sahara', flag: '🇪🇭', dialCode: '+212' },
+  { value: 'YE', label: 'Yemen', flag: '🇾🇪', dialCode: '+967' },
+  { value: 'ZM', label: 'Zambia', flag: '🇿🇲', dialCode: '+260' },
+  { value: 'ZW', label: 'Zimbabwe', flag: '🇿🇼', dialCode: '+263' },
+];
+
+export function filterCountries(
+  searchTerm: string,
+  countries: CountryData[],
+  limit: number = 10
+): CountryData[] {
+  if (!searchTerm.trim()) {
+    return countries.slice(0, limit);
+  }
+
+  const normalizedSearch = searchTerm.toLowerCase().trim();
+  const searchWithoutPlus = normalizedSearch.replace(/^\+/, '');
+
+  const scored = countries.map(country => {
+    const nameLower = country.label.toLowerCase();
+    const dialCodeWithoutPlus = country.dialCode.replace(/^\+/, '');
+    const isoLower = country.value.toLowerCase();
+
+    let score = 0;
+
+    if (nameLower === normalizedSearch || isoLower === normalizedSearch) {
+      score = 100;
+    } else if (nameLower.startsWith(normalizedSearch)) {
+      score = 80;
+    } else if (isoLower.startsWith(normalizedSearch)) {
+      score = 75;
+    } else if (dialCodeWithoutPlus === searchWithoutPlus) {
+      score = 70;
+    } else if (dialCodeWithoutPlus.startsWith(searchWithoutPlus)) {
+      score = 65;
+    } else if (nameLower.includes(normalizedSearch)) {
+      score = 50;
+    } else if (dialCodeWithoutPlus.includes(searchWithoutPlus)) {
+      score = 40;
+    }
+
+    return { country, score };
+  });
+
+  return scored
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(item => item.country);
+}
+
+export function getCountryByIso(iso: string): CountryData | undefined {
+  return allCountries.find(c => c.value === iso);
+}
+
+export function isValidCountryIsoFromAll(iso: string): boolean {
+  return allCountries.some(c => c.value === iso);
+}

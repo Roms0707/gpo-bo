@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon, Globe } from 'lucide-react';
+import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -27,8 +27,8 @@ import {
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
-import { countries } from '../../data/countries';
-import { isValidCountryIso } from '../../utils/countryUtils';
+import SearchableCountrySelect from '../ui/SearchableCountrySelect';
+import { isValidCountryIsoFromAll } from '../../data/allCountries';
 
 const AUTH_METHOD_OPTIONS: { value: AuthMethod; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'email', label: 'Email/Password', description: 'Traditional email and password authentication', icon: <Mail className="w-4 h-4" /> },
@@ -204,7 +204,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         }
         if (!defaultPhoneCountryIso) {
           newErrors.defaultPhoneCountryIso = 'Default phone country is required for OTP authentication';
-        } else if (!isValidCountryIso(defaultPhoneCountryIso)) {
+        } else if (!isValidCountryIsoFromAll(defaultPhoneCountryIso)) {
           newErrors.defaultPhoneCountryIso = 'Invalid country selected';
         }
       }
@@ -640,38 +640,15 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                       </div>
 
                       <div className="mt-4">
-                        <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
-                          Default Phone Country <span className="text-error-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <select
-                            value={defaultPhoneCountryIso}
-                            onChange={(e) => setDefaultPhoneCountryIso(e.target.value)}
-                            className={`
-                              w-full pl-10 pr-3 py-2 text-xs md:text-sm
-                              bg-dark-300
-                              border ${errors.defaultPhoneCountryIso ? 'border-error-500' : 'border-dark-200'}
-                              rounded-lg
-                              text-white
-                              focus:outline-none focus:ring-2 focus:ring-primary-500
-                              appearance-none cursor-pointer
-                            `}
-                          >
-                            <option value="">Select a country...</option>
-                            {countries.map((country) => (
-                              <option key={country.value} value={country.value}>
-                                {country.flag} {country.label} ({country.dialCode})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        {errors.defaultPhoneCountryIso && (
-                          <p className="text-xs text-error-500 mt-1">{errors.defaultPhoneCountryIso}</p>
-                        )}
-                        <p className="text-xs text-gray-400 mt-1">
-                          Required for SMS delivery via Sendito API
-                        </p>
+                        <SearchableCountrySelect
+                          label="Default Phone Country"
+                          value={defaultPhoneCountryIso}
+                          onChange={setDefaultPhoneCountryIso}
+                          error={errors.defaultPhoneCountryIso}
+                          helperText="Required for SMS delivery via Sendito API"
+                          required
+                          placeholder="Search for a country..."
+                        />
                       </div>
                     </div>
                   )}
