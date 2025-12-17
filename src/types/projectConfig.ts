@@ -19,6 +19,7 @@ export interface ProjectConfiguration {
   is_default: boolean;
   auth_method: AuthMethod;
   kliento_auth_type: KlientoAuthType | null;
+  default_phone_country_iso: string | null;
   extra_metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -41,6 +42,7 @@ export interface CreateProjectConfigData {
   is_default?: boolean;
   auth_method?: AuthMethod;
   kliento_auth_type?: KlientoAuthType | null;
+  default_phone_country_iso?: string | null;
   extra_metadata?: Record<string, any>;
 }
 

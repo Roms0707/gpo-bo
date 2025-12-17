@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon } from 'lucide-react';
+import { Edit, ArrowLeft, ArrowRight, Mail, MessageCircle, Phone, Info, AlertTriangle as AlertTriangleIcon, Globe } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -27,6 +27,8 @@ import {
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
+import { countries } from '../../data/countries';
+import { isValidCountryIso } from '../../utils/countryUtils';
 
 const AUTH_METHOD_OPTIONS: { value: AuthMethod; label: string; description: string; icon: React.ReactNode }[] = [
   { value: 'email', label: 'Email/Password', description: 'Traditional email and password authentication', icon: <Mail className="w-4 h-4" /> },
@@ -103,6 +105,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [klientoAuthType, setKlientoAuthType] = useState<KlientoAuthType>('password');
   const [klientoOtpSmsTemplate, setKlientoOtpSmsTemplate] = useState(DEFAULT_OTP_SMS_TEMPLATE);
+  const [defaultPhoneCountryIso, setDefaultPhoneCountryIso] = useState('');
   const [originalAuthMethod, setOriginalAuthMethod] = useState<AuthMethod>('email');
   const [showAuthChangeConfirm, setShowAuthChangeConfirm] = useState(false);
   const [pendingAuthMethod, setPendingAuthMethod] = useState<AuthMethod | null>(null);
@@ -135,6 +138,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setAuthMethod(configAuthMethod);
       setKlientoAuthType(config.kliento_auth_type || 'password');
       setKlientoOtpSmsTemplate(config.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE);
+      setDefaultPhoneCountryIso(config.default_phone_country_iso || '');
       setOriginalAuthMethod(configAuthMethod);
       setPendingAuthMethod(null);
       setShowAuthChangeConfirm(false);
@@ -197,6 +201,11 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         const templateValidation = validateOtpSmsTemplate(klientoOtpSmsTemplate);
         if (!templateValidation.valid) {
           newErrors.klientoOtpSmsTemplate = templateValidation.error || 'Invalid SMS template';
+        }
+        if (!defaultPhoneCountryIso) {
+          newErrors.defaultPhoneCountryIso = 'Default phone country is required for OTP authentication';
+        } else if (!isValidCountryIso(defaultPhoneCountryIso)) {
+          newErrors.defaultPhoneCountryIso = 'Invalid country selected';
         }
       }
     }
@@ -380,6 +389,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         auth_method: authMethod,
         kliento_auth_type: authMethod === 'kliento' ? klientoAuthType : null,
         kliento_otp_sms_template: authMethod === 'kliento' && klientoAuthType === 'otp' ? klientoOtpSmsTemplate.trim() : null,
+        default_phone_country_iso: authMethod === 'kliento' && klientoAuthType === 'otp' ? defaultPhoneCountryIso : null,
         subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
@@ -627,6 +637,41 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                               .replace(/\{\{OTP_CODE\}\}/g, '1234')}
                           </p>
                         </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                          Default Phone Country <span className="text-error-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <select
+                            value={defaultPhoneCountryIso}
+                            onChange={(e) => setDefaultPhoneCountryIso(e.target.value)}
+                            className={`
+                              w-full pl-10 pr-3 py-2 text-xs md:text-sm
+                              bg-dark-300
+                              border ${errors.defaultPhoneCountryIso ? 'border-error-500' : 'border-dark-200'}
+                              rounded-lg
+                              text-white
+                              focus:outline-none focus:ring-2 focus:ring-primary-500
+                              appearance-none cursor-pointer
+                            `}
+                          >
+                            <option value="">Select a country...</option>
+                            {countries.map((country) => (
+                              <option key={country.value} value={country.value}>
+                                {country.flag} {country.label} ({country.dialCode})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        {errors.defaultPhoneCountryIso && (
+                          <p className="text-xs text-error-500 mt-1">{errors.defaultPhoneCountryIso}</p>
+                        )}
+                        <p className="text-xs text-gray-400 mt-1">
+                          Required for SMS delivery via Sendito API
+                        </p>
                       </div>
                     </div>
                   )}

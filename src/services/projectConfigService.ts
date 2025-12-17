@@ -28,6 +28,7 @@ export interface ProjectConfiguration {
   auth_method: AuthMethod;
   kliento_auth_type: KlientoAuthType | null;
   kliento_otp_sms_template: string | null;
+  default_phone_country_iso: string | null;
   subscription_redirect_url: string | null;
   default_trailer_url: string | null;
   typewriter_phrase_1: string | null;
@@ -63,6 +64,7 @@ export interface CreateProjectConfigData {
   auth_method?: AuthMethod;
   kliento_auth_type?: KlientoAuthType | null;
   kliento_otp_sms_template?: string | null;
+  default_phone_country_iso?: string | null;
   subscription_redirect_url?: string | null;
   default_trailer_url?: string | null;
   typewriter_phrase_1?: string | null;
@@ -442,6 +444,9 @@ export const createProjectConfiguration = async (
       if (!templateValidation.valid) {
         throw new Error(templateValidation.error);
       }
+      if (!configData.default_phone_country_iso?.trim()) {
+        throw new Error('Default phone country (ISO code) is required for Kliento OTP authentication');
+      }
     }
 
     const legalValidation = validateLegalFields(configData);
@@ -535,6 +540,9 @@ export const updateProjectConfiguration = async (
       const templateValidation = validateOtpSmsTemplate(template);
       if (!templateValidation.valid) {
         throw new Error(templateValidation.error);
+      }
+      if (!configData.default_phone_country_iso?.trim()) {
+        throw new Error('Default phone country (ISO code) is required for Kliento OTP authentication');
       }
     }
 
@@ -669,6 +677,7 @@ export const duplicateProjectConfiguration = async (
       auth_method: sourceConfig.auth_method || 'email',
       kliento_auth_type: sourceConfig.kliento_auth_type,
       kliento_otp_sms_template: sourceConfig.kliento_otp_sms_template,
+      default_phone_country_iso: sourceConfig.default_phone_country_iso,
       extra_metadata: sourceConfig.extra_metadata || {},
       support_email: sourceConfig.support_email,
       legal_email: sourceConfig.legal_email,
