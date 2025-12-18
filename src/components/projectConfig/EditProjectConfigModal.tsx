@@ -1118,28 +1118,29 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
             )}
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <Button variant="ghost" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto order-2 sm:order-1">
+            <Button variant="ghost" onClick={onClose} disabled={isSubmitting} className="w-full sm:w-auto order-3 sm:order-1">
               Cancel
             </Button>
-            {currentStep < STEPS.length ? (
+            {currentStep < STEPS.length && (
               <Button
+                variant="ghost"
                 onClick={handleNext}
                 rightIcon={<ArrowRight size={16} />}
-                className="w-full sm:w-auto order-1 sm:order-2"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto order-2 sm:order-2"
               >
                 Next
               </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                isLoading={isSubmitting}
-                leftIcon={<Edit size={16} />}
-                className="w-full sm:w-auto order-1 sm:order-2"
-              >
-                <span className="hidden sm:inline">Update Configuration</span>
-                <span className="sm:hidden">Update</span>
-              </Button>
             )}
+            <Button
+              onClick={handleSubmit}
+              isLoading={isSubmitting}
+              leftIcon={<Edit size={16} />}
+              className="w-full sm:w-auto order-1 sm:order-3"
+            >
+              <span className="hidden sm:inline">Save Changes</span>
+              <span className="sm:hidden">Save</span>
+            </Button>
           </div>
         </div>
       }
