@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info, X } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -70,6 +70,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [primaryColor, setPrimaryColor] = useState('#FF6B00');
   const [secondaryColor, setSecondaryColor] = useState('#000000');
   const [accentColor, setAccentColor] = useState('#000000');
+  const [infoSectionTextColor, setInfoSectionTextColor] = useState<string | null>(null);
   const [productId, setProductId] = useState('');
   const [campaignId, setCampaignId] = useState('');
   const [subscriptionRedirectUrl, setSubscriptionRedirectUrl] = useState('');
@@ -113,6 +114,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setPrimaryColor('#FF6B00');
     setSecondaryColor('#000000');
     setAccentColor('#000000');
+    setInfoSectionTextColor(null);
     setProductId('');
     setCampaignId('');
     setSubscriptionRedirectUrl('');
@@ -237,6 +239,10 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
 
       if (accentColor && accentColor !== '#000000' && !validateHexColor(accentColor)) {
         newErrors.accentColor = 'Invalid color format. Use #RRGGBB';
+      }
+
+      if (infoSectionTextColor && !validateHexColor(infoSectionTextColor)) {
+        newErrors.infoSectionTextColor = 'Invalid color format. Use #RRGGBB';
       }
     }
 
@@ -365,6 +371,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         primary_color: primaryColor,
         secondary_color: secondaryColor,
         accent_color: accentColor && accentColor !== '#000000' ? accentColor : null,
+        info_section_text_color: infoSectionTextColor || null,
         product_id: productId.trim() || null,
         campaign_id: campaignId.trim() || null,
         domain: domain.trim() || null,
@@ -735,12 +742,13 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         const accentSimilarToPrimary = accentColor && accentColor !== '#000000' && areColorsSimilar(accentColor, primaryColor);
         const accentSimilarToSecondary = accentColor && accentColor !== '#000000' && areColorsSimilar(accentColor, secondaryColor);
         const showAccentWarning = accentSimilarToPrimary || accentSimilarToSecondary;
+        const displayInfoTextColor = infoSectionTextColor || accentColor || primaryColor;
 
         return (
           <div className="space-y-4">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Visual Identity</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <ColorPickerInput
                 label="Primary Color"
                 value={primaryColor}
@@ -764,8 +772,28 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 value={accentColor}
                 onChange={setAccentColor}
                 error={errors.accentColor}
-                helperText="Optional - For text variations and accents"
+                helperText="For text variations"
               />
+
+              <div>
+                <ColorPickerInput
+                  label="Info Section Text"
+                  value={infoSectionTextColor || '#888888'}
+                  onChange={setInfoSectionTextColor}
+                  error={errors.infoSectionTextColor}
+                  helperText={infoSectionTextColor ? 'Custom color' : 'Falls back to accent'}
+                />
+                {infoSectionTextColor && (
+                  <button
+                    type="button"
+                    onClick={() => setInfoSectionTextColor(null)}
+                    className="mt-1 flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                    <span>Clear (use accent)</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {showAccentWarning && (
@@ -780,7 +808,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
 
             <div className="mt-4 md:mt-6 p-3 md:p-4 bg-dark-200 rounded-lg border border-dark-100">
               <h4 className="text-xs md:text-sm font-medium text-white mb-2 md:mb-3">Color Preview</h4>
-              <div className="grid grid-cols-4 gap-2 md:gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                 <div className="flex-1">
                   <div
                     className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg"
@@ -804,21 +832,17 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 </div>
                 <div className="flex-1">
                   <div
-                    className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg flex items-center justify-center"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    <span style={{ color: secondaryColor }} className="font-bold text-sm md:text-lg">
-                      {brandName || 'Brand'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-center text-gray-400 mt-1 md:mt-2">Combined</p>
+                    className="h-16 md:h-20 rounded-lg border-2 border-white shadow-lg"
+                    style={{ backgroundColor: infoSectionTextColor || accentColor }}
+                  />
+                  <p className="text-xs text-center text-gray-400 mt-1 md:mt-2">Info Text</p>
                 </div>
               </div>
 
-              {accentColor && accentColor !== '#000000' && (
+              {(accentColor && accentColor !== '#000000') && (
                 <>
-                  <h4 className="text-xs md:text-sm font-medium text-white mt-4 mb-2 md:mb-3">Accent Color Usage Examples</h4>
-                  <div className="grid grid-cols-4 gap-2 md:gap-3">
+                  <h4 className="text-xs md:text-sm font-medium text-white mt-4 mb-2 md:mb-3">Color Usage Examples</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                     <div className="flex-1">
                       <div
                         className="h-12 md:h-14 rounded-lg border border-dark-100 flex items-center justify-center"
@@ -828,16 +852,18 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                           Accent Text
                         </span>
                       </div>
-                      <p className="text-xs text-center text-gray-400 mt-1">Text Color</p>
+                      <p className="text-xs text-center text-gray-400 mt-1">Accent</p>
                     </div>
                     <div className="flex-1">
                       <div
                         className="h-12 md:h-14 rounded-lg border border-dark-100 flex items-center justify-center"
-                        style={{ backgroundColor: `${accentColor}80` }}
+                        style={{ backgroundColor: '#1a1a2e' }}
                       >
-                        <span className="text-white font-semibold text-xs md:text-sm">50% Opacity</span>
+                        <span style={{ color: displayInfoTextColor }} className="font-semibold text-xs md:text-sm">
+                          Info Text
+                        </span>
                       </div>
-                      <p className="text-xs text-center text-gray-400 mt-1">Opacity Variant</p>
+                      <p className="text-xs text-center text-gray-400 mt-1">Info Section</p>
                     </div>
                     <div className="flex-1">
                       <div

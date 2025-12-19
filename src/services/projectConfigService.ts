@@ -21,6 +21,7 @@ export interface ProjectConfiguration {
   primary_color: string;
   secondary_color: string;
   accent_color: string | null;
+  info_section_text_color: string | null;
   product_id: string | null;
   campaign_id: string | null;
   domain: string | null;
@@ -58,6 +59,7 @@ export interface CreateProjectConfigData {
   primary_color: string;
   secondary_color: string;
   accent_color?: string | null;
+  info_section_text_color?: string | null;
   product_id?: string | null;
   campaign_id?: string | null;
   domain?: string | null;
@@ -428,6 +430,10 @@ export const createProjectConfiguration = async (
       throw new Error('Invalid accent_color format. Use #RRGGBB format');
     }
 
+    if (configData.info_section_text_color && !validateHexColor(configData.info_section_text_color)) {
+      throw new Error('Invalid info_section_text_color format. Use #RRGGBB format');
+    }
+
     if (configData.auth_method && !validateAuthMethod(configData.auth_method)) {
       throw new Error('Invalid auth_method. Must be one of: email, discord, kliento');
     }
@@ -523,6 +529,10 @@ export const updateProjectConfiguration = async (
 
     if (configData.accent_color && !validateHexColor(configData.accent_color)) {
       throw new Error('Invalid accent_color format. Use #RRGGBB format');
+    }
+
+    if (configData.info_section_text_color && !validateHexColor(configData.info_section_text_color)) {
+      throw new Error('Invalid info_section_text_color format. Use #RRGGBB format');
     }
 
     if (configData.auth_method && !validateAuthMethod(configData.auth_method)) {
@@ -667,6 +677,7 @@ export const duplicateProjectConfiguration = async (
       primary_color: sourceConfig.primary_color,
       secondary_color: sourceConfig.secondary_color,
       accent_color: sourceConfig.accent_color,
+      info_section_text_color: sourceConfig.info_section_text_color,
       product_id: sourceConfig.product_id,
       campaign_id: sourceConfig.campaign_id,
       subscription_redirect_url: sourceConfig.subscription_redirect_url,
