@@ -40,6 +40,8 @@ import XPEventsPage from './pages/XPEventsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import CountryConfigurationPage from './pages/admin/CountryConfigurationPage';
 import ProjectConfigurationsPage from './pages/admin/ProjectConfigurationsPage';
+import CoachingAnalyticsPage from './pages/admin/CoachingAnalyticsPage';
+import CoachingConfigPage from './pages/admin/CoachingConfigPage';
 
 function App() {
   const { user, checkSession, isLoading } = useAuthStore();
@@ -203,6 +205,16 @@ function App() {
               key="admin-project-configs"
               path="admin/project-configurations"
               element={<ProjectConfigurationsPage />}
+            />
+            <Route
+              key="admin-coaching-analytics"
+              path="admin/coaching-analytics"
+              element={<CoachingAnalyticsPage />}
+            />
+            <Route
+              key="admin-coaching-config"
+              path="admin/coaching-config"
+              element={<CoachingConfigPage />}
             />
             <Route
               key="support-tickets-page"

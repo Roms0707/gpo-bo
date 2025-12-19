@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Users, Shield, Plus, Edit, Trash2, Key, Database, Monitor, HardDrive, Cpu, MemoryStick, AlertTriangle, Check, X, User, Palette, ArrowRight } from 'lucide-react';
+import { Settings, Users, Shield, Plus, Edit, Trash2, Key, Database, Monitor, HardDrive, Cpu, MemoryStick, AlertTriangle, Check, X, User, Palette, ArrowRight, BrainCircuit } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -332,25 +332,47 @@ const AdminPage: React.FC = () => {
 
       {/* Quick Links Section */}
       {canManageRoles && (
-        <Card
-          className="cursor-pointer hover:border-primary-500 transition-colors"
-          onClick={() => navigate('/admin/project-configurations')}
-        >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-accent-500/10 rounded-lg">
-                  <Palette className="h-6 w-6 text-accent-500" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card
+            className="cursor-pointer hover:border-primary-500 transition-colors"
+            onClick={() => navigate('/admin/project-configurations')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-accent-500/10 rounded-lg">
+                    <Palette className="h-6 w-6 text-accent-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-white">Project Configurations</h3>
+                    <p className="text-sm text-gray-400">Manage project branding, themes, and integrations</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-white">Project Configurations</h3>
-                  <p className="text-sm text-gray-400">Manage project branding, themes, and integrations</p>
-                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400" />
               </div>
-              <ArrowRight className="h-5 w-5 text-gray-400" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card
+            className="cursor-pointer hover:border-primary-500 transition-colors"
+            onClick={() => navigate('/admin/coaching-analytics')}
+          >
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary-500/10 rounded-lg">
+                    <BrainCircuit className="h-6 w-6 text-primary-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-white">AI Coaching Analytics</h3>
+                    <p className="text-sm text-gray-400">Monitor AI coach usage and configure behavior</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-gray-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* User Management Section */}
