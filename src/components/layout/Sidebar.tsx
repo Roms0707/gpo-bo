@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Image, Trophy, LifeBuoy, FileText, Sparkles, Palette } from 'lucide-react';
+import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Image, Trophy, LifeBuoy, FileText, Sparkles, Palette, BrainCircuit } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSupportTicketStore } from '../../store/supportTicketStore';
 import NotificationBadge from '../ui/NotificationBadge';
@@ -15,6 +15,7 @@ const Sidebar: React.FC = () => {
   const logout = useAuthStore((state) => state.logout);
   const canGenerateReports = useAuthStore((state) => state.canGenerateReports);
   const canAccessGamification = useAuthStore((state) => state.canAccessGamification);
+  const canAccessCoachingAnalytics = useAuthStore((state) => state.canAccessCoachingAnalytics);
   const { unreadCount, fetchUnreadCount } = useSupportTicketStore();
 
   useEffect(() => {
@@ -73,6 +74,11 @@ const Sidebar: React.FC = () => {
       label: 'Add informations',
     },
     {
+      to: '/admin/coaching-analytics',
+      icon: <BrainCircuit size={20} />,
+      label: 'Coaching Monitor',
+    },
+    {
       to: '/admin',
       icon: <Settings size={20} />,
       label: 'Admin',
@@ -92,7 +98,10 @@ const Sidebar: React.FC = () => {
       return canAccessGamification();
     }
     if (link.to === '/admin/project-configurations') {
-      return canAccessGamification(); // Only master_admin
+      return canAccessGamification();
+    }
+    if (link.to === '/admin/coaching-analytics') {
+      return canAccessCoachingAnalytics();
     }
     return true;
   });

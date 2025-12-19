@@ -18,6 +18,7 @@ interface AuthState {
   canGenerateReports: () => boolean;
   canAccessGamification: () => boolean;
   canResetBrackets: () => boolean;
+  canAccessCoachingAnalytics: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -164,6 +165,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   canResetBrackets: () => {
+    const state = useAuthStore.getState();
+    const userRole = state.user?.role;
+    return userRole === 'super_admin' || userRole === 'master_admin';
+  },
+
+  canAccessCoachingAnalytics: () => {
     const state = useAuthStore.getState();
     const userRole = state.user?.role;
     return userRole === 'super_admin' || userRole === 'master_admin';
