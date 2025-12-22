@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { DragEndEvent, DndContext, DragOverlay } from '@dnd-kit/core';
@@ -7,7 +7,7 @@ import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { ArrowLeft, Trophy, ChevronRight, Crown, Sparkles, Star, Target, Award, AlertTriangle, RotateCcw, Clock, Wrench, Maximize, Bell, Focus } from 'lucide-react';
+import { ArrowLeft, Trophy, ChevronRight, Crown, Sparkles, Star, Target, Award, AlertTriangle, RotateCcw, Clock, Wrench, Maximize, Bell } from 'lucide-react';
 import BracketDisplay from '../components/bracket/BracketDisplay';
 import BracketHeader from '../components/bracket/BracketHeader';
 import EmptyBracketMessage from '../components/bracket/EmptyBracketMessage';
@@ -129,9 +129,6 @@ const BracketPage: React.FC = () => {
   const hasShownExpirationModal = useRef<Set<string>>(new Set());
   const [showPlayerInfoModal, setShowPlayerInfoModal] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Player | Team | null>(null);
-  const [autoScaleEnabled, setAutoScaleEnabled] = useState(true);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const bracketContainerRef = useRef<HTMLDivElement>(null);
 
   const { canResetBrackets } = useAuthStore();
   const { resetBracket } = useTournamentStore();
@@ -178,24 +175,6 @@ const BracketPage: React.FC = () => {
       }
     }
   }, [matches, isDraftMode]);
-
-  useEffect(() => {
-    if (!bracketContainerRef.current) return;
-
-    const updateContainerSize = () => {
-      if (bracketContainerRef.current) {
-        const rect = bracketContainerRef.current.getBoundingClientRect();
-        setContainerSize({ width: rect.width, height: rect.height });
-      }
-    };
-
-    updateContainerSize();
-
-    const resizeObserver = new ResizeObserver(updateContainerSize);
-    resizeObserver.observe(bracketContainerRef.current);
-
-    return () => resizeObserver.disconnect();
-  }, []);
 
   const isBattleRoyaleTournament = () => {
     return tournament?.tournament_format?.toLowerCase().includes('battle royale');
@@ -2189,18 +2168,7 @@ ORDER BY
         </CardHeader>
         <CardContent className="flex-1 flex flex-row overflow-hidden">
           <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div ref={bracketContainerRef} className="flex-1 flex flex-col relative">
-            <div className="absolute top-2 right-2 z-10">
-              <Button
-                size="sm"
-                variant={autoScaleEnabled ? 'primary' : 'secondary'}
-                onClick={() => setAutoScaleEnabled(!autoScaleEnabled)}
-                className="w-10 h-10 p-0 flex items-center justify-center"
-                title={autoScaleEnabled ? 'Disable Auto-Fit' : 'Auto-Fit to Screen'}
-              >
-                <Focus size={18} />
-              </Button>
-            </div>
+          <div className="flex-1 flex flex-col">
             {/* Draft Mode Helper Message */}
             {isDraftMode && (
               <div className="mb-4 bg-gradient-to-r from-primary-900/30 to-primary-800/20 border-2 border-primary-500/50 rounded-lg p-4 flex items-start space-x-3 shadow-lg">
@@ -2311,9 +2279,6 @@ ORDER BY
               searchQuery={searchQuery}
               highlightedMatchIds={highlightedMatchIds}
               onPlayerInfoClick={handlePlayerInfoClick}
-              autoScale={autoScaleEnabled}
-              containerWidth={containerSize.width - 48}
-              containerHeight={containerSize.height - 200}
             />
           </div>
 
