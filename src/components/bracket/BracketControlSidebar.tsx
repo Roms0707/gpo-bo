@@ -98,7 +98,7 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   return (
     <>
       <div
-        className={`fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 ease-in-out ${
+        className={`fixed left-64 top-0 bottom-0 z-40 transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ width: '320px' }}
@@ -320,18 +320,19 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
         onClick={onToggle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`fixed z-40 bg-dark-300 border border-gray-700 shadow-lg transition-all duration-300 ease-in-out hover:bg-dark-200 ${
+        className={`fixed z-40 bg-dark-300 border border-gray-700 shadow-lg transition-all duration-300 ease-in-out hover:bg-dark-200 rounded-lg ${
           isOpen
-            ? 'left-[320px] top-4 rounded-r-lg'
-            : 'left-0 top-1/2 -translate-y-1/2 rounded-r-lg'
+            ? 'left-[calc(16rem+320px)] top-20'
+            : 'left-[17rem] top-20'
         }`}
       >
         {isOpen ? (
           <ChevronLeft className="h-6 w-6 text-gray-400 m-2" />
         ) : (
-          <div className="flex items-center py-3 px-2">
-            <ChevronRight className="h-5 w-5 text-gray-400" />
-            <span className="text-xs text-gray-400 ml-1 writing-mode-vertical">Controls</span>
+          <div className="flex items-center py-2 px-3">
+            <Settings className="h-4 w-4 text-primary-400 mr-2" />
+            <span className="text-sm text-gray-300">Controls</span>
+            <ChevronRight className="h-4 w-4 text-gray-400 ml-2" />
           </div>
         )}
       </button>
