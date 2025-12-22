@@ -107,7 +107,7 @@ const Sidebar: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-dark-300 text-gray-900 dark:text-white w-64 fixed left-0 top-0 bottom-0 border-r border-gray-200 dark:border-dark-200">
+    <div className="flex flex-col h-full bg-white dark:bg-dark-300 text-gray-900 dark:text-white w-64 fixed left-0 top-0 bottom-0 border-r border-gray-200 dark:border-dark-200 z-50">
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center space-x-2">
