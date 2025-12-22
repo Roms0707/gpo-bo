@@ -77,6 +77,7 @@ const BracketRound: React.FC<BracketRoundProps> = ({
               <BracketMatch
                 ref={matchRef}
                 match={match}
+                allMatches={matches}
                 tournament={tournament}
                 players={players}
                 teams={teams}

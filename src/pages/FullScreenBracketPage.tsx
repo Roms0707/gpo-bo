@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import toast from 'react-hot-toast';
-import { DragEndEvent, DndContext, DragOverlay } from '@dnd-kit/core';
+import { DragEndEvent, DndContext, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { supabase } from '../lib/supabase';
 import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
@@ -14,7 +14,8 @@ import {
   Maximize2,
   Map as MapIcon,
   Menu,
-  Search
+  Search,
+  Focus
 } from 'lucide-react';
 import BracketDisplay from '../components/bracket/BracketDisplay';
 import WinnerCelebration from '../components/bracket/WinnerCelebration';
@@ -104,6 +105,15 @@ const FullScreenBracketPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isZoomControlsVisible, setIsZoomControlsVisible] = useState(true);
+  const [autoScaleEnabled, setAutoScaleEnabled] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const bracketContainerRef = useRef<HTMLDivElement>(null);
+  const headerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const zoomControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const sidebarTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const canResetBrackets = useAuthStore((state) => state.canResetBrackets);
   const resetBracket = useTournamentStore((state) => state.resetBracket);
@@ -634,9 +644,80 @@ const FullScreenBracketPage: React.FC = () => {
     }
   }, [id, matches.length]);
 
-  const handleDragStart = (event: any) => {
-    setActiveDragId(event.active.id);
+  useEffect(() => {
+    if (!bracketContainerRef.current) return;
+
+    const updateContainerSize = () => {
+      if (bracketContainerRef.current) {
+        const rect = bracketContainerRef.current.getBoundingClientRect();
+        setContainerSize({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateContainerSize();
+
+    const resizeObserver = new ResizeObserver(updateContainerSize);
+    resizeObserver.observe(bracketContainerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [isSidebarOpen]);
+
+  const handleHeaderMouseEnter = useCallback(() => {
+    if (headerTimeoutRef.current) {
+      clearTimeout(headerTimeoutRef.current);
+      headerTimeoutRef.current = null;
+    }
+    setIsHeaderVisible(true);
+  }, []);
+
+  const handleHeaderMouseLeave = useCallback(() => {
+    headerTimeoutRef.current = setTimeout(() => {
+      setIsHeaderVisible(false);
+    }, 500);
+  }, []);
+
+  const handleZoomControlsMouseEnter = useCallback(() => {
+    if (zoomControlsTimeoutRef.current) {
+      clearTimeout(zoomControlsTimeoutRef.current);
+      zoomControlsTimeoutRef.current = null;
+    }
+    setIsZoomControlsVisible(true);
+  }, []);
+
+  const handleZoomControlsMouseLeave = useCallback(() => {
+    zoomControlsTimeoutRef.current = setTimeout(() => {
+      setIsZoomControlsVisible(false);
+    }, 500);
+  }, []);
+
+  const handleSidebarMouseEnter = useCallback(() => {
+    if (sidebarTimeoutRef.current) {
+      clearTimeout(sidebarTimeoutRef.current);
+      sidebarTimeoutRef.current = null;
+    }
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
+    }
+  }, [isSidebarOpen]);
+
+  const handleSidebarMouseLeave = useCallback(() => {
+    sidebarTimeoutRef.current = setTimeout(() => {
+      setIsSidebarOpen(false);
+    }, 800);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (headerTimeoutRef.current) clearTimeout(headerTimeoutRef.current);
+      if (zoomControlsTimeoutRef.current) clearTimeout(zoomControlsTimeoutRef.current);
+      if (sidebarTimeoutRef.current) clearTimeout(sidebarTimeoutRef.current);
+    };
+  }, []);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
     setActiveDragData(event.active.data.current);
+    setIsDragging(true);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -644,6 +725,7 @@ const FullScreenBracketPage: React.FC = () => {
 
     setActiveDragId(null);
     setActiveDragData(null);
+    setIsDragging(false);
 
     if (!over || active.id === over.id) {
       return;
@@ -1179,7 +1261,18 @@ const FullScreenBracketPage: React.FC = () => {
         totalRounds={calculateRoundsNeeded(participants.length)}
       />
 
-      <div className="absolute top-0 left-0 right-0 z-30 bg-dark-300 border-b border-gray-700 shadow-lg">
+      <div
+        className="fixed top-0 left-0 right-0 h-4 z-40"
+        onMouseEnter={handleHeaderMouseEnter}
+      />
+
+      <div
+        className={`absolute top-0 left-0 right-0 z-30 bg-dark-300 border-b border-gray-700 shadow-lg transition-all duration-300 ease-in-out ${
+          isHeaderVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
+        }`}
+        onMouseEnter={handleHeaderMouseEnter}
+        onMouseLeave={handleHeaderMouseLeave}
+      >
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center space-x-4">
             <Button
@@ -1241,105 +1334,137 @@ const FullScreenBracketPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden" style={{ marginTop: '60px' }}>
-        <FullScreenSidebar
-          isOpen={isSidebarOpen}
-          isDraftMode={isDraftMode}
-          tournament={tournament}
-          byesByRound={byesByRound}
-          roundTimers={roundTimers}
-          canResetBrackets={canResetBrackets()}
-          isUpdatingBracketStatus={isUpdatingBracketStatus}
-          isRepairingByes={isRepairingByes}
-          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-          onPushBracketLive={handlePushBracketLive}
-          onEditBracket={handleEditBracket}
-          onResetDraft={handleResetDraft}
-          onShowByePanel={() => setShowByePanel(true)}
-          onRepairByes={handleRepairOrphanedByes}
-          onResetBracket={() => setShowResetModal(true)}
-          onLoadTimers={loadRoundTimers}
-          tournamentId={id || ''}
-        />
+      <div
+        className="fixed left-0 top-[60px] bottom-0 w-4 z-40"
+        onMouseEnter={handleSidebarMouseEnter}
+      />
 
-        <div className="flex-1 relative overflow-hidden">
-          <TransformWrapper
-            initialScale={1}
-            minScale={0.3}
-            maxScale={2}
-            centerOnInit={false}
-            wheel={{ step: 0.1 }}
-            panning={{ disabled: false, velocityDisabled: false }}
-            doubleClick={{ disabled: false }}
-            limitToBounds={false}
-            onZoom={(ref) => setZoomLevel(ref.state.scale)}
-          >
-            {({ zoomIn, zoomOut, resetTransform, centerView }) => (
-              <>
-                <div className="absolute top-4 right-4 z-20 flex flex-col space-y-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => zoomIn()}
-                    className="w-10 h-10 p-0 flex items-center justify-center"
+      <div
+        className="flex flex-1 overflow-hidden"
+        style={{ marginTop: isHeaderVisible ? '60px' : '0px', transition: 'margin-top 0.3s ease-in-out' }}
+      >
+        <div
+          onMouseEnter={handleSidebarMouseEnter}
+          onMouseLeave={handleSidebarMouseLeave}
+        >
+          <FullScreenSidebar
+            isOpen={isSidebarOpen}
+            isDraftMode={isDraftMode}
+            tournament={tournament}
+            byesByRound={byesByRound}
+            roundTimers={roundTimers}
+            canResetBrackets={canResetBrackets()}
+            isUpdatingBracketStatus={isUpdatingBracketStatus}
+            isRepairingByes={isRepairingByes}
+            onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+            onPushBracketLive={handlePushBracketLive}
+            onEditBracket={handleEditBracket}
+            onResetDraft={handleResetDraft}
+            onShowByePanel={() => setShowByePanel(true)}
+            onRepairByes={handleRepairOrphanedByes}
+            onResetBracket={() => setShowResetModal(true)}
+            onLoadTimers={loadRoundTimers}
+            tournamentId={id || ''}
+          />
+        </div>
+
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div ref={bracketContainerRef} className="flex-1 relative overflow-hidden">
+            <TransformWrapper
+              initialScale={1}
+              minScale={0.3}
+              maxScale={2}
+              centerOnInit={false}
+              wheel={{ step: 0.1 }}
+              panning={{ disabled: isDragging, velocityDisabled: false }}
+              doubleClick={{ disabled: false }}
+              limitToBounds={false}
+              onZoom={(ref) => setZoomLevel(ref.state.scale)}
+            >
+              {({ zoomIn, zoomOut, resetTransform, centerView }) => (
+                <>
+                  <div
+                    className={`absolute top-4 right-4 z-20 flex flex-col space-y-2 transition-opacity duration-300 ${
+                      isZoomControlsVisible ? 'opacity-100' : 'opacity-30'
+                    }`}
+                    onMouseEnter={handleZoomControlsMouseEnter}
+                    onMouseLeave={handleZoomControlsMouseLeave}
                   >
-                    <ZoomIn size={18} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => zoomOut()}
-                    className="w-10 h-10 p-0 flex items-center justify-center"
-                  >
-                    <ZoomOut size={18} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      resetTransform();
-                      centerView();
-                    }}
-                    className="w-10 h-10 p-0 flex items-center justify-center"
-                  >
-                    <Maximize2 size={18} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowMiniMap(!showMiniMap)}
-                    className="w-10 h-10 p-0 flex items-center justify-center"
-                  >
-                    <MapIcon size={18} />
-                  </Button>
-                  <div className="bg-dark-300 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center">
-                    {Math.round(zoomLevel * 100)}%
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => zoomIn()}
+                      className="w-10 h-10 p-0 flex items-center justify-center"
+                      title="Zoom In"
+                    >
+                      <ZoomIn size={18} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => zoomOut()}
+                      className="w-10 h-10 p-0 flex items-center justify-center"
+                      title="Zoom Out"
+                    >
+                      <ZoomOut size={18} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        resetTransform();
+                        centerView();
+                      }}
+                      className="w-10 h-10 p-0 flex items-center justify-center"
+                      title="Reset View"
+                    >
+                      <Maximize2 size={18} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={autoScaleEnabled ? 'primary' : 'secondary'}
+                      onClick={() => setAutoScaleEnabled(!autoScaleEnabled)}
+                      className="w-10 h-10 p-0 flex items-center justify-center"
+                      title={autoScaleEnabled ? 'Disable Auto-Fit' : 'Auto-Fit to Screen'}
+                    >
+                      <Focus size={18} />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setShowMiniMap(!showMiniMap)}
+                      className="w-10 h-10 p-0 flex items-center justify-center"
+                      title="Toggle Mini Map"
+                    >
+                      <MapIcon size={18} />
+                    </Button>
+                    <div className="bg-dark-300 border border-gray-600 rounded px-2 py-1 text-xs text-white text-center">
+                      {Math.round(zoomLevel * 100)}%
+                    </div>
                   </div>
-                </div>
 
-                {showMiniMap && (
-                  <FullScreenMiniMap
-                    matches={currentMatches}
-                    tournament={tournament}
-                    onClose={() => setShowMiniMap(false)}
-                  />
-                )}
+                  {showMiniMap && (
+                    <FullScreenMiniMap
+                      matches={currentMatches}
+                      tournament={tournament}
+                      onClose={() => setShowMiniMap(false)}
+                    />
+                  )}
 
-                <TransformComponent
-                  wrapperStyle={{
-                    width: '100%',
-                    height: '100%',
-                    overflow: 'visible'
-                  }}
-                  contentStyle={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    minWidth: '100%',
-                    minHeight: '100%'
-                  }}
-                >
-                  <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                  <TransformComponent
+                    wrapperStyle={{
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'visible'
+                    }}
+                    contentStyle={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'flex-start',
+                      minWidth: '100%',
+                      minHeight: '100%'
+                    }}
+                  >
                     <div className="p-8">
                       <BracketDisplay
                         matches={currentMatches}
@@ -1362,36 +1487,39 @@ const FullScreenBracketPage: React.FC = () => {
                         onChangeWinner={handleChangeWinner}
                         searchQuery={searchQuery}
                         highlightedMatchIds={highlightedMatchIds}
+                        autoScale={autoScaleEnabled}
+                        containerWidth={containerSize.width - 64}
+                        containerHeight={containerSize.height - 64}
                       />
                     </div>
+                  </TransformComponent>
+                </>
+              )}
+            </TransformWrapper>
 
-                    <BackupPanel
-                      backupPlayers={backupPlayers}
-                      backupTeams={backupTeams}
-                      isTeamTournament={tournament?.type === 'team'}
-                      show={isDraftMode}
-                    />
+            <BackupPanel
+              backupPlayers={backupPlayers}
+              backupTeams={backupTeams}
+              isTeamTournament={tournament?.type === 'team'}
+              show={isDraftMode}
+            />
+          </div>
 
-                    <DragOverlay>
-                      {activeDragId && activeDragData ? (
-                        <div className="bg-primary-600 border-2 border-primary-400 rounded-lg p-3 shadow-2xl opacity-90">
-                          <div className="text-white font-medium text-sm">
-                            {activeDragData.type === 'backup' ? '🛡️ ' : ''}
-                            {activeDragData.participantName || (
-                              tournament?.type === 'team'
-                                ? teams.find(t => t.captain_id === activeDragData.participantId)?.name || 'Unknown'
-                                : players.find(p => p.id === activeDragData.participantId)?.name || 'Unknown'
-                            )}
-                          </div>
-                        </div>
-                      ) : null}
-                    </DragOverlay>
-                  </DndContext>
-                </TransformComponent>
-              </>
-            )}
-          </TransformWrapper>
-        </div>
+          <DragOverlay>
+            {activeDragId && activeDragData ? (
+              <div className="bg-primary-600 border-2 border-primary-400 rounded-lg p-3 shadow-2xl opacity-90">
+                <div className="text-white font-medium text-sm">
+                  {activeDragData.type === 'backup' ? '' : ''}
+                  {activeDragData.participantName || (
+                    tournament?.type === 'team'
+                      ? teams.find(t => t.captain_id === activeDragData.participantId)?.name || 'Unknown'
+                      : players.find(p => p.id === activeDragData.participantId)?.name || 'Unknown'
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
 
       {crossRoundPendingMove && (

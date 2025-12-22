@@ -7,6 +7,7 @@ import HighlightText from './HighlightText';
 
 interface BracketMatchProps {
   match: Match;
+  allMatches?: Match[];
   tournament: any;
   players: Player[];
   teams: Team[];
@@ -22,8 +23,11 @@ interface BracketMatchProps {
   onPlayerInfoClick?: (participantId: string) => void;
 }
 
+type SlotStatus = 'player' | 'bye' | 'tbd' | 'empty';
+
 const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
   match,
+  allMatches = [],
   tournament,
   players,
   teams,
@@ -46,8 +50,64 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
   } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
   const [isChangingWinner, setIsChangingWinner] = useState(false);
-  const getParticipantName = (participantId: string | null) => {
-    if (!participantId) return 'Bye';
+
+  const getSlotStatus = (slotId: string | null, slotPosition: 'player1' | 'player2'): SlotStatus => {
+    if (slotId) return 'player';
+
+    if (match.round === 1) {
+      const hasPlayer1 = match.player1_id !== null;
+      const hasPlayer2 = match.player2_id !== null;
+      if (hasPlayer1 !== hasPlayer2) return 'bye';
+      return 'empty';
+    }
+
+    const feederPosition = slotPosition === 'player1'
+      ? (match.position * 2) - 1
+      : match.position * 2;
+    const feederMatch = allMatches.find(
+      m => m.round === match.round - 1 && m.position === feederPosition
+    );
+
+    if (!feederMatch) {
+      const hasPlayer1 = match.player1_id !== null;
+      const hasPlayer2 = match.player2_id !== null;
+      if (hasPlayer1 !== hasPlayer2) return 'bye';
+      return 'tbd';
+    }
+
+    if (feederMatch.is_bye) {
+      return 'bye';
+    }
+
+    const feederHasPlayer1 = feederMatch.player1_id !== null;
+    const feederHasPlayer2 = feederMatch.player2_id !== null;
+    const feederIsBye = (feederHasPlayer1 && !feederHasPlayer2) || (!feederHasPlayer1 && feederHasPlayer2);
+
+    if (feederIsBye && feederMatch.winner_id) {
+      return 'bye';
+    }
+
+    if (!feederMatch.winner_id) {
+      return 'tbd';
+    }
+
+    return 'tbd';
+  };
+
+  const getSlotLabel = (status: SlotStatus): string => {
+    switch (status) {
+      case 'bye': return 'Bye';
+      case 'tbd': return 'TBD';
+      case 'empty': return '---';
+      default: return '';
+    }
+  };
+
+  const getParticipantName = (participantId: string | null, slotPosition: 'player1' | 'player2') => {
+    if (!participantId) {
+      const status = getSlotStatus(participantId, slotPosition);
+      return getSlotLabel(status);
+    }
     
     if (tournament?.type === 'team') {
       // For team tournaments, find team by captain_id
@@ -91,8 +151,10 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
     return team ? team.memberCount : null;
   };
 
-  const participant1Name = getParticipantName(match.player1_id);
-  const participant2Name = getParticipantName(match.player2_id);
+  const participant1Name = getParticipantName(match.player1_id, 'player1');
+  const participant2Name = getParticipantName(match.player2_id, 'player2');
+  const slot1Status = getSlotStatus(match.player1_id, 'player1');
+  const slot2Status = getSlotStatus(match.player2_id, 'player2');
   const participant1Elo = getParticipantElo(match.player1_id);
   const participant2Elo = getParticipantElo(match.player2_id);
   const participant1Seed = getParticipantSeed(match.player1_id);
@@ -100,11 +162,10 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
   const participant1MemberCount = getParticipantMemberCount(match.player1_id);
   const participant2MemberCount = getParticipantMemberCount(match.player2_id);
 
-  // Check if this is a BYE match (exactly one player present, not zero, not two)
-  // A BYE is when one player has no opponent, not when a match is empty
   const hasPlayer1 = match.player1_id !== null && match.player1_id !== undefined;
   const hasPlayer2 = match.player2_id !== null && match.player2_id !== undefined;
-  const isByeMatch = match.is_bye || (hasPlayer1 && !hasPlayer2) || (!hasPlayer1 && hasPlayer2);
+  const isByeMatch = match.is_bye || (slot1Status === 'bye' || slot2Status === 'bye');
+  const isTbdMatch = slot1Status === 'tbd' || slot2Status === 'tbd';
   const isFirstRoundBye = match.round === 1 && isByeMatch;
   const isLuckyLoserMatch = match.is_lucky_loser_match || false;
   const luckyLoserPlayerId = match.lucky_loser_player_id;
@@ -115,11 +176,19 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
   const canDragParticipants = isEditable && !match.winner_id;
   const canDropParticipants = isEditable && !match.winner_id;
 
-  // Check if someone was automatically advanced due to BYE
   const isAutoAdvanced = isByeMatch && match.winner_id;
 
-  // BYE badges for visual distinction
-  const byeBadgeColor = match.round === 1 ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+  const byeBadgeColor = match.round === 1
+    ? 'bg-green-500/20 text-green-400 border-green-500/30'
+    : 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+
+  const tbdBadgeColor = 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+
+  const getMatchBorderColor = () => {
+    if (isByeMatch) return byeBadgeColor;
+    if (isTbdMatch) return tbdBadgeColor;
+    return '';
+  };
 
   const handleResetConfirm = async () => {
     if (!onResetMatch) return;
@@ -139,6 +208,17 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
     setChangeWinnerConfirm(null);
   };
 
+  const getPlayerDisplayName = (participantId: string | null): string => {
+    if (!participantId) return 'Unknown';
+    if (tournament?.type === 'team') {
+      const team = teams.find(t => t.captain_id === participantId);
+      return team ? team.name : 'Unknown Team';
+    } else {
+      const player = players.find(p => p.id === participantId);
+      return player ? player.name : 'Unknown Player';
+    }
+  };
+
   const handleParticipantClick = (participantId: string | null) => {
     if (!participantId) return;
 
@@ -147,8 +227,8 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
     } else if (match.winner_id && match.winner_id !== participantId && canModifyResult && onChangeWinner) {
       setChangeWinnerConfirm({
         newWinnerId: participantId,
-        currentWinnerName: getParticipantName(match.winner_id),
-        newWinnerName: getParticipantName(participantId)
+        currentWinnerName: getPlayerDisplayName(match.winner_id),
+        newWinnerName: getPlayerDisplayName(participantId)
       });
     }
   };
@@ -159,9 +239,14 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
         ref={ref}
         data-match-id={match.id}
         className={`relative p-3 rounded-lg border min-h-[80px] flex flex-col justify-center shadow-lg ${
-        isByeMatch ? `${byeBadgeColor} border-2` : isHighlighted ? 'bg-gray-700 border-primary-500 ring-2 ring-primary-500/20' : 'bg-gray-700 border-gray-600'
-      }`}>
-        {/* Match Number - Top Left */}
+          isByeMatch
+            ? `${byeBadgeColor} border-2`
+            : isTbdMatch
+              ? `${tbdBadgeColor} border-2`
+              : isHighlighted
+                ? 'bg-gray-700 border-primary-500 ring-2 ring-primary-500/20'
+                : 'bg-gray-700 border-gray-600'
+        }`}>
         {matchNumber && (
           <div className="absolute -top-2 -left-2 z-10">
             <span className="bg-primary-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
@@ -170,11 +255,18 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
           </div>
         )}
 
-        {/* BYE Badge - Top Center */}
         {isByeMatch && !match.winner_id && (
           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${byeBadgeColor}`}>
-              {match.round === 1 ? 'BYE AUTO' : 'BYE R' + match.round}
+              {match.round === 1 ? 'BYE' : 'BYE R' + match.round}
+            </span>
+          </div>
+        )}
+
+        {isTbdMatch && !isByeMatch && !match.winner_id && (
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${tbdBadgeColor}`}>
+              TBD
             </span>
           </div>
         )}

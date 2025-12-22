@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Trophy } from 'lucide-react';
 import BracketRound from './BracketRound';
 import { Match, Player, Team } from './types';
@@ -17,6 +17,9 @@ interface BracketDisplayProps {
   searchQuery?: string;
   highlightedMatchIds?: Set<string>;
   onPlayerInfoClick?: (participantId: string) => void;
+  autoScale?: boolean;
+  containerWidth?: number;
+  containerHeight?: number;
 }
 
 const BracketDisplay: React.FC<BracketDisplayProps> = ({
@@ -32,9 +35,64 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
   onChangeWinner,
   searchQuery = '',
   highlightedMatchIds = new Set(),
-  onPlayerInfoClick
+  onPlayerInfoClick,
+  autoScale = false,
+  containerWidth,
+  containerHeight
 }) => {
   const firstMatchRef = useRef<string | null>(null);
+  const bracketRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  const calculateScale = useCallback(() => {
+    if (!autoScale || !bracketRef.current || !containerWidth) return;
+
+    const bracketWidth = bracketRef.current.scrollWidth;
+    const bracketHeight = bracketRef.current.scrollHeight;
+
+    const MATCH_WIDTH = 180;
+    const ROUND_GAP = 64;
+    const PADDING = 64;
+
+    const roundsSet = new Set(matches.map(m => m.round));
+    const numRounds = roundsSet.size;
+    const estimatedWidth = numRounds * MATCH_WIDTH + (numRounds - 1) * ROUND_GAP + PADDING * 2;
+
+    const widthToUse = Math.max(bracketWidth, estimatedWidth);
+
+    let newScale = 1;
+
+    if (containerWidth && widthToUse > containerWidth) {
+      newScale = containerWidth / widthToUse;
+    }
+
+    if (containerHeight && bracketHeight > 0) {
+      const heightScale = containerHeight / bracketHeight;
+      newScale = Math.min(newScale, heightScale);
+    }
+
+    const MIN_SCALE = 0.4;
+    const MAX_SCALE = 1;
+    newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+
+    setScale(newScale);
+  }, [autoScale, containerWidth, containerHeight, matches]);
+
+  useEffect(() => {
+    calculateScale();
+  }, [calculateScale]);
+
+  useEffect(() => {
+    if (!autoScale || !bracketRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      calculateScale();
+    });
+
+    resizeObserver.observe(bracketRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [autoScale, calculateScale]);
 
   useEffect(() => {
     if (searchQuery && highlightedMatchIds.size > 0) {
@@ -81,10 +139,20 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
     matchNumberMap.set(match.id, index + 1);
   });
 
+  const scaleStyle = autoScale ? {
+    transform: `scale(${scale})`,
+    transformOrigin: 'top left',
+    width: scale < 1 ? `${100 / scale}%` : '100%'
+  } : {};
+
   return (
     <div className="flex-1 flex flex-col">
-      <div className="bracket-container flex-1">
-        <div className="flex gap-16 p-8 min-h-full">
+      <div className="bracket-container flex-1 overflow-hidden">
+        <div
+          ref={bracketRef}
+          className="flex gap-16 p-8 min-h-full transition-transform duration-300 ease-out"
+          style={scaleStyle}
+        >
           {rounds.map(round => (
             <BracketRound
               key={round}
