@@ -287,159 +287,158 @@ const RoundTimerConfigModal: React.FC<RoundTimerConfigModalProps> = ({
         <div className="py-4">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             <div className="flex-1 min-w-0">
-              <div className="mb-3 p-3 bg-dark-200 rounded-lg">
-                <p className="text-sm text-gray-400 mb-2">Apply to all pending rounds:</p>
-                <div className="flex flex-wrap gap-2">
-                  {presetDurations.map((preset) => (
-                    <Button
-                      key={preset.value}
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleApplyToAll(preset.value)}
-                      disabled={isUpdating}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
+              {!editingTimerId && (
+                <div className="mb-3 p-3 bg-dark-200 rounded-lg">
+                  <p className="text-sm text-gray-400 mb-2">Apply to all pending rounds:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {presetDurations.map((preset) => (
+                      <Button
+                        key={preset.value}
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleApplyToAll(preset.value)}
+                        disabled={isUpdating}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                <table className="w-full min-w-[500px]">
-                  <thead>
-                    <tr className="border-b border-dark-300">
-                      <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Round</th>
-                      <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300 hidden sm:table-cell">Name</th>
-                      <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Duration</th>
-                      <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Status</th>
-                      <th className="text-right py-2 px-3 text-sm font-semibold text-gray-300">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localTimers.map((timer) => {
-                      const roundName = getRoundName(timer.round_number, totalRounds);
-                      const isEditing = editingTimerId === timer.id;
-                      const canEdit = timer.status === 'pending';
-                      const hasPendingChange = pendingChanges.has(timer.id);
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-dark-300">
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Round</th>
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Name</th>
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Duration</th>
+                    <th className={`text-left py-2 px-3 text-sm font-semibold text-gray-300 ${editingTimerId ? 'hidden' : ''}`}>Status</th>
+                    <th className="text-right py-2 px-3 text-sm font-semibold text-gray-300">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {localTimers.map((timer) => {
+                    const roundName = getRoundName(timer.round_number, totalRounds);
+                    const isEditing = editingTimerId === timer.id;
+                    const canEdit = timer.status === 'pending';
+                    const hasPendingChange = pendingChanges.has(timer.id);
 
-                      return (
-                        <tr
-                          key={timer.id}
-                          className={`border-b border-dark-300 hover:bg-dark-200 ${hasPendingChange ? 'bg-primary-900/10' : ''}`}
-                        >
-                          <td className="py-3 px-3">
-                            <span className="text-white">{timer.round_number}</span>
-                            <span className="sm:hidden text-gray-400 text-sm ml-2">({roundName})</span>
-                          </td>
-                          <td className="py-3 px-3 text-gray-300 hidden sm:table-cell">{roundName}</td>
-                          <td className="py-3 px-3">
-                            {isEditing ? (
-                              <div className="flex items-center gap-2">
-                                {isCustomDuration ? (
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min={5}
-                                      max={1440}
-                                      value={customValue}
-                                      onChange={(e) => handleCustomValueChange(e.target.value)}
-                                      className="w-20 px-2 py-1.5 bg-dark-300 border border-dark-200 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                      placeholder="min"
-                                    />
-                                    <button
-                                      onClick={() => {
-                                        setIsCustomDuration(false);
-                                        setEditValue(60);
-                                      }}
-                                      className="text-xs text-gray-400 hover:text-white"
-                                    >
-                                      Preset
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="relative">
-                                    <select
-                                      value={editValue}
-                                      onChange={(e) => handleDropdownChange(e.target.value)}
-                                      className="appearance-none w-32 px-3 py-1.5 pr-8 bg-dark-300 border border-dark-200 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
-                                    >
-                                      {DURATION_OPTIONS.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                          {option.label}
-                                        </option>
-                                      ))}
-                                      <option value="custom">Custom...</option>
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className={`font-medium ${hasPendingChange ? 'text-primary-400' : 'text-white'}`}>
-                                {formatDuration(timer.duration_minutes)}
-                                {hasPendingChange && (
-                                  <span className="ml-2 text-xs text-primary-400">(modified)</span>
-                                )}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3">
-                            {getStatusBadge(timer.status)}
-                          </td>
-                          <td className="py-3 px-3 text-right">
-                            {isEditing ? (
-                              <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSaveRowEdit(timer.id)}
-                                  disabled={isUpdating}
-                                  leftIcon={<Save size={14} />}
-                                >
-                                  <span className="hidden sm:inline">Save</span>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={handleCancelEdit}
-                                  disabled={isUpdating}
-                                  leftIcon={<X size={14} />}
-                                >
-                                  <span className="hidden sm:inline">Cancel</span>
-                                </Button>
-                              </div>
-                            ) : (
+                    return (
+                      <tr
+                        key={timer.id}
+                        className={`border-b border-dark-300 hover:bg-dark-200 ${hasPendingChange ? 'bg-primary-900/10' : ''}`}
+                      >
+                        <td className="py-3 px-3 text-white">{timer.round_number}</td>
+                        <td className="py-3 px-3 text-gray-300">{roundName}</td>
+                        <td className="py-3 px-3">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              {isCustomDuration ? (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    min={5}
+                                    max={1440}
+                                    value={customValue}
+                                    onChange={(e) => handleCustomValueChange(e.target.value)}
+                                    className="w-20 px-2 py-1.5 bg-dark-300 border border-dark-200 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                    placeholder="min"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      setIsCustomDuration(false);
+                                      setEditValue(60);
+                                    }}
+                                    className="text-xs text-gray-400 hover:text-white"
+                                  >
+                                    Preset
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="relative">
+                                  <select
+                                    value={editValue}
+                                    onChange={(e) => handleDropdownChange(e.target.value)}
+                                    className="appearance-none w-28 px-2 py-1.5 pr-7 bg-dark-300 border border-dark-200 rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                                  >
+                                    {DURATION_OPTIONS.map((option) => (
+                                      <option key={option.value} value={option.value}>
+                                        {option.label}
+                                      </option>
+                                    ))}
+                                    <option value="custom">Custom...</option>
+                                  </select>
+                                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className={`font-medium ${hasPendingChange ? 'text-primary-400' : 'text-white'}`}>
+                              {formatDuration(timer.duration_minutes)}
+                              {hasPendingChange && (
+                                <span className="ml-2 text-xs text-primary-400">(modified)</span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td className={`py-3 px-3 ${editingTimerId ? 'hidden' : ''}`}>
+                          {getStatusBadge(timer.status)}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          {isEditing ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveRowEdit(timer.id)}
+                                disabled={isUpdating}
+                                leftIcon={<Save size={14} />}
+                              >
+                                Save
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleStartEdit(timer)}
-                                disabled={!canEdit}
-                                leftIcon={<Edit2 size={14} />}
+                                onClick={handleCancelEdit}
+                                disabled={isUpdating}
+                                leftIcon={<X size={14} />}
                               >
-                                <span className="hidden sm:inline">Edit</span>
+                                Cancel
                               </Button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleStartEdit(timer)}
+                              disabled={!canEdit}
+                              leftIcon={<Edit2 size={14} />}
+                            >
+                              Edit
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
-            <div className="lg:w-72 flex-shrink-0 space-y-4">
-              <div className="p-4 bg-primary-900/20 border border-primary-500/30 rounded-lg">
-                <p className="text-sm text-gray-300 mb-2">Total estimated time</p>
-                <p className="text-2xl font-bold text-primary-400">{getTotalEstimatedTime()}</p>
-              </div>
+            {!editingTimerId && (
+              <div className="lg:w-72 flex-shrink-0 space-y-4">
+                <div className="p-4 bg-primary-900/20 border border-primary-500/30 rounded-lg">
+                  <p className="text-sm text-gray-300 mb-2">Total estimated time</p>
+                  <p className="text-2xl font-bold text-primary-400">{getTotalEstimatedTime()}</p>
+                </div>
 
-              <div className="p-4 bg-dark-200 rounded-lg">
-                <p className="text-xs text-gray-400">
-                  <strong>Note:</strong> Durations can only be modified for rounds that have not yet started.
-                  Once a round is in progress, you can pause or extend it, but not modify its initial duration.
-                </p>
+                <div className="p-4 bg-dark-200 rounded-lg">
+                  <p className="text-xs text-gray-400">
+                    <strong>Note:</strong> Durations can only be modified for rounds that have not yet started.
+                    Once a round is in progress, you can pause or extend it, but not modify its initial duration.
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
