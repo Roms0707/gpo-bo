@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   variant?: 'default' | 'active' | 'past';
@@ -9,7 +9,8 @@ interface CardProps {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(({
   children,
   className = '',
-  variant = 'default'
+  variant = 'default',
+  ...rest
 }, ref) => {
   const baseStyles = 'rounded-lg border bg-card text-card-foreground shadow transition-all duration-200 hover:shadow-md';
 
@@ -20,7 +21,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({
   };
 
   return (
-    <div ref={ref} className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <div ref={ref} {...rest} className={`${baseStyles} ${variants[variant]} ${className}`}>
       {children}
     </div>
   );
