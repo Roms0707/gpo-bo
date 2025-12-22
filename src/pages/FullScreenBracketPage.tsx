@@ -102,7 +102,7 @@ const FullScreenBracketPage: React.FC = () => {
     incompleteMatches: Match[];
   } | null>(null);
   const [isRepairingByes, setIsRepairingByes] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showMiniMap, setShowMiniMap] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);

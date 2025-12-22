@@ -7,7 +7,7 @@ import { useTournamentStore } from '../store/tournamentStore';
 import { useAuthStore } from '../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { ArrowLeft, Trophy, ChevronRight, Crown, Sparkles, Star, Target, Award, AlertTriangle, RotateCcw, Clock, Wrench, Maximize, Bell } from 'lucide-react';
+import { ArrowLeft, Trophy, ChevronRight, Crown, Sparkles, Star, Target, Award, AlertTriangle, RotateCcw, Clock, Wrench, Maximize, Bell, Menu } from 'lucide-react';
 import BracketDisplay from '../components/bracket/BracketDisplay';
 import BracketHeader from '../components/bracket/BracketHeader';
 import EmptyBracketMessage from '../components/bracket/EmptyBracketMessage';
@@ -19,14 +19,13 @@ import BackupPanel from '../components/bracket/BackupPanel';
 import ByeManagementPanel from '../components/bracket/ByeManagementPanel';
 import CrossRoundMoveModal from '../components/bracket/CrossRoundMoveModal';
 import ResetBracketModal from '../components/bracket/ResetBracketModal';
-import BracketSearchBar from '../components/bracket/BracketSearchBar';
 import RoundTimerDisplay from '../components/bracket/RoundTimerDisplay';
-import RoundTimerConfig from '../components/bracket/RoundTimerConfig';
 import IncompleteMatchesModal from '../components/bracket/IncompleteMatchesModal';
 import ForceRoundProgressionModal from '../components/bracket/ForceRoundProgressionModal';
 import RoundTimerExpirationModal from '../components/bracket/RoundTimerExpirationModal';
 import PlayerInfoModal from '../components/bracket/PlayerInfoModal';
-import { MatchNotificationPanel } from '../components/notifications/MatchNotificationPanel';
+import BracketControlSidebar from '../components/bracket/BracketControlSidebar';
+import BracketFAB from '../components/bracket/BracketFAB';
 import { detectByes } from '../services/byeDetectionService';
 import { Match, Player, Team, Firework, MatchInsert } from '../components/bracket/types';
 import {
@@ -117,8 +116,6 @@ const BracketPage: React.FC = () => {
     incompleteMatches: Match[];
   } | null>(null);
   const [isRepairingByes, setIsRepairingByes] = useState(false);
-  const [isSearchBarFixed, setIsSearchBarFixed] = useState(false);
-  const searchBarObserverRef = useRef<HTMLDivElement>(null);
   const [showTimerExpirationModal, setShowTimerExpirationModal] = useState(false);
   const [timerExpirationData, setTimerExpirationData] = useState<{
     currentRound: number;
@@ -129,6 +126,7 @@ const BracketPage: React.FC = () => {
   const hasShownExpirationModal = useRef<Set<string>>(new Set());
   const [showPlayerInfoModal, setShowPlayerInfoModal] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Player | Team | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { canResetBrackets } = useAuthStore();
   const { resetBracket } = useTournamentStore();
@@ -138,29 +136,6 @@ const BracketPage: React.FC = () => {
       fetchTournamentAndPlayers();
     }
   }, [id]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsSearchBarFixed(!entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: '-1px 0px 0px 0px'
-      }
-    );
-
-    const currentRef = searchBarObserverRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (matches.length > 0) {
@@ -1982,34 +1957,28 @@ ORDER BY
         totalRounds={calculateRoundsNeeded(totalParticipants)}
       />
 
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/brackets')}
-          leftIcon={<ArrowLeft size={16} />}
-        >
-          Back to Brackets
-        </Button>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/brackets')}
+            leftIcon={<ArrowLeft size={16} />}
+          >
+            Back to Brackets
+          </Button>
+          <div className="h-6 w-px bg-gray-700" />
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-dark-200 hover:bg-dark-100 transition-colors"
+          >
+            <Menu className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-300">Controls</span>
+          </button>
+        </div>
 
         <div className="flex items-center space-x-2">
-          {/* Notification Panel - Demo using admin user */}
-          {tournament && (
-            <MatchNotificationPanel
-              userId="admin-demo-user-id"
-              tournamentId={id}
-            />
-          )}
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate(`/tournaments/${id}/bracket/fullscreen`)}
-            leftIcon={<Maximize size={16} />}
-            className="bg-primary-600 hover:bg-primary-700 text-white"
-          >
-            Full Screen
-          </Button>
           <div className="text-xs text-gray-400 bg-dark-200 px-2 py-1 rounded">
-            Single Elimination Bracket
+            Single Elimination
           </div>
           {tournament && (
             <div className={`text-xs px-2 py-1 rounded ${
@@ -2045,131 +2014,23 @@ ORDER BY
         )
       )}
 
-      <Card className="flex-1 flex flex-col">
-        <CardHeader className="pb-3">
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardHeader className="pb-3 flex-shrink-0">
           <CardTitle className="flex items-center justify-between text-lg">
-            <span>Single Elimination Bracket - {tournament?.title}</span>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-400">
-                {participants.length} {tournament?.type === 'team' ? 'Teams' : 'Players'} • {byes} BYEs • {rounds} Rounds
-              </div>
-
-              {/* Bracket Control Buttons */}
-              {tournament && (
-                <div className="flex items-center space-x-2">
-                  {/* BYE Management Button */}
-                  {byesByRound.size > 0 && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setShowByePanel(!showByePanel)}
-                        className={`relative ${
-                          Array.from(byesByRound.keys()).some(round => round > 1)
-                            ? 'text-orange-400 hover:text-orange-300 border border-orange-500/30'
-                            : 'text-green-400 hover:text-green-300'
-                        }`}
-                      >
-                        <AlertTriangle className="h-4 w-4 mr-1" />
-                        {Array.from(byesByRound.values()).reduce((acc, matches) => acc + matches.length, 0)} BYE
-                        {Array.from(byesByRound.keys()).some(round => round > 1) && (
-                          <span className="absolute -top-1 -right-1 h-3 w-3 bg-orange-500 rounded-full animate-pulse" />
-                        )}
-                      </Button>
-
-                      {/* Repair BYE Button - Show when problematic BYEs detected */}
-                      {Array.from(byesByRound.keys()).some(round => round > 1) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleRepairOrphanedByes}
-                          isLoading={isRepairingByes}
-                          className="text-blue-400 hover:text-blue-300 border border-blue-500/30"
-                          leftIcon={<Wrench size={16} />}
-                        >
-                          Réparer BYE
-                        </Button>
-                      )}
-                    </>
-                  )}
-
-                  {/* Initialize Timers Button - Only show in draft mode if timers are missing */}
-                  {isDraftMode && matches.length > 0 && roundTimers.length === 0 && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleManualInitializeTimers}
-                      className="text-blue-400 hover:text-blue-300 border border-blue-500/30"
-                      leftIcon={<Clock size={16} />}
-                    >
-                      Initialiser les Timers
-                    </Button>
-                  )}
-
-                  {isDraftMode ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleResetDraft}
-                        className="text-warning-400 hover:text-warning-300"
-                      >
-                        Reset Draft
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handlePushBracketLive}
-                        isLoading={isUpdatingBracketStatus}
-                        className="bg-success-600 hover:bg-success-700 text-white"
-                      >
-                        Push Bracket Live
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={handleEditBracket}
-                      isLoading={isUpdatingBracketStatus}
-                    >
-                      Edit Bracket
-                    </Button>
-                  )}
-
-                  {/* Resend Notifications Button - Only visible when bracket is live and timer is active */}
-                  {!isDraftMode && activeTimer && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleResendNotifications}
-                      className="text-blue-400 hover:text-blue-300 border border-blue-500/30"
-                      leftIcon={<Bell size={16} />}
-                    >
-                      Renvoyer notifications
-                    </Button>
-                  )}
-
-                  {/* Reset Bracket Button - Only visible to master_admin and super_admin */}
-                  {canResetBrackets() && bracketAlreadyGenerated && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setShowResetModal(true)}
-                      className="text-error-400 hover:text-error-300 border border-error-500/30"
-                      leftIcon={<RotateCcw size={16} />}
-                    >
-                      Reset Bracket
-                    </Button>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center space-x-3">
+              <Trophy className="h-5 w-5 text-primary-400" />
+              <span>{tournament?.title}</span>
+            </div>
+            <div className="text-sm text-gray-400">
+              {participants.length} {tournament?.type === 'team' ? 'Teams' : 'Players'} | {byes} BYEs | {rounds} Rounds
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-row overflow-hidden">
+        <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
           <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Draft Mode Helper Message */}
+            <div className="px-6 pt-4">
             {isDraftMode && (
               <div className="mb-4 bg-gradient-to-r from-primary-900/30 to-primary-800/20 border-2 border-primary-500/50 rounded-lg p-4 flex items-start space-x-3 shadow-lg">
                 <div className="flex-shrink-0 mt-0.5 animate-pulse">
@@ -2215,19 +2076,9 @@ ORDER BY
               </div>
             )}
 
-            {/* Timer Section - Dedicated area for timer components */}
-            <div className="mb-4">
-              {/* Round Timer Configuration (Draft Mode Only) */}
-              {isDraftMode && roundTimers.length > 0 && (
-                <RoundTimerConfig
-                  timers={roundTimers}
-                  totalRounds={rounds}
-                  onTimersUpdated={loadRoundTimers}
-                />
-              )}
-
-              {/* Active Round Timer Display (Live Mode Only) */}
-              {!isDraftMode && activeTimer && (
+            {/* Active Round Timer Display (Live Mode Only) */}
+            {!isDraftMode && activeTimer && (
+              <div className="mb-4 flex-shrink-0">
                 <RoundTimerDisplay
                   timer={activeTimer}
                   totalRounds={rounds}
@@ -2237,58 +2088,50 @@ ORDER BY
                   onManualProgression={handleManualProgression}
                   onForceProgression={handleShowForceProgression}
                 />
-              )}
+              </div>
+            )}
             </div>
 
-            {/* Search Bar Observer Anchor */}
-            <div ref={searchBarObserverRef} className="h-0" />
+            {/* Scrollable Bracket Container */}
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1 overflow-x-auto overflow-y-auto bracket-scroll-container">
+                {/* Condensed Seeding Information */}
+                <div className="px-6">
+                  <BracketHeader
+                    tournament={tournament}
+                    participants={participants}
+                    byes={byes}
+                    rounds={rounds}
+                  />
+                </div>
 
-            {/* Search Bar - Fixed when scrolled past */}
-            <div className={`${isSearchBarFixed ? 'fixed top-0 left-0 right-0 z-50' : ''}`}>
-              <BracketSearchBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                resultsCount={searchQuery ? highlightedMatchIds.size : undefined}
-                isFixed={isSearchBarFixed}
+                {/* Bracket Display */}
+                <BracketDisplay
+                  matches={isDraftMode ? editableMatches : matches}
+                  tournament={tournament}
+                  players={players}
+                  teams={teams}
+                  onWinnerSelected={handleWinnerSelected}
+                  isEditable={isDraftMode}
+                  onMatchUpdate={handleSwapPlayers}
+                  canModifyResult={!isDraftMode}
+                  onResetMatch={handleResetMatch}
+                  onChangeWinner={handleChangeWinner}
+                  searchQuery={searchQuery}
+                  highlightedMatchIds={highlightedMatchIds}
+                  onPlayerInfoClick={handlePlayerInfoClick}
+                />
+              </div>
+
+              {/* Backup Panel */}
+              <BackupPanel
+                backupPlayers={backupPlayers}
+                backupTeams={backupTeams}
+                isTeamTournament={tournament?.type === 'team'}
+                show={isDraftMode}
               />
             </div>
-
-            {/* Placeholder to prevent layout shift when fixed */}
-            {isSearchBarFixed && <div className="h-[88px]" />}
-
-            {/* Condensed Seeding Information */}
-            <BracketHeader
-              tournament={tournament}
-              participants={participants}
-              byes={byes}
-              rounds={rounds}
-            />
-
-            {/* Bracket Display */}
-            <BracketDisplay
-              matches={isDraftMode ? editableMatches : matches}
-              tournament={tournament}
-              players={players}
-              teams={teams}
-              onWinnerSelected={handleWinnerSelected}
-              isEditable={isDraftMode}
-              onMatchUpdate={handleSwapPlayers}
-              canModifyResult={!isDraftMode}
-              onResetMatch={handleResetMatch}
-              onChangeWinner={handleChangeWinner}
-              searchQuery={searchQuery}
-              highlightedMatchIds={highlightedMatchIds}
-              onPlayerInfoClick={handlePlayerInfoClick}
-            />
           </div>
-
-          {/* Backup Panel */}
-          <BackupPanel
-            backupPlayers={backupPlayers}
-            backupTeams={backupTeams}
-            isTeamTournament={tournament?.type === 'team'}
-            show={isDraftMode}
-          />
 
           {/* Drag Overlay for visual feedback */}
           <DragOverlay>
@@ -2414,6 +2257,43 @@ ORDER BY
         onClose={() => setShowPlayerInfoModal(false)}
         participant={selectedParticipant}
         isTeam={tournament?.type === 'team'}
+      />
+
+      {/* Control Sidebar */}
+      <BracketControlSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        isDraftMode={isDraftMode}
+        tournament={tournament}
+        byesByRound={byesByRound}
+        roundTimers={roundTimers}
+        canResetBrackets={canResetBrackets()}
+        isUpdatingBracketStatus={isUpdatingBracketStatus}
+        isRepairingByes={isRepairingByes}
+        bracketAlreadyGenerated={bracketAlreadyGenerated}
+        activeTimer={activeTimer}
+        onPushBracketLive={handlePushBracketLive}
+        onEditBracket={handleEditBracket}
+        onResetDraft={handleResetDraft}
+        onShowByePanel={() => setShowByePanel(true)}
+        onRepairByes={handleRepairOrphanedByes}
+        onResetBracket={() => setShowResetModal(true)}
+        onLoadTimers={loadRoundTimers}
+        onInitializeTimers={handleManualInitializeTimers}
+        onResendNotifications={handleResendNotifications}
+        matches={matches}
+      />
+
+      {/* Floating Action Button */}
+      <BracketFAB
+        tournamentId={id || ''}
+        isDraftMode={isDraftMode}
+        isUpdatingBracketStatus={isUpdatingBracketStatus}
+        onPushBracketLive={handlePushBracketLive}
+        onToggleSidebar={() => setIsSidebarOpen(true)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchResultsCount={searchQuery ? highlightedMatchIds.size : undefined}
       />
     </div>
   );

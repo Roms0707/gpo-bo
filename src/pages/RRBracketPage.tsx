@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { ArrowLeft, AlertTriangle, Target } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveBracket } from '../components/bracket/BracketService';
 import { Player, Team, Tournament, Match } from '../components/roundrobin/types';
@@ -13,8 +13,8 @@ import GroupStandings from '../components/roundrobin/GroupStandings';
 import WaitingList from '../components/roundrobin/WaitingList';
 import RoundRobinMatches from '../components/roundrobin/RoundRobinMatches';
 import RoundRobinDebugPanel from '../components/roundrobin/RoundRobinDebugPanel';
-import BracketSearchBar from '../components/bracket/BracketSearchBar';
-import { MatchNotificationPanel } from '../components/notifications/MatchNotificationPanel';
+import RRControlSidebar from '../components/roundrobin/RRControlSidebar';
+import RRBracketFAB from '../components/roundrobin/RRBracketFAB';
 import {
   fetchSoloPlayers,
   fetchTeams,
@@ -45,8 +45,7 @@ const RRBracketPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [hasRedirected, setHasRedirected] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchBarFixed, setIsSearchBarFixed] = useState(false);
-  const searchBarObserverRef = useRef<HTMLDivElement>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (effectRan.current || hasRedirected) return;
@@ -54,29 +53,6 @@ const RRBracketPage: React.FC = () => {
 
     fetchTournamentAndPlayers();
   }, [id]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsSearchBarFixed(!entry.isIntersecting);
-      },
-      {
-        threshold: 0,
-        rootMargin: '-1px 0px 0px 0px'
-      }
-    );
-
-    const currentRef = searchBarObserverRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, []);
 
   const isBattleRoyaleTournament = () => {
     return tournament?.tournament_format?.toLowerCase().includes('battle royale');
@@ -672,30 +648,33 @@ const RRBracketPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/brackets')}
-          leftIcon={<ArrowLeft size={16} />}
-        >
-          Back to Brackets
-        </Button>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/brackets')}
+            leftIcon={<ArrowLeft size={16} />}
+          >
+            Back to Brackets
+          </Button>
+          <div className="h-6 w-px bg-gray-700" />
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-dark-200 hover:bg-dark-100 transition-colors"
+          >
+            <Menu className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-300">Controls</span>
+          </button>
+        </div>
 
         <div className="flex items-center space-x-2">
-          {/* Notification Panel - Demo using admin user */}
-          {tournament && (
-            <MatchNotificationPanel
-              userId="admin-demo-user-id"
-              tournamentId={id}
-            />
-          )}
           <div className="text-xs text-gray-400 bg-dark-200 px-2 py-1 rounded">
-            Round Robin Bracket
+            Round Robin
           </div>
           {tournament && (
             <div className={`text-xs px-2 py-1 rounded ${
-              tournament.bracket_status === 'live' 
-                ? 'bg-success-900/20 text-success-400 border border-success-500/30' 
+              tournament.bracket_status === 'live'
+                ? 'bg-success-900/20 text-success-400 border border-success-500/30'
                 : 'bg-warning-900/20 text-warning-400 border border-warning-500/30'
             }`}>
               {tournament.bracket_status === 'live' ? 'Live' : 'Draft'}
@@ -709,56 +688,6 @@ const RRBracketPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bracket Control Buttons */}
-      {tournament && (
-        <Card className="bg-dark-300 border-primary-500/30">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-medium text-white mb-1">Bracket Management</h3>
-                <p className="text-sm text-gray-400">
-                  {isDraftMode 
-                    ? 'Bracket is in draft mode. You can swap players and make changes.' 
-                    : 'Bracket is live. Players can compete and results can be recorded.'}
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {isDraftMode ? (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleResetDraft}
-                      className="text-warning-400 hover:text-warning-300"
-                    >
-                      Reset Draft
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={handlePushBracketLive}
-                      isLoading={isUpdatingBracketStatus}
-                      className="bg-success-600 hover:bg-success-700 text-white"
-                    >
-                      Push Bracket Live
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={handleEditBracket}
-                    isLoading={isUpdatingBracketStatus}
-                  >
-                    Edit Bracket
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <TournamentOverview
         tournament={tournament}
         participants={participants}
@@ -769,46 +698,6 @@ const RRBracketPage: React.FC = () => {
         completedMatches={completedMatches}
         totalMatches={totalMatches}
       />
-
-      {/* Search Bar Observer Anchor */}
-      <div ref={searchBarObserverRef} className="h-0" />
-
-      {/* Search Bar - Fixed when scrolled past */}
-      <div className={`mb-6 ${isSearchBarFixed ? 'fixed top-0 left-0 right-0 z-50' : ''}`}>
-        <BracketSearchBar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          resultsCount={searchQuery ? (isDraftMode ? editableMatches : matches).filter((match) => {
-            const getParticipantName = (participantId: string | null) => {
-              if (!participantId) return 'TBD';
-              if (tournament?.type === 'team') {
-                const team = teams.find(t => t.captain_id === participantId);
-                return team ? team.name : 'Unknown Team';
-              } else {
-                const player = players.find(p => p.id === participantId);
-                return player ? player.name : 'Unknown Player';
-              }
-            };
-            const sortedMatches = [...(isDraftMode ? editableMatches : matches)].sort((a, b) => {
-              if (a.round !== b.round) return a.round - b.round;
-              return a.position - b.position;
-            });
-            const matchNumber = sortedMatches.findIndex(m => m.id === match.id) + 1;
-            const player1Name = getParticipantName(match.player1_id).toLowerCase();
-            const player2Name = getParticipantName(match.player2_id).toLowerCase();
-            const query = searchQuery.toLowerCase();
-            return (
-              matchNumber.toString().includes(query) ||
-              player1Name.includes(query) ||
-              player2Name.includes(query)
-            );
-          }).length : undefined}
-          isFixed={isSearchBarFixed}
-        />
-      </div>
-
-      {/* Placeholder to prevent layout shift when fixed */}
-      {isSearchBarFixed && <div className="h-[88px] mb-6" />}
 
       {groupStageComplete && qualifiedParticipants.length >= 2 && (
         <KnockoutStageCard
@@ -857,6 +746,48 @@ const RRBracketPage: React.FC = () => {
         isEditable={isDraftMode}
         onMatchUpdate={handleSwapPlayers}
         searchQuery={searchQuery}
+      />
+
+      {/* Control Sidebar */}
+      <RRControlSidebar
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        isDraftMode={isDraftMode}
+        tournament={tournament}
+        isUpdatingBracketStatus={isUpdatingBracketStatus}
+        groupStageComplete={groupStageComplete}
+        qualifiedCount={qualifiedParticipants.length}
+        onPushBracketLive={handlePushBracketLive}
+        onEditBracket={handleEditBracket}
+        onResetDraft={handleResetDraft}
+        onGenerateKnockout={generateKnockoutStage}
+        isGeneratingKnockout={isGeneratingKnockout}
+      />
+
+      {/* Floating Action Button */}
+      <RRBracketFAB
+        isDraftMode={isDraftMode}
+        isUpdatingBracketStatus={isUpdatingBracketStatus}
+        onPushBracketLive={handlePushBracketLive}
+        onToggleSidebar={() => setIsSidebarOpen(true)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchResultsCount={searchQuery ? (isDraftMode ? editableMatches : matches).filter((match) => {
+          const getParticipantName = (participantId: string | null) => {
+            if (!participantId) return 'TBD';
+            if (tournament?.type === 'team') {
+              const team = teams.find(t => t.captain_id === participantId);
+              return team ? team.name : 'Unknown Team';
+            } else {
+              const player = players.find(p => p.id === participantId);
+              return player ? player.name : 'Unknown Player';
+            }
+          };
+          const player1Name = getParticipantName(match.player1_id).toLowerCase();
+          const player2Name = getParticipantName(match.player2_id).toLowerCase();
+          const query = searchQuery.toLowerCase();
+          return player1Name.includes(query) || player2Name.includes(query);
+        }).length : undefined}
       />
     </div>
   );
