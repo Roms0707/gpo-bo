@@ -244,8 +244,8 @@ const RoundTimerConfigModal: React.FC<RoundTimerConfigModalProps> = ({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="" size="lg">
-      <div className="flex flex-col max-h-[80vh]">
+    <Modal isOpen={isOpen} onClose={handleClose} title="" size="4xl">
+      <div className="flex flex-col">
         <div className="flex items-center justify-between pb-4 border-b border-dark-300">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-primary-900/30 rounded-lg">
@@ -264,127 +264,129 @@ const RoundTimerConfigModal: React.FC<RoundTimerConfigModalProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-4">
-          <div className="mb-4 p-3 bg-dark-200 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Appliquer a tous les rounds en attente :</p>
-            <div className="flex flex-wrap gap-2">
-              {presetDurations.map((preset) => (
-                <Button
-                  key={preset.value}
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => handleApplyToAll(preset.value)}
-                  disabled={isUpdating}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-dark-300">
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Round</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Nom</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Duree</th>
-                  <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Statut</th>
-                  <th className="text-right py-2 px-3 text-sm font-semibold text-gray-300">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {localTimers.map((timer) => {
-                  const roundName = getRoundName(timer.round_number, totalRounds);
-                  const isEditing = editingTimerId === timer.id;
-                  const canEdit = timer.status === 'pending';
-                  const hasPendingChange = pendingChanges.has(timer.id);
-
-                  return (
-                    <tr
-                      key={timer.id}
-                      className={`border-b border-dark-300 hover:bg-dark-200 ${hasPendingChange ? 'bg-primary-900/10' : ''}`}
+        <div className="py-4">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex-1">
+              <div className="mb-3 p-3 bg-dark-200 rounded-lg">
+                <p className="text-sm text-gray-400 mb-2">Appliquer a tous les rounds en attente :</p>
+                <div className="flex flex-wrap gap-2">
+                  {presetDurations.map((preset) => (
+                    <Button
+                      key={preset.value}
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleApplyToAll(preset.value)}
+                      disabled={isUpdating}
                     >
-                      <td className="py-3 px-3 text-white">{timer.round_number}</td>
-                      <td className="py-3 px-3 text-gray-300">{roundName}</td>
-                      <td className="py-3 px-3">
-                        {isEditing ? (
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              type="number"
-                              min={5}
-                              max={1440}
-                              value={editValue}
-                              onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
-                              className="w-24"
-                            />
-                            <span className="text-sm text-gray-400">min</span>
-                          </div>
-                        ) : (
-                          <span className={`font-medium ${hasPendingChange ? 'text-primary-400' : 'text-white'}`}>
-                            {formatDuration(timer.duration_minutes)}
-                            {hasPendingChange && (
-                              <span className="ml-2 text-xs text-primary-400">(modifie)</span>
-                            )}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3">
-                        {getStatusBadge(timer.status)}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        {isEditing ? (
-                          <div className="flex items-center justify-end space-x-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleSaveRowEdit(timer.id)}
-                              disabled={isUpdating}
-                              leftIcon={<Save size={14} />}
-                            >
-                              Sauvegarder
-                            </Button>
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-dark-300">
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Round</th>
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Nom</th>
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Duree</th>
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-gray-300">Statut</th>
+                    <th className="text-right py-2 px-3 text-sm font-semibold text-gray-300">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {localTimers.map((timer) => {
+                    const roundName = getRoundName(timer.round_number, totalRounds);
+                    const isEditing = editingTimerId === timer.id;
+                    const canEdit = timer.status === 'pending';
+                    const hasPendingChange = pendingChanges.has(timer.id);
+
+                    return (
+                      <tr
+                        key={timer.id}
+                        className={`border-b border-dark-300 hover:bg-dark-200 ${hasPendingChange ? 'bg-primary-900/10' : ''}`}
+                      >
+                        <td className="py-3 px-3 text-white">{timer.round_number}</td>
+                        <td className="py-3 px-3 text-gray-300">{roundName}</td>
+                        <td className="py-3 px-3">
+                          {isEditing ? (
+                            <div className="flex items-center space-x-2">
+                              <Input
+                                type="number"
+                                min={5}
+                                max={1440}
+                                value={editValue}
+                                onChange={(e) => setEditValue(parseInt(e.target.value) || 0)}
+                                className="w-24"
+                              />
+                              <span className="text-sm text-gray-400">min</span>
+                            </div>
+                          ) : (
+                            <span className={`font-medium ${hasPendingChange ? 'text-primary-400' : 'text-white'}`}>
+                              {formatDuration(timer.duration_minutes)}
+                              {hasPendingChange && (
+                                <span className="ml-2 text-xs text-primary-400">(modifie)</span>
+                              )}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          {getStatusBadge(timer.status)}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          {isEditing ? (
+                            <div className="flex items-center justify-end space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleSaveRowEdit(timer.id)}
+                                disabled={isUpdating}
+                                leftIcon={<Save size={14} />}
+                              >
+                                Sauvegarder
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleCancelEdit}
+                                disabled={isUpdating}
+                                leftIcon={<X size={14} />}
+                              >
+                                Annuler
+                              </Button>
+                            </div>
+                          ) : (
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={handleCancelEdit}
-                              disabled={isUpdating}
-                              leftIcon={<X size={14} />}
+                              onClick={() => handleStartEdit(timer)}
+                              disabled={!canEdit}
+                              leftIcon={<Edit2 size={14} />}
                             >
-                              Annuler
+                              Modifier
                             </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleStartEdit(timer)}
-                            disabled={!canEdit}
-                            leftIcon={<Edit2 size={14} />}
-                          >
-                            Modifier
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 p-3 bg-primary-900/20 border border-primary-500/30 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-300">Temps total estime pour le tournoi :</span>
-              <span className="text-lg font-bold text-primary-400">{getTotalEstimatedTime()}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </div>
 
-          <div className="mt-4 p-3 bg-dark-200 rounded-lg">
-            <p className="text-xs text-gray-400">
-              <strong>Note :</strong> Les durees ne peuvent etre modifiees que pour les rounds
-              qui n'ont pas encore commence. Une fois qu'un round est en cours, vous pouvez le mettre en pause
-              ou l'etendre, mais pas modifier sa duree initiale.
-            </p>
+            <div className="w-72 flex-shrink-0 space-y-4">
+              <div className="p-4 bg-primary-900/20 border border-primary-500/30 rounded-lg">
+                <p className="text-sm text-gray-300 mb-2">Temps total estime</p>
+                <p className="text-2xl font-bold text-primary-400">{getTotalEstimatedTime()}</p>
+              </div>
+
+              <div className="p-4 bg-dark-200 rounded-lg">
+                <p className="text-xs text-gray-400">
+                  <strong>Note :</strong> Les durees ne peuvent etre modifiees que pour les rounds
+                  qui n'ont pas encore commence. Une fois qu'un round est en cours, vous pouvez le mettre en pause
+                  ou l'etendre, mais pas modifier sa duree initiale.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
