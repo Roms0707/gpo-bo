@@ -14,7 +14,6 @@ import {
   Bell,
   X
 } from 'lucide-react';
-import RoundTimerConfig from './RoundTimerConfig';
 import { RoundTimer } from '../../services/roundTimerService';
 import { Match } from './types';
 
@@ -39,6 +38,7 @@ interface BracketControlSidebarProps {
   onLoadTimers: () => void;
   onInitializeTimers?: () => void;
   onResendNotifications?: () => void;
+  onOpenTimerModal?: () => void;
   matches: Match[];
 }
 
@@ -63,6 +63,7 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   onLoadTimers,
   onInitializeTimers,
   onResendNotifications,
+  onOpenTimerModal,
   matches
 }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -242,19 +243,40 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
               </div>
             )}
 
-            {isDraftMode && roundTimers.length > 0 && (
+            {isDraftMode && roundTimers.length > 0 && onOpenTimerModal && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider flex items-center">
                   <Clock className="h-4 w-4 mr-1" />
-                  Round Timer Configuration
+                  Round Timers
                 </h3>
 
                 <div className="bg-dark-200 rounded-lg p-3">
-                  <RoundTimerConfig
-                    timers={roundTimers}
-                    totalRounds={Math.max(...roundTimers.map(t => t.round_number))}
-                    onTimersUpdated={onLoadTimers}
-                  />
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-sm text-white font-medium">
+                        {roundTimers.length} rounds
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Total: {(() => {
+                          const totalMinutes = roundTimers.reduce((sum, t) => sum + t.duration_minutes, 0);
+                          const hours = Math.floor(totalMinutes / 60);
+                          const mins = totalMinutes % 60;
+                          if (hours > 0 && mins > 0) return `${hours}h ${mins}min`;
+                          if (hours > 0) return `${hours}h`;
+                          return `${mins}min`;
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={onOpenTimerModal}
+                    leftIcon={<Settings size={14} />}
+                    className="w-full"
+                  >
+                    Configure Timers
+                  </Button>
                 </div>
               </div>
             )}

@@ -26,6 +26,7 @@ import RoundTimerExpirationModal from '../components/bracket/RoundTimerExpiratio
 import PlayerInfoModal from '../components/bracket/PlayerInfoModal';
 import BracketControlSidebar from '../components/bracket/BracketControlSidebar';
 import BracketFAB from '../components/bracket/BracketFAB';
+import RoundTimerConfigModal from '../components/bracket/RoundTimerConfigModal';
 import { detectByes } from '../services/byeDetectionService';
 import { Match, Player, Team, Firework, MatchInsert } from '../components/bracket/types';
 import {
@@ -127,6 +128,7 @@ const BracketPage: React.FC = () => {
   const [showPlayerInfoModal, setShowPlayerInfoModal] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Player | Team | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showTimerConfigModal, setShowTimerConfigModal] = useState(false);
 
   const { canResetBrackets } = useAuthStore();
   const { resetBracket } = useTournamentStore();
@@ -2281,7 +2283,17 @@ ORDER BY
         onLoadTimers={loadRoundTimers}
         onInitializeTimers={handleManualInitializeTimers}
         onResendNotifications={handleResendNotifications}
+        onOpenTimerModal={() => setShowTimerConfigModal(true)}
         matches={matches}
+      />
+
+      {/* Round Timer Configuration Modal */}
+      <RoundTimerConfigModal
+        isOpen={showTimerConfigModal}
+        onClose={() => setShowTimerConfigModal(false)}
+        timers={roundTimers}
+        totalRounds={rounds}
+        onTimersUpdated={loadRoundTimers}
       />
 
       {/* Floating Action Button */}

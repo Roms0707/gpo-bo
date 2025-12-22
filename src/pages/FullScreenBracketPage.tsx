@@ -29,6 +29,7 @@ import ForceRoundProgressionModal from '../components/bracket/ForceRoundProgress
 import FullScreenSidebar from '../components/bracket/FullScreenSidebar';
 import FullScreenMiniMap from '../components/bracket/FullScreenMiniMap';
 import RoundTimerDisplay from '../components/bracket/RoundTimerDisplay';
+import RoundTimerConfigModal from '../components/bracket/RoundTimerConfigModal';
 import { detectByes } from '../services/byeDetectionService';
 import { Match, Player, Team, Firework } from '../components/bracket/types';
 import {
@@ -110,6 +111,7 @@ const FullScreenBracketPage: React.FC = () => {
   const [autoScaleEnabled, setAutoScaleEnabled] = useState(false);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [showTimerConfigModal, setShowTimerConfigModal] = useState(false);
   const bracketContainerRef = useRef<HTMLDivElement>(null);
   const headerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const zoomControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1364,6 +1366,7 @@ const FullScreenBracketPage: React.FC = () => {
             onRepairByes={handleRepairOrphanedByes}
             onResetBracket={() => setShowResetModal(true)}
             onLoadTimers={loadRoundTimers}
+            onOpenTimerModal={() => setShowTimerConfigModal(true)}
             tournamentId={id || ''}
           />
         </div>
@@ -1597,6 +1600,14 @@ const FullScreenBracketPage: React.FC = () => {
           )}
         />
       )}
+
+      <RoundTimerConfigModal
+        isOpen={showTimerConfigModal}
+        onClose={() => setShowTimerConfigModal(false)}
+        timers={roundTimers}
+        totalRounds={calculateRoundsNeeded(participants.length)}
+        onTimersUpdated={loadRoundTimers}
+      />
     </div>
   );
 };
