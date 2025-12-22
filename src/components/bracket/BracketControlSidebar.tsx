@@ -98,7 +98,7 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   return (
     <>
       <div
-        className={`fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 ease-in-out ${
+        className={`fixed left-64 top-0 bottom-0 z-40 transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ width: '320px' }}
@@ -322,8 +322,8 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
         onMouseLeave={handleMouseLeave}
         className={`fixed z-40 bg-dark-300 border border-gray-700 shadow-lg transition-all duration-300 ease-in-out hover:bg-dark-200 ${
           isOpen
-            ? 'left-[320px] top-4 rounded-r-lg'
-            : 'left-0 top-1/2 -translate-y-1/2 rounded-r-lg'
+            ? 'left-[calc(16rem+320px)] top-4 rounded-r-lg'
+            : 'left-64 top-1/2 -translate-y-1/2 rounded-r-lg'
         }`}
       >
         {isOpen ? (
