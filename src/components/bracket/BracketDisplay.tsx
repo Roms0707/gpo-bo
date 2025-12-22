@@ -147,7 +147,7 @@ const BracketDisplay: React.FC<BracketDisplayProps> = ({
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="bracket-container flex-1 overflow-hidden">
+      <div className="bracket-container flex-1">
         <div
           ref={bracketRef}
           className="flex gap-16 p-8 min-h-full transition-transform duration-300 ease-out"

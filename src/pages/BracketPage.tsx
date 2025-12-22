@@ -1934,7 +1934,7 @@ ORDER BY
   }
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col min-h-full relative overflow-x-auto">
       {/* Fireworks Canvas */}
       <FireworksCanvas
         show={showCelebration}
@@ -1959,6 +1959,8 @@ ORDER BY
         totalRounds={calculateRoundsNeeded(totalParticipants)}
       />
 
+      {/* Sticky Navigation Header */}
+      <div className="sticky top-0 z-30 bg-dark-400 pb-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Button
@@ -1993,6 +1995,7 @@ ORDER BY
           )}
         </div>
       </div>
+      </div>
 
       {/* Debug Info Panel - Hidden by default */}
       {showDebugInfo && (
@@ -2016,8 +2019,8 @@ ORDER BY
         )
       )}
 
-      <Card className="flex-1 flex flex-col overflow-hidden">
-        <CardHeader className="pb-3 flex-shrink-0">
+      <Card className="flex-1 flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0 sticky top-0 z-20 bg-dark-300">
           <CardTitle className="flex items-center justify-between text-lg">
             <div className="flex items-center space-x-3">
               <Trophy className="h-5 w-5 text-primary-400" />
@@ -2028,9 +2031,9 @@ ORDER BY
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col overflow-hidden p-0">
+        <CardContent className="flex-1 flex flex-col p-0">
           <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col">
             {/* Draft Mode Helper Message */}
             <div className="px-6 pt-4">
             {isDraftMode && (
@@ -2094,9 +2097,9 @@ ORDER BY
             )}
             </div>
 
-            {/* Scrollable Bracket Container */}
-            <div className="flex-1 flex overflow-hidden">
-              <div className="flex-1 overflow-x-auto overflow-y-auto bracket-scroll-container">
+            {/* Bracket Container */}
+            <div className="flex-1 flex">
+              <div className="flex-1">
                 {/* Condensed Seeding Information */}
                 <div className="px-6">
                   <BracketHeader
