@@ -127,6 +127,7 @@ const DraggableParticipant: React.FC<DraggableParticipantProps> = ({
           <div className="flex items-center space-x-1">
             {onPlayerInfoClick && participantId && (
               <button
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   onPlayerInfoClick(participantId);
