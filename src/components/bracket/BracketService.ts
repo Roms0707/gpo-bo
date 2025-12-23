@@ -133,68 +133,83 @@ export const generateProfessionalBracket = (
 };
 
 const advanceByeWinnersRecursively = (matches: MatchInsert[]): void => {
-  let changesApplied = true;
-  let iterations = 0;
-  const maxIterations = 20; // Safety limit to prevent infinite loops
+  const maxRound = Math.max(...matches.map(m => m.round));
+  console.log(`🔄 BYE Propagation: Processing ${maxRound} rounds with two-phase approach`);
 
-  while (changesApplied && iterations < maxIterations) {
-    changesApplied = false;
-    iterations++;
+  for (let currentRound = 1; currentRound < maxRound; currentRound++) {
+    const nextRound = currentRound + 1;
 
-    // Find all matches with BYE (has winner_id set but missing one player)
-    const byeMatches = matches.filter(m =>
-      m.winner_id && (!m.player1_id || !m.player2_id)
+    const byeMatchesInRound = matches.filter(m =>
+      m.round === currentRound &&
+      m.winner_id &&
+      (!m.player1_id || !m.player2_id)
     );
 
-    console.log(`🔄 BYE Propagation Iteration ${iterations}: Found ${byeMatches.length} BYE matches to propagate`);
+    if (byeMatchesInRound.length === 0) {
+      console.log(`  Round ${currentRound}: No BYE matches to propagate`);
+      continue;
+    }
 
-    byeMatches.forEach(match => {
+    console.log(`  Round ${currentRound}: Propagating ${byeMatchesInRound.length} BYE winner(s) to Round ${nextRound}`);
+
+    byeMatchesInRound.forEach(match => {
       const winnerId = match.winner_id;
       if (!winnerId) return;
 
-      // Advance winner to next round
-      const nextRound = match.round + 1;
       const nextPosition = Math.ceil(match.position / 2);
-
       const nextMatch = matches.find(m =>
         m.round === nextRound && m.position === nextPosition
       );
 
       if (nextMatch) {
-        // Determine if the winner goes to player1 or player2 slot
         const isPlayer1Slot = match.position % 2 !== 0;
-
         const targetSlot = isPlayer1Slot ? 'player1_id' : 'player2_id';
         const currentValue = isPlayer1Slot ? nextMatch.player1_id : nextMatch.player2_id;
 
-        // Only update if the slot is empty
         if (!currentValue) {
           if (isPlayer1Slot) {
             nextMatch.player1_id = winnerId;
           } else {
             nextMatch.player2_id = winnerId;
           }
-          changesApplied = true;
-
-          console.log(`  ➡️ Advanced BYE winner from R${match.round}:M${match.position} to R${nextRound}:M${nextPosition} (${targetSlot})`);
-
-          // If the next match also becomes a BYE match, set winner automatically
-          if (nextMatch.player1_id && !nextMatch.player2_id) {
-            nextMatch.winner_id = nextMatch.player1_id;
-            console.log(`  ⚡ Auto-assigned winner for new BYE in R${nextRound}:M${nextPosition}`);
-          } else if (!nextMatch.player1_id && nextMatch.player2_id) {
-            nextMatch.winner_id = nextMatch.player2_id;
-            console.log(`  ⚡ Auto-assigned winner for new BYE in R${nextRound}:M${nextPosition}`);
-          }
+          console.log(`    ➡️ R${currentRound}:M${match.position} → R${nextRound}:M${nextPosition} (${targetSlot})`);
         }
       }
     });
+
+    const nextRoundMatches = matches.filter(m => m.round === nextRound);
+    let newByesCreated = 0;
+
+    nextRoundMatches.forEach(nextMatch => {
+      const hasPlayer1 = nextMatch.player1_id !== null;
+      const hasPlayer2 = nextMatch.player2_id !== null;
+
+      if (hasPlayer1 && !hasPlayer2 && !nextMatch.winner_id) {
+        nextMatch.winner_id = nextMatch.player1_id;
+        nextMatch.is_bye = true;
+        newByesCreated++;
+        console.log(`    ⚡ New BYE detected: R${nextRound}:M${nextMatch.position} - player1 auto-wins`);
+      } else if (!hasPlayer1 && hasPlayer2 && !nextMatch.winner_id) {
+        nextMatch.winner_id = nextMatch.player2_id;
+        nextMatch.is_bye = true;
+        newByesCreated++;
+        console.log(`    ⚡ New BYE detected: R${nextRound}:M${nextMatch.position} - player2 auto-wins`);
+      }
+    });
+
+    if (newByesCreated > 0) {
+      console.log(`    Created ${newByesCreated} new BYE(s) in Round ${nextRound}`);
+    }
   }
 
-  if (iterations >= maxIterations) {
-    console.warn('⚠️ BYE propagation reached maximum iterations. Bracket may have unresolved BYEs.');
-  } else {
-    console.log(`✅ BYE propagation completed in ${iterations} iteration(s)`);
+  const totalByes = matches.filter(m => m.is_bye).length;
+  console.log(`✅ BYE propagation completed. Total BYE matches: ${totalByes}`);
+
+  const finalMatch = matches.find(m => m.round === maxRound);
+  if (finalMatch) {
+    const hasPlayer1 = finalMatch.player1_id !== null;
+    const hasPlayer2 = finalMatch.player2_id !== null;
+    console.log(`📊 Finals status: Player1=${hasPlayer1 ? 'filled' : 'empty'}, Player2=${hasPlayer2 ? 'filled' : 'empty'}`);
   }
 };
 

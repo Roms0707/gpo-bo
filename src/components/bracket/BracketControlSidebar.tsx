@@ -12,7 +12,8 @@ import {
   Clock,
   Settings,
   Bell,
-  X
+  X,
+  FastForward
 } from 'lucide-react';
 import { RoundTimer } from '../../services/roundTimerService';
 import { Match } from './types';
@@ -39,6 +40,11 @@ interface BracketControlSidebarProps {
   onInitializeTimers?: () => void;
   onResendNotifications?: () => void;
   onOpenTimerModal?: () => void;
+  onForceProgression?: () => void;
+  nextRoundTimer?: RoundTimer | null;
+  currentRoundNumber?: number;
+  totalRounds?: number;
+  isForcingProgression?: boolean;
   matches: Match[];
 }
 
@@ -64,6 +70,11 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   onInitializeTimers,
   onResendNotifications,
   onOpenTimerModal,
+  onForceProgression,
+  nextRoundTimer,
+  currentRoundNumber,
+  totalRounds,
+  isForcingProgression,
   matches
 }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -189,6 +200,50 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
                 </Button>
               )}
             </div>
+
+            {!isDraftMode && activeTimer && nextRoundTimer && onForceProgression && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+                  Round Management
+                </h3>
+
+                <div className="bg-dark-200 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-400">Current Round</span>
+                    <span className="text-sm font-medium text-white">
+                      {currentRoundNumber} / {totalRounds}
+                    </span>
+                  </div>
+                  {activeTimer.end_time && (
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-gray-400">Time Remaining</span>
+                      <span className="text-sm font-medium text-primary-400">
+                        {(() => {
+                          const endTime = new Date(activeTimer.end_time).getTime();
+                          const now = Date.now();
+                          const remaining = Math.max(0, endTime - now);
+                          const mins = Math.floor(remaining / 60000);
+                          const secs = Math.floor((remaining % 60000) / 1000);
+                          return `${mins}:${secs.toString().padStart(2, '0')}`;
+                        })()}
+                      </span>
+                    </div>
+                  )}
+                  <Button
+                    onClick={onForceProgression}
+                    isLoading={isForcingProgression}
+                    variant="ghost"
+                    className="w-full justify-start text-orange-400 hover:bg-orange-900/20 border border-orange-500/30"
+                    leftIcon={<FastForward size={16} />}
+                  >
+                    Force Round Progression
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Skip to Round {(currentRoundNumber || 0) + 1}. Incomplete matches will be forfeited.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {totalByes > 0 && (
               <div className="space-y-3">

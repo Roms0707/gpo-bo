@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { GripVertical, ChevronRight, Crown, Users, MoveVertical } from 'lucide-react';
+import { GripVertical, ChevronRight, Crown, Users, MoveVertical, Info } from 'lucide-react';
 import HighlightText from './HighlightText';
 
 interface DraggableParticipantProps {
@@ -15,6 +15,7 @@ interface DraggableParticipantProps {
   matchId: string;
   position: 'player1' | 'player2';
   onParticipantClick?: (participantId: string | null) => void;
+  onPlayerInfoClick?: (participantId: string) => void;
   canSelect: boolean;
   clickTitle?: string;
   searchQuery?: string;
@@ -32,6 +33,7 @@ const DraggableParticipant: React.FC<DraggableParticipantProps> = ({
   matchId,
   position,
   onParticipantClick,
+  onPlayerInfoClick,
   canSelect,
   clickTitle,
   searchQuery = ''
@@ -123,6 +125,18 @@ const DraggableParticipant: React.FC<DraggableParticipantProps> = ({
 
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center space-x-1">
+            {onPlayerInfoClick && participantId && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPlayerInfoClick(participantId);
+                }}
+                className="text-gray-400 hover:text-primary-400 transition-colors flex-shrink-0"
+                title="View player info"
+              >
+                <Info className="h-3 w-3" />
+              </button>
+            )}
             {participantSeed && participantSeed <= 4 && (
               <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
             )}

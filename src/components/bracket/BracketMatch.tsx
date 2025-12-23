@@ -1,5 +1,5 @@
 import React, { useState, forwardRef } from 'react';
-import { ChevronRight, Crown, Trophy, Users, RotateCcw, Star } from 'lucide-react';
+import { ChevronRight, Crown, Trophy, Users, RotateCcw, Star, Info } from 'lucide-react';
 import { Match, Player, Team } from './types';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import DraggableParticipant from './DraggableParticipant';
@@ -327,6 +327,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
               matchId={match.id}
               position="player1"
               onParticipantClick={handleParticipantClick}
+              onPlayerInfoClick={onPlayerInfoClick}
               canSelect={canSelectWinner}
               clickTitle={match.winner_id && match.winner_id !== match.player1_id && canModifyResult ? 'Click to change winner' : ''}
               searchQuery={searchQuery}
@@ -346,6 +347,18 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
             >
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center space-x-1">
+                {onPlayerInfoClick && match.player1_id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPlayerInfoClick(match.player1_id!);
+                    }}
+                    className="text-gray-400 hover:text-primary-400 transition-colors flex-shrink-0"
+                    title="View player info"
+                  >
+                    <Info className="h-3 w-3" />
+                  </button>
+                )}
                 {participant1Seed && participant1Seed <= 4 && (
                   <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                 )}
@@ -355,16 +368,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
                 <span
                   className={`font-medium truncate ${
                     match.player1_id ? 'text-white' : 'text-gray-500'
-                  } ${canSelectWinner && match.player1_id ? 'hover:text-primary-300' : ''} ${
-                    onPlayerInfoClick && match.player1_id ? 'cursor-pointer hover:underline' : ''
-                  }`}
-                  onClick={(e) => {
-                    if (onPlayerInfoClick && match.player1_id) {
-                      e.stopPropagation();
-                      onPlayerInfoClick(match.player1_id);
-                    }
-                  }}
-                  title={onPlayerInfoClick && match.player1_id ? 'Voir les informations' : ''}
+                  } ${canSelectWinner && match.player1_id ? 'hover:text-primary-300' : ''}`}
                 >
                   {participant1Seed && match.player1_id && `#${participant1Seed} `}
                   <HighlightText
@@ -412,6 +416,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
             matchId={match.id}
             position="player2"
             onParticipantClick={handleParticipantClick}
+            onPlayerInfoClick={onPlayerInfoClick}
             canSelect={canSelectWinner}
             clickTitle={match.winner_id && match.winner_id !== match.player2_id && canModifyResult ? 'Click to change winner' : ''}
             searchQuery={searchQuery}
@@ -431,6 +436,18 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
           >
             <div className="flex flex-col min-w-0 flex-1">
               <div className="flex items-center space-x-1">
+                {onPlayerInfoClick && match.player2_id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPlayerInfoClick(match.player2_id!);
+                    }}
+                    className="text-gray-400 hover:text-primary-400 transition-colors flex-shrink-0"
+                    title="View player info"
+                  >
+                    <Info className="h-3 w-3" />
+                  </button>
+                )}
                 {participant2Seed && participant2Seed <= 4 && (
                   <Crown className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                 )}
@@ -440,16 +457,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
                 <span
                   className={`font-medium truncate ${
                     match.player2_id ? 'text-white' : 'text-gray-500'
-                  } ${canSelectWinner && match.player2_id ? 'hover:text-primary-300' : ''} ${
-                    onPlayerInfoClick && match.player2_id ? 'cursor-pointer hover:underline' : ''
-                  }`}
-                  onClick={(e) => {
-                    if (onPlayerInfoClick && match.player2_id) {
-                      e.stopPropagation();
-                      onPlayerInfoClick(match.player2_id);
-                    }
-                  }}
-                  title={onPlayerInfoClick && match.player2_id ? 'Voir les informations' : ''}
+                  } ${canSelectWinner && match.player2_id ? 'hover:text-primary-300' : ''}`}
                 >
                   {participant2Seed && match.player2_id && `#${participant2Seed} `}
                   <HighlightText
