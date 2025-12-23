@@ -51,6 +51,24 @@ const RRBracketFAB: React.FC<RRBracketFABProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        setIsSearchOpen(true);
+        setIsExpanded(false);
+      }
+      if (event.key === 'Escape' && isSearchOpen) {
+        event.preventDefault();
+        onSearchChange('');
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen, onSearchChange]);
+
   const handleSearchToggle = () => {
     if (isSearchOpen && !searchQuery) {
       setIsSearchOpen(false);

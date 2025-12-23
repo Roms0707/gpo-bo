@@ -62,6 +62,24 @@ const BracketFAB: React.FC<BracketFABProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [searchQuery]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        setIsSearchOpen(true);
+        setIsExpanded(false);
+      }
+      if (event.key === 'Escape' && isSearchOpen) {
+        event.preventDefault();
+        onSearchChange('');
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen, onSearchChange]);
+
   const handleFullScreen = () => {
     navigate(`/tournaments/${tournamentId}/bracket/fullscreen`);
   };
