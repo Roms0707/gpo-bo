@@ -250,3 +250,124 @@ export const getRegistrationStatusColor = (
       return 'error';
   }
 };
+
+export interface BracketValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  stats: {
+    participantCount: number;
+    bracketSize: number;
+    expectedByes: number;
+    actualByeMatches: number;
+    totalMatches: number;
+    expectedMatches: number;
+    totalRounds: number;
+  };
+}
+
+export const isPowerOfTwo = (n: number): boolean => {
+  if (n <= 0) return false;
+  return (n & (n - 1)) === 0;
+};
+
+export const validateBracketStructure = (
+  participantCount: number,
+  matches: Array<{
+    round: number;
+    position: number;
+    player1_id: string | null;
+    player2_id: string | null;
+    winner_id: string | null;
+    is_bye?: boolean;
+  }>
+): BracketValidationResult => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const bracketSize = getNextPowerOfTwo(participantCount);
+  const expectedByes = bracketSize - participantCount;
+  const expectedMatches = bracketSize - 1;
+  const expectedRounds = Math.log2(bracketSize);
+
+  if (!isPowerOfTwo(bracketSize)) {
+    errors.push(`Bracket size ${bracketSize} is not a power of 2`);
+  }
+
+  const totalMatches = matches.length;
+  if (totalMatches !== expectedMatches) {
+    errors.push(`Expected ${expectedMatches} matches but got ${totalMatches}`);
+  }
+
+  const rounds = [...new Set(matches.map(m => m.round))].sort((a, b) => a - b);
+  if (rounds.length !== expectedRounds) {
+    warnings.push(`Expected ${expectedRounds} rounds but found ${rounds.length}`);
+  }
+
+  for (let round = 1; round <= expectedRounds; round++) {
+    const expectedMatchesInRound = bracketSize / Math.pow(2, round);
+    const actualMatchesInRound = matches.filter(m => m.round === round).length;
+    if (actualMatchesInRound !== expectedMatchesInRound) {
+      errors.push(`Round ${round}: expected ${expectedMatchesInRound} matches, got ${actualMatchesInRound}`);
+    }
+  }
+
+  const round1Matches = matches.filter(m => m.round === 1);
+  const byeMatchesInRound1 = round1Matches.filter(m =>
+    (!m.player1_id && m.player2_id) || (m.player1_id && !m.player2_id)
+  ).length;
+
+  if (byeMatchesInRound1 !== expectedByes) {
+    warnings.push(`Expected ${expectedByes} BYE matches in Round 1, found ${byeMatchesInRound1}`);
+  }
+
+  const byesAfterRound1 = matches.filter(m =>
+    m.round > 1 &&
+    ((!m.player1_id && m.player2_id) || (m.player1_id && !m.player2_id)) &&
+    !m.winner_id
+  );
+
+  if (byesAfterRound1.length > 0) {
+    errors.push(`Found ${byesAfterRound1.length} orphaned BYE(s) after Round 1 - bracket structure is invalid`);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+    stats: {
+      participantCount,
+      bracketSize,
+      expectedByes,
+      actualByeMatches: byeMatchesInRound1,
+      totalMatches,
+      expectedMatches,
+      totalRounds: rounds.length
+    }
+  };
+};
+
+export const getBracketSizeInfo = (participantCount: number): {
+  bracketSize: number;
+  byes: number;
+  rounds: number;
+  roundBreakdown: string;
+} => {
+  const bracketSize = getNextPowerOfTwo(participantCount);
+  const byes = bracketSize - participantCount;
+  const rounds = Math.log2(bracketSize);
+
+  const breakdown: string[] = [];
+  let remaining = bracketSize;
+  for (let r = 1; r <= rounds; r++) {
+    remaining = remaining / 2;
+    breakdown.push(`R${r}: ${remaining * 2} to ${remaining}`);
+  }
+
+  return {
+    bracketSize,
+    byes,
+    rounds,
+    roundBreakdown: breakdown.join(' | ')
+  };
+};

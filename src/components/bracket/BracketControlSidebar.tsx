@@ -13,7 +13,8 @@ import {
   Settings,
   Bell,
   X,
-  FastForward
+  FastForward,
+  RefreshCw
 } from 'lucide-react';
 import { RoundTimer } from '../../services/roundTimerService';
 import { Match } from './types';
@@ -28,6 +29,7 @@ interface BracketControlSidebarProps {
   canResetBrackets: boolean;
   isUpdatingBracketStatus: boolean;
   isRepairingByes: boolean;
+  isRegeneratingBracket?: boolean;
   bracketAlreadyGenerated: boolean;
   activeTimer: RoundTimer | null;
   onPushBracketLive: () => void;
@@ -36,6 +38,7 @@ interface BracketControlSidebarProps {
   onShowByePanel: () => void;
   onRepairByes: () => void;
   onResetBracket: () => void;
+  onRegenerateBracket?: () => void;
   onLoadTimers: () => void;
   onInitializeTimers?: () => void;
   onResendNotifications?: () => void;
@@ -58,6 +61,7 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   canResetBrackets,
   isUpdatingBracketStatus,
   isRepairingByes,
+  isRegeneratingBracket,
   bracketAlreadyGenerated,
   activeTimer,
   onPushBracketLive,
@@ -66,6 +70,7 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
   onShowByePanel,
   onRepairByes,
   onResetBracket,
+  onRegenerateBracket,
   onLoadTimers,
   onInitializeTimers,
   onResendNotifications,
@@ -341,6 +346,23 @@ const BracketControlSidebar: React.FC<BracketControlSidebarProps> = ({
                 <h3 className="text-sm font-semibold text-error-400 uppercase tracking-wider">
                   Danger Zone
                 </h3>
+
+                {isDraftMode && onRegenerateBracket && (
+                  <>
+                    <Button
+                      onClick={onRegenerateBracket}
+                      isLoading={isRegeneratingBracket}
+                      variant="ghost"
+                      className="w-full justify-start text-orange-400 hover:bg-orange-900/20 border border-orange-500/30"
+                      leftIcon={<RefreshCw size={16} />}
+                    >
+                      Regenerate Bracket
+                    </Button>
+                    <p className="text-xs text-gray-500 px-2">
+                      Re-creates the bracket with correct power-of-2 structure and BYE distribution.
+                    </p>
+                  </>
+                )}
 
                 <Button
                   onClick={onResetBracket}

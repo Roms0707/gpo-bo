@@ -49,7 +49,8 @@ import {
   isRoundCompleted,
   forceProgressToNextRound,
   detectAndRepairOrphanedByes,
-  startRoundOne
+  startRoundOne,
+  regenerateBracket
 } from '../components/bracket/BracketService';
 import {
   RoundTimer,
@@ -117,6 +118,7 @@ const BracketPage: React.FC = () => {
     incompleteMatches: Match[];
   } | null>(null);
   const [isRepairingByes, setIsRepairingByes] = useState(false);
+  const [isRegeneratingBracket, setIsRegeneratingBracket] = useState(false);
   const [showTimerExpirationModal, setShowTimerExpirationModal] = useState(false);
   const [timerExpirationData, setTimerExpirationData] = useState<{
     currentRound: number;
@@ -1692,6 +1694,33 @@ ORDER BY
     }
   };
 
+  const handleRegenerateBracket = async () => {
+    if (!id) return;
+
+    try {
+      setIsRegeneratingBracket(true);
+      toast.loading('Regenerating bracket with correct structure...', { id: 'regenerate-bracket' });
+
+      const result = await regenerateBracket(id);
+
+      if (result.success) {
+        setMatches(result.matches);
+        toast.success(
+          `Bracket regenerated successfully with ${result.matches.length} matches`,
+          { id: 'regenerate-bracket' }
+        );
+        await fetchTournamentAndPlayers();
+      } else {
+        toast.error(`Error: ${result.error}`, { id: 'regenerate-bracket' });
+      }
+    } catch (error) {
+      console.error('Error regenerating bracket:', error);
+      toast.error('Failed to regenerate bracket', { id: 'regenerate-bracket' });
+    } finally {
+      setIsRegeneratingBracket(false);
+    }
+  };
+
   const handleResetBracket = async () => {
     if (!id) return;
 
@@ -2275,6 +2304,7 @@ ORDER BY
         canResetBrackets={canResetBrackets()}
         isUpdatingBracketStatus={isUpdatingBracketStatus}
         isRepairingByes={isRepairingByes}
+        isRegeneratingBracket={isRegeneratingBracket}
         bracketAlreadyGenerated={bracketAlreadyGenerated}
         activeTimer={activeTimer}
         onPushBracketLive={handlePushBracketLive}
@@ -2283,6 +2313,7 @@ ORDER BY
         onShowByePanel={() => setShowByePanel(true)}
         onRepairByes={handleRepairOrphanedByes}
         onResetBracket={() => setShowResetModal(true)}
+        onRegenerateBracket={handleRegenerateBracket}
         onLoadTimers={loadRoundTimers}
         onInitializeTimers={handleManualInitializeTimers}
         onResendNotifications={handleResendNotifications}

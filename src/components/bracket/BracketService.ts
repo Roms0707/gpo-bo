@@ -1,7 +1,12 @@
 import { Match, MatchInsert, Player, Team } from './types';
 import { supabase } from '../../lib/supabase';
 import { updatePlayerRankings, updateTeamRankings } from '../../utils/eloUtils';
-import { getNextPowerOfTwo, generateSnakeSeeding } from '../../utils/tournamentValidation';
+import {
+  getNextPowerOfTwo,
+  generateSnakeSeeding,
+  validateBracketStructure,
+  getBracketSizeInfo
+} from '../../utils/tournamentValidation';
 import {
   completeRoundTimer,
   startRoundTimer,
@@ -62,6 +67,7 @@ export const generateProfessionalBracket = (
 
   const seedMap = new Map<number, string | null>();
   for (let i = 0; i < bracketSize; i++) {
+    const seedNumber = i + 1;
     if (i < totalParticipants) {
       const participant = participantsByRank[i];
       const playerId = tournamentType === 'team'
@@ -69,14 +75,18 @@ export const generateProfessionalBracket = (
         : participant.id;
 
       if (playerId && validUserIds.has(playerId)) {
-        seedMap.set(snakeSeeding[i], playerId);
+        seedMap.set(seedNumber, playerId);
       } else {
-        seedMap.set(snakeSeeding[i], null);
+        seedMap.set(seedNumber, null);
       }
     } else {
-      seedMap.set(snakeSeeding[i], null);
+      seedMap.set(seedNumber, null);
     }
   }
+
+  console.log(`🎯 BRACKET GENERATION: Seed assignments:`);
+  console.log(`   - Seeds 1-${totalParticipants}: Assigned to players by ELO rank`);
+  console.log(`   - Seeds ${totalParticipants + 1}-${bracketSize}: BYEs`)
 
   console.log(`🎯 BRACKET GENERATION: Creating Round 1 with ${bracketSize / 2} matches`);
 
@@ -1132,6 +1142,145 @@ export const resetTournamentBracket = async (tournamentId: string): Promise<bool
   } catch (error) {
     console.error('Error in resetTournamentBracket:', error);
     return false;
+  }
+};
+
+/**
+ * Validate a generated bracket before saving
+ * Returns validation result with errors and warnings
+ */
+export const validateGeneratedBracket = (
+  matches: MatchInsert[],
+  participantCount: number
+): { isValid: boolean; errors: string[]; warnings: string[] } => {
+  const validation = validateBracketStructure(participantCount, matches);
+
+  if (validation.errors.length > 0) {
+    console.error('❌ Bracket validation errors:', validation.errors);
+  }
+  if (validation.warnings.length > 0) {
+    console.warn('⚠️ Bracket validation warnings:', validation.warnings);
+  }
+
+  console.log('📊 Bracket validation stats:', validation.stats);
+
+  return {
+    isValid: validation.isValid,
+    errors: validation.errors,
+    warnings: validation.warnings
+  };
+};
+
+/**
+ * Regenerate bracket for a tournament
+ * Fetches fresh participant list and creates a new bracket
+ * @param tournamentId - The tournament ID to regenerate bracket for
+ * @returns Object with success status and new matches
+ */
+export const regenerateBracket = async (
+  tournamentId: string
+): Promise<{ success: boolean; matches: Match[]; error?: string }> => {
+  try {
+    console.log(`🔄 Regenerating bracket for tournament: ${tournamentId}`);
+
+    const { data: tournamentData, error: tournamentError } = await supabase
+      .from('tournaments')
+      .select('*, game:game_id(name)')
+      .eq('id', tournamentId)
+      .single();
+
+    if (tournamentError || !tournamentData) {
+      return { success: false, matches: [], error: 'Tournament not found' };
+    }
+
+    const { error: deleteError } = await supabase
+      .from('tournament_matches')
+      .delete()
+      .eq('tournament_id', tournamentId);
+
+    if (deleteError) {
+      console.error('Error deleting existing matches:', deleteError);
+      return { success: false, matches: [], error: 'Failed to delete existing matches' };
+    }
+
+    let participants: Player[] | Team[] = [];
+    const validUserIds = new Set<string>();
+
+    if (tournamentData.type === 'team') {
+      const { data: teams, error: teamsError } = await supabase
+        .from('teams')
+        .select('*, captain:captain_id(id, username, email, elo)')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'approved');
+
+      if (teamsError) {
+        return { success: false, matches: [], error: 'Failed to fetch teams' };
+      }
+
+      participants = teams || [];
+      teams?.forEach(team => {
+        if (team.captain_id) validUserIds.add(team.captain_id);
+      });
+    } else {
+      const { data: registrations, error: regError } = await supabase
+        .from('tournament_registrations')
+        .select('*, user:user_id(id, username, email, elo)')
+        .eq('tournament_id', tournamentId)
+        .eq('status', 'approved');
+
+      if (regError) {
+        return { success: false, matches: [], error: 'Failed to fetch registrations' };
+      }
+
+      participants = (registrations || []).map(reg => ({
+        id: reg.user_id,
+        username: reg.user?.username || 'Unknown',
+        email: reg.user?.email || '',
+        elo: reg.user?.elo || 1000
+      }));
+
+      registrations?.forEach(reg => {
+        if (reg.user_id) validUserIds.add(reg.user_id);
+      });
+    }
+
+    if (participants.length < 2) {
+      return { success: false, matches: [], error: 'Not enough participants to generate bracket' };
+    }
+
+    const bracketInfo = getBracketSizeInfo(participants.length);
+    console.log(`📊 Bracket info: ${participants.length} participants → ${bracketInfo.bracketSize}-bracket with ${bracketInfo.byes} BYEs`);
+    console.log(`📊 Round breakdown: ${bracketInfo.roundBreakdown}`);
+
+    const generatedMatches = generateProfessionalBracket(
+      participants,
+      tournamentId,
+      tournamentData.type,
+      validUserIds,
+      tournamentData.max_nb_players
+    );
+
+    const validation = validateGeneratedBracket(generatedMatches, participants.length);
+    if (!validation.isValid) {
+      console.error('Generated bracket failed validation:', validation.errors);
+    }
+
+    const savedMatches = await saveBracket(generatedMatches, validUserIds, tournamentId, 'draft');
+
+    if (!savedMatches) {
+      return { success: false, matches: [], error: 'Failed to save regenerated bracket' };
+    }
+
+    console.log(`✅ Bracket regenerated successfully with ${savedMatches.length} matches`);
+
+    return { success: true, matches: savedMatches };
+  } catch (error) {
+    console.error('Error regenerating bracket:', error);
+    return {
+      success: false,
+      matches: [],
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 };
 

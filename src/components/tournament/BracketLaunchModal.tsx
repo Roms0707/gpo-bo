@@ -1,8 +1,8 @@
 import React from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
-import { AlertTriangle, CheckCircle, Users, Trophy, Target, Hash } from 'lucide-react';
-import { TournamentValidation } from '../../utils/tournamentValidation';
+import { AlertTriangle, CheckCircle, Users, Trophy, Target, Hash, GitBranch } from 'lucide-react';
+import { TournamentValidation, getBracketSizeInfo } from '../../utils/tournamentValidation';
 
 interface BracketLaunchModalProps {
   isOpen: boolean;
@@ -133,37 +133,50 @@ const BracketLaunchModal: React.FC<BracketLaunchModalProps> = ({
           {validation.isValid && (
             <div className="bg-dark-200 rounded-lg p-4 border border-gray-700">
               <div className="flex items-center space-x-2 mb-3">
-                <Hash className="h-5 w-5 text-accent-400" />
-                <span className="font-medium text-gray-300">Structure du bracket</span>
+                <GitBranch className="h-5 w-5 text-accent-400" />
+                <span className="font-medium text-gray-300">Structure du bracket (Single Elimination)</span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-xs text-gray-500">Participants</p>
-                  <p className="text-lg font-semibold text-white">{participantCount}</p>
-                </div>
-                {validation.numberOfRounds !== undefined && (
-                  <div>
-                    <p className="text-xs text-gray-500">Nombre de rounds</p>
-                    <p className="text-lg font-semibold text-white">{validation.numberOfRounds}</p>
-                  </div>
-                )}
-                {validation.numberOfByes !== undefined && validation.numberOfByes > 0 && (
-                  <div>
-                    <p className="text-xs text-gray-500">BYEs attribués</p>
-                    <p className="text-lg font-semibold text-amber-400">{validation.numberOfByes}</p>
-                  </div>
-                )}
-              </div>
-              {validation.bracketSize && validation.bracketSize !== participantCount && (
-                <div className="mt-3 pt-3 border-t border-gray-700">
-                  <p className="text-xs text-gray-400">
-                    Capacité totale du bracket: <span className="font-medium text-gray-300">{validation.bracketSize}</span> places
-                    {validation.bracketSize > participantCount && (
-                      <span className="text-amber-400"> ({validation.bracketSize - participantCount} places vides)</span>
+
+              {(() => {
+                const bracketInfo = getBracketSizeInfo(participantCount);
+                return (
+                  <>
+                    <div className="bg-dark-300/50 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-gray-300">
+                        <span className="text-primary-400 font-bold">{participantCount}</span> {participantLabel}
+                        <span className="text-gray-500 mx-2">→</span>
+                        Bracket de <span className="text-accent-400 font-bold">{bracketInfo.bracketSize}</span> places
+                        <span className="text-xs text-gray-500 ml-2">(2^{Math.log2(bracketInfo.bracketSize)} = prochaine puissance de 2)</span>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <p className="text-xs text-gray-500">Participants</p>
+                        <p className="text-lg font-semibold text-white">{participantCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Rounds</p>
+                        <p className="text-lg font-semibold text-white">{bracketInfo.rounds}</p>
+                      </div>
+                      {bracketInfo.byes > 0 && (
+                        <div>
+                          <p className="text-xs text-gray-500">BYEs (Round 1)</p>
+                          <p className="text-lg font-semibold text-amber-400">{bracketInfo.byes}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {bracketInfo.byes > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <p className="text-xs text-gray-400">
+                          Les <span className="text-amber-400 font-medium">{bracketInfo.byes}</span> meilleurs seeds recevront un BYE au Round 1 (auto-qualification au Round 2)
+                        </p>
+                      </div>
                     )}
-                  </p>
-                </div>
-              )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
