@@ -194,21 +194,30 @@ const advanceByeWinnersRecursively = (matches: MatchInsert[]): void => {
       const hasPlayer1 = nextMatch.player1_id !== null;
       const hasPlayer2 = nextMatch.player2_id !== null;
 
-      if (hasPlayer1 && !hasPlayer2 && !nextMatch.winner_id) {
-        nextMatch.winner_id = nextMatch.player1_id;
-        nextMatch.is_bye = true;
-        newByesCreated++;
-        console.log(`    ⚡ New BYE detected: R${nextRound}:M${nextMatch.position} - player1 auto-wins`);
-      } else if (!hasPlayer1 && hasPlayer2 && !nextMatch.winner_id) {
-        nextMatch.winner_id = nextMatch.player2_id;
-        nextMatch.is_bye = true;
-        newByesCreated++;
-        console.log(`    ⚡ New BYE detected: R${nextRound}:M${nextMatch.position} - player2 auto-wins`);
+      if ((hasPlayer1 && !hasPlayer2) || (!hasPlayer1 && hasPlayer2)) {
+        const feederPos1 = (nextMatch.position * 2) - 1;
+        const feederPos2 = nextMatch.position * 2;
+        const feederMatch1 = matches.find(m => m.round === currentRound && m.position === feederPos1);
+        const feederMatch2 = matches.find(m => m.round === currentRound && m.position === feederPos2);
+
+        const feeder1Complete = feederMatch1?.winner_id !== null && feederMatch1?.winner_id !== undefined;
+        const feeder2Complete = feederMatch2?.winner_id !== null && feederMatch2?.winner_id !== undefined;
+        const feeder1IsBye = feederMatch1?.is_bye === true;
+        const feeder2IsBye = feederMatch2?.is_bye === true;
+
+        if (feeder1Complete && feeder2Complete && feeder1IsBye && feeder2IsBye && !nextMatch.winner_id) {
+          nextMatch.winner_id = hasPlayer1 ? nextMatch.player1_id : nextMatch.player2_id;
+          nextMatch.is_bye = true;
+          newByesCreated++;
+          console.log(`    ⚡ Cascading BYE: R${nextRound}:M${nextMatch.position} - both feeders are BYEs`);
+        } else {
+          console.log(`    ⏳ R${nextRound}:M${nextMatch.position} - waiting for opponent (not a BYE)`);
+        }
       }
     });
 
     if (newByesCreated > 0) {
-      console.log(`    Created ${newByesCreated} new BYE(s) in Round ${nextRound}`);
+      console.log(`    Created ${newByesCreated} cascading BYE(s) in Round ${nextRound}`);
     }
   }
 

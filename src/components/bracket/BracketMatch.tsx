@@ -69,22 +69,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
     );
 
     if (!feederMatch) {
-      const hasPlayer1 = match.player1_id !== null;
-      const hasPlayer2 = match.player2_id !== null;
-      if (hasPlayer1 !== hasPlayer2) return 'bye';
       return 'tbd';
-    }
-
-    if (feederMatch.is_bye) {
-      return 'bye';
-    }
-
-    const feederHasPlayer1 = feederMatch.player1_id !== null;
-    const feederHasPlayer2 = feederMatch.player2_id !== null;
-    const feederIsBye = (feederHasPlayer1 && !feederHasPlayer2) || (!feederHasPlayer1 && feederHasPlayer2);
-
-    if (feederIsBye && feederMatch.winner_id) {
-      return 'bye';
     }
 
     if (!feederMatch.winner_id) {
@@ -164,9 +149,11 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
 
   const hasPlayer1 = match.player1_id !== null && match.player1_id !== undefined;
   const hasPlayer2 = match.player2_id !== null && match.player2_id !== undefined;
-  const isByeMatch = match.is_bye || (slot1Status === 'bye' || slot2Status === 'bye');
+  const isRound1Bye = match.round === 1 && (hasPlayer1 !== hasPlayer2);
+  const isByeMatch = match.is_bye || isRound1Bye;
   const isTbdMatch = slot1Status === 'tbd' || slot2Status === 'tbd';
-  const isFirstRoundBye = match.round === 1 && isByeMatch;
+  const isFirstRoundBye = isRound1Bye;
+  const isWaitingForOpponent = match.round > 1 && (hasPlayer1 !== hasPlayer2) && !match.is_bye && !match.winner_id;
   const isLuckyLoserMatch = match.is_lucky_loser_match || false;
   const luckyLoserPlayerId = match.lucky_loser_player_id;
   const canSelectWinner = match.player1_id && match.player2_id && !match.winner_id && !isEditable;
@@ -233,6 +220,8 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
     }
   };
 
+  const waitingBadgeColor = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+
   return (
     <>
       <div
@@ -241,11 +230,13 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
         className={`relative p-3 rounded-lg border min-h-[80px] flex flex-col justify-center shadow-lg ${
           isByeMatch
             ? `${byeBadgeColor} border-2`
-            : isTbdMatch
-              ? `${tbdBadgeColor} border-2`
-              : isHighlighted
-                ? 'bg-gray-700 border-primary-500 ring-2 ring-primary-500/20'
-                : 'bg-gray-700 border-gray-600'
+            : isWaitingForOpponent
+              ? `${waitingBadgeColor} border-2`
+              : isTbdMatch
+                ? `${tbdBadgeColor} border-2`
+                : isHighlighted
+                  ? 'bg-gray-700 border-primary-500 ring-2 ring-primary-500/20'
+                  : 'bg-gray-700 border-gray-600'
         }`}>
         {matchNumber && (
           <div className="absolute -top-2 -left-2 z-10">
@@ -263,7 +254,15 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
           </div>
         )}
 
-        {isTbdMatch && !isByeMatch && !match.winner_id && (
+        {isWaitingForOpponent && (
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${waitingBadgeColor}`}>
+              Qualified
+            </span>
+          </div>
+        )}
+
+        {isTbdMatch && !isByeMatch && !isWaitingForOpponent && !match.winner_id && (
           <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${tbdBadgeColor}`}>
               TBD
