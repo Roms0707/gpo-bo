@@ -385,14 +385,16 @@ export const generateFirstRound = async (
     console.log(`🔍 SWISS DEBUG: Max players configured: ${tournamentData.max_nb_players || 'not set'}`);
     console.log(`🔍 SWISS DEBUG: Valid user IDs count: ${validUserIds.size}`);
 
-    // Use max_nb_players if provided to determine bracket capacity
-    const maxPlayers = tournamentData.max_nb_players || participants.length;
     const actualParticipants = participants.length;
-    const emptySlots = maxPlayers - actualParticipants;
 
-    console.log(`🔍 SWISS DEBUG: Bracket capacity: ${maxPlayers}, Actual participants: ${actualParticipants}, Empty slots: ${emptySlots}`);
+    const bracketSize = tournamentData.max_nb_players
+      ? Math.pow(2, Math.ceil(Math.log2(tournamentData.max_nb_players)))
+      : Math.pow(2, Math.ceil(Math.log2(actualParticipants)));
 
-    // Verify all participant IDs are in validUserIds before pairing
+    const byeCount = bracketSize - actualParticipants;
+
+    console.log(`🔍 SWISS DEBUG: Bracket size: ${bracketSize}, Actual participants: ${actualParticipants}, BYEs needed: ${byeCount}`);
+
     let invalidParticipants = 0;
     participants.forEach((p, index) => {
       const participantId = tournamentData.type === 'team' ? p.captain_id : p.id;
@@ -409,9 +411,8 @@ export const generateFirstRound = async (
       console.log(`🔍 SWISS DEBUG: ⚠️ Found ${invalidParticipants} invalid participants before pairing!`);
     }
 
-    // Sort participants by ELO for initial seeding
     const sortedParticipants = [...participants].sort((a, b) => {
-      return (b.elo || 1000) - (a.elo || 1000); // Higher ELO first
+      return (b.elo || 1000) - (a.elo || 1000);
     });
 
     console.log(`🔍 SWISS DEBUG: Sorted participants by ELO:`, sortedParticipants.map(p => ({
@@ -423,33 +424,89 @@ export const generateFirstRound = async (
     const paired = new Set<string>();
     let position = 1;
 
-    // Handle odd number of participants (assign BYE to lowest ranked player)
-    const hasOddParticipants = sortedParticipants.length % 2 !== 0;
-    let byeParticipant = null;
+    if (byeCount > 0) {
+      console.log(`🔍 SWISS DEBUG: Creating ${byeCount} BYE matches for top seeds`);
 
-    if (hasOddParticipants) {
-      byeParticipant = sortedParticipants[sortedParticipants.length - 1];
-      console.log(`🔍 SWISS DEBUG: Odd number of participants - assigning BYE to: ${byeParticipant.name}`);
+      for (let i = 0; i < byeCount && i < sortedParticipants.length; i++) {
+        const byeParticipant = sortedParticipants[i];
+        const byeParticipantId = tournamentData.type === 'team'
+          ? byeParticipant.captain_id
+          : byeParticipant.id;
+
+        if (byeParticipantId && validUserIds.has(byeParticipantId)) {
+          const byeMatch = {
+            tournament_id: tournamentId,
+            round: 1,
+            position: position++,
+            player1_id: byeParticipantId,
+            player2_id: null,
+            winner_id: byeParticipantId,
+            is_draw: false
+          };
+
+          newMatches.push(byeMatch);
+          paired.add(byeParticipantId);
+
+          console.log(`🔍 SWISS DEBUG: ✅ Created BYE match for seed #${i + 1}: ${byeParticipant.name}`);
+        }
+      }
     }
 
-    console.log(`🔍 SWISS DEBUG: Starting pairing process...`);
-    console.log(`🔍 SWISS DEBUG: Will create ${Math.floor(sortedParticipants.length / 2)} matches`);
+    const remainingParticipants = sortedParticipants.filter(p => {
+      const pId = tournamentData.type === 'team' ? p.captain_id : p.id;
+      return pId && !paired.has(pId);
+    });
 
-    // Swiss pairing for first round - pair top vs bottom half
-    const pairingCount = Math.floor(sortedParticipants.length / 2);
+    console.log(`🔍 SWISS DEBUG: ${remainingParticipants.length} participants remaining for regular pairing`);
+
+    const hasOddRemaining = remainingParticipants.length % 2 !== 0;
+
+    if (hasOddRemaining && remainingParticipants.length > 0) {
+      const oddByeParticipant = remainingParticipants[remainingParticipants.length - 1];
+      const oddByeId = tournamentData.type === 'team'
+        ? oddByeParticipant.captain_id
+        : oddByeParticipant.id;
+
+      if (oddByeId && validUserIds.has(oddByeId)) {
+        const byeMatch = {
+          tournament_id: tournamentId,
+          round: 1,
+          position: position++,
+          player1_id: oddByeId,
+          player2_id: null,
+          winner_id: oddByeId,
+          is_draw: false
+        };
+
+        newMatches.push(byeMatch);
+        paired.add(oddByeId);
+
+        console.log(`🔍 SWISS DEBUG: ✅ Created BYE match for odd participant: ${oddByeParticipant.name}`);
+      }
+    }
+
+    const participantsForPairing = remainingParticipants.filter(p => {
+      const pId = tournamentData.type === 'team' ? p.captain_id : p.id;
+      return pId && !paired.has(pId);
+    });
+
+    console.log(`🔍 SWISS DEBUG: Starting pairing process with ${participantsForPairing.length} participants...`);
+    console.log(`🔍 SWISS DEBUG: Will create ${Math.floor(participantsForPairing.length / 2)} regular matches`);
+
+    const pairingCount = Math.floor(participantsForPairing.length / 2);
     for (let i = 0; i < pairingCount; i++) {
-      const participant1 = sortedParticipants[i];
-      const participant2 = sortedParticipants[sortedParticipants.length - 1 - i - (hasOddParticipants ? 1 : 0)];
-      
+      const participant1 = participantsForPairing[i];
+      const participant2 = participantsForPairing[participantsForPairing.length - 1 - i];
+
       console.log(`🔍 SWISS DEBUG: --- Pairing attempt ${i + 1} ---`);
       console.log(`🔍 SWISS DEBUG: Participant 1: ${participant1.name} (ID: ${participant1.id})`);
       console.log(`🔍 SWISS DEBUG: Participant 2: ${participant2.name} (ID: ${participant2.id})`);
-      
-      const participant1Id = tournamentData.type === 'team' 
-        ? participant1.captain_id 
+
+      const participant1Id = tournamentData.type === 'team'
+        ? participant1.captain_id
         : participant1.id;
-      const participant2Id = tournamentData.type === 'team' 
-        ? participant2.captain_id 
+      const participant2Id = tournamentData.type === 'team'
+        ? participant2.captain_id
         : participant2.id;
 
       console.log(`🔍 SWISS DEBUG: Resolved participant 1 ID: ${participant1Id}`);
@@ -459,10 +516,10 @@ export const generateFirstRound = async (
       console.log(`🔍 SWISS DEBUG: Participant 1 ID already paired: ${participant1Id ? paired.has(participant1Id) : false}`);
       console.log(`🔍 SWISS DEBUG: Participant 2 ID already paired: ${participant2Id ? paired.has(participant2Id) : false}`);
 
-      if (participant1Id && participant2Id && 
+      if (participant1Id && participant2Id &&
           validUserIds.has(participant1Id) && validUserIds.has(participant2Id) &&
           !paired.has(participant1Id) && !paired.has(participant2Id)) {
-        
+
         const matchData = {
           tournament_id: tournamentId,
           round: 1,
@@ -472,11 +529,11 @@ export const generateFirstRound = async (
           winner_id: null,
           is_draw: false
         };
-        
+
         newMatches.push(matchData);
         paired.add(participant1Id);
         paired.add(participant2Id);
-        
+
         console.log(`🔍 SWISS DEBUG: ✅ Successfully created match ${position - 1}:`);
         console.log(`🔍 SWISS DEBUG:    ${participant1.name} vs ${participant2.name}`);
         console.log(`🔍 SWISS DEBUG:    Match data:`, matchData);
@@ -491,14 +548,13 @@ export const generateFirstRound = async (
       }
     }
 
-    console.log(`🔍 SWISS DEBUG: Pairing complete. Created ${newMatches.length} matches`);
+    console.log(`🔍 SWISS DEBUG: Pairing complete. Created ${newMatches.length} matches (including BYEs)`);
     console.log(`🔍 SWISS DEBUG: Paired participants: ${paired.size}`);
     console.log(`🔍 SWISS DEBUG: Unpaired participants: ${participants.length - paired.size}`);
 
     if (newMatches.length > 0) {
       console.log(`🔍 SWISS DEBUG: Final existing check before insert - Found ${newMatches.length} matches to insert`);
 
-      // Insert matches using the new insertMatches function (preserves existing matches)
       console.log(`🔍 SWISS DEBUG: Inserting ${newMatches.length} matches into database`);
       const { data: insertedMatches, error } = await supabase
         .from('tournament_matches')
@@ -512,22 +568,21 @@ export const generateFirstRound = async (
 
       console.log(`🔍 SWISS DEBUG: Successfully inserted ${insertedMatches.length} matches`);
       console.log(`🔍 SWISS DEBUG: ===== FIRST ROUND GENERATION COMPLETE =====`);
-      
+
       return insertedMatches;
     } else {
       console.log('🔍 SWISS DEBUG: ❌ No matches could be generated - investigating why...');
-      
-      // Additional debugging for why no matches were created
+
       console.log(`🔍 SWISS DEBUG: Debugging why no matches were created:`);
       console.log(`🔍 SWISS DEBUG: - Participants length: ${participants.length}`);
       console.log(`🔍 SWISS DEBUG: - Expected matches: ${Math.floor(participants.length / 2)}`);
       console.log(`🔍 SWISS DEBUG: - Tournament type: ${tournamentData.type}`);
-      
+
       participants.forEach((p, index) => {
         const participantId = tournamentData.type === 'team' ? p.captain_id : p.id;
         console.log(`🔍 SWISS DEBUG: - Participant ${index}: ${p.name}, ID: ${participantId}, Valid: ${participantId ? validUserIds.has(participantId) : false}`);
       });
-      
+
       toast.error('Could not generate first round matches - check console for details');
       return [];
     }
@@ -615,6 +670,30 @@ export const generateNextRound = async (
     const paired = new Set<string>();
     const nextRound = currentRound + 1;
     let position = 1;
+
+    if (sortedParticipants.length % 2 !== 0 && sortedParticipants.length > 0) {
+      const byeParticipant = sortedParticipants[sortedParticipants.length - 1];
+      const byeParticipantId = tournamentData.type === 'team'
+        ? byeParticipant.captain_id
+        : byeParticipant.id;
+
+      if (byeParticipantId && validUserIds.has(byeParticipantId)) {
+        const byeMatch = {
+          tournament_id: tournamentId,
+          round: nextRound,
+          position: position++,
+          player1_id: byeParticipantId,
+          player2_id: null,
+          winner_id: byeParticipantId,
+          is_draw: false
+        };
+
+        newMatches.push(byeMatch);
+        paired.add(byeParticipantId);
+
+        console.log(`🔍 SWISS DEBUG: ✅ Created BYE match for lowest-ranked active participant: ${byeParticipant.name} (${byeParticipant.wins}W-${byeParticipant.losses}L)`);
+      }
+    }
 
     // Build a comprehensive list of all previous opponents for each participant
     const allOpponents = new Map<string, Set<string>>();
@@ -854,15 +933,14 @@ export const generateNextRound = async (
 
 export const updateParticipantStandings = (participants: any[], matches: any[], tournamentType: 'solo' | 'team') => {
   console.log(`🔍 SWISS DEBUG: Updating participant standings for ${participants.length} participants and ${matches.length} matches`);
-  
+
   const standingsMap = new Map();
-  
-  // Initialize participants
+
   participants.forEach(participant => {
-    const participantId = tournamentType === 'team' 
-      ? participant.captain_id 
+    const participantId = tournamentType === 'team'
+      ? participant.captain_id
       : participant.id;
-    
+
     if (participantId) {
       standingsMap.set(participantId, {
         ...participant,
@@ -876,37 +954,45 @@ export const updateParticipantStandings = (participants: any[], matches: any[], 
     }
   });
 
-  // Calculate standings from matches
   matches.forEach(match => {
-    if (match.winner_id && match.player1_id && match.player2_id) {
+    if (match.winner_id && match.player1_id && !match.player2_id) {
+      if (standingsMap.has(match.winner_id)) {
+        const winner = standingsMap.get(match.winner_id);
+        winner.wins = (winner.wins || 0) + 1;
+        winner.points = (winner.points || 0) + 1;
+
+        if (winner.wins >= 3) {
+          winner.isQualified = true;
+        }
+
+        standingsMap.set(match.winner_id, winner);
+        console.log(`🔍 SWISS DEBUG: BYE win credited to ${winner.name || match.winner_id}: now ${winner.wins}W-${winner.losses}L`);
+      }
+    } else if (match.winner_id && match.player1_id && match.player2_id) {
       const loserId = match.player1_id === match.winner_id ? match.player2_id : match.player1_id;
-      
-      // Update winner
+
       if (standingsMap.has(match.winner_id)) {
         const winner = standingsMap.get(match.winner_id);
         winner.wins = (winner.wins || 0) + 1;
         winner.points = (winner.points || 0) + 1;
         winner.opponents = [...(winner.opponents || []), loserId];
-        
-        // Check if qualified (3 wins)
+
         if (winner.wins >= 3) {
           winner.isQualified = true;
         }
-        
+
         standingsMap.set(match.winner_id, winner);
       }
 
-      // Update loser
       if (standingsMap.has(loserId)) {
         const loser = standingsMap.get(loserId);
         loser.losses = (loser.losses || 0) + 1;
         loser.opponents = [...(loser.opponents || []), match.winner_id];
-        
-        // Check if eliminated (3 losses)
+
         if (loser.losses >= 3) {
           loser.isEliminated = true;
         }
-        
+
         standingsMap.set(loserId, loser);
       }
     }

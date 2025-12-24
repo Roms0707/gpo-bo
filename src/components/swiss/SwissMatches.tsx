@@ -47,7 +47,7 @@ const SwissMatches: React.FC<SwissMatchesProps> = ({
     ? currentRoundMatches.filter((match, index) => {
         const matchNumber = index + 1;
         const player1Name = getParticipantName(match.player1_id).toLowerCase();
-        const player2Name = getParticipantName(match.player2_id).toLowerCase();
+        const player2Name = match.player2_id ? getParticipantName(match.player2_id).toLowerCase() : 'bye';
         const query = searchQuery.toLowerCase();
 
         return (
@@ -150,6 +150,45 @@ const SwissMatches: React.FC<SwissMatchesProps> = ({
             {filteredMatches.map((match, index) => {
               const matchNumber = currentRoundMatches.findIndex(m => m.id === match.id) + 1;
               const canModify = canModifyResult(match.id);
+              const isByeMatch = !match.player2_id && match.player1_id;
+
+              if (isByeMatch) {
+                return (
+                  <div
+                    key={match.id}
+                    ref={index === 0 && searchQuery ? firstMatchRef : null}
+                    className={`bg-dark-200 rounded-lg p-4 border relative ${
+                      searchQuery && filteredMatches.includes(match)
+                        ? 'border-primary-500 ring-2 ring-primary-500/20'
+                        : 'border-dark-100'
+                    }`}
+                  >
+                    <div className="absolute -top-2 -left-2 z-10">
+                      <span className="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                        BYE
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-2 rounded bg-success-900/30 border border-success-500/50">
+                        <HighlightText
+                          text={getParticipantName(match.player1_id)}
+                          searchQuery={searchQuery}
+                          className="font-medium text-white"
+                        />
+                        <Trophy className="h-4 w-4 text-success-500" />
+                      </div>
+                      <div className="text-center text-gray-500 text-sm italic">
+                        Automatic advancement
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <span className="text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded">
+                        +1 Win (BYE)
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
                 <div
