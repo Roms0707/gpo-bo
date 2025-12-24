@@ -43,12 +43,97 @@ const LOL_TOPIC_KEYWORDS: Record<string, string[]> = {
   "Mental Game and Tilt Management": ["tilt", "tilted", "mental", "focus", "losing streak", "frustrated", "toxic"],
 };
 
-function detectTopics(message: string, topicPriorities: string[]): string[] {
+const VALORANT_TOPIC_KEYWORDS: Record<string, string[]> = {
+  "Crosshair Placement": ["crosshair", "aim", "head level", "head height", "pre-aim", "preaim", "headshot"],
+  "Agent Abilities and Utility Usage": ["ability", "abilities", "util", "utility", "smoke", "flash", "molly", "wall", "drone", "dart", "ult", "ultimate", "signature"],
+  "Economy Management": ["eco", "economy", "save", "buy", "force", "bonus", "thrifty", "credits", "creds"],
+  "Map Control and Site Takes": ["site", "execute", "take", "push", "entry", "default", "control", "map control"],
+  "Communication and Callouts": ["callout", "comms", "communicate", "info", "call", "ping"],
+  "Gunfight Mechanics": ["gunfight", "duel", "1v1", "aim", "spray", "burst", "tap", "strafe", "counter-strafe"],
+  "Positioning and Angles": ["angle", "position", "positioning", "off-angle", "peek", "peeking", "hold", "post"],
+  "Post-Plant Situations": ["post-plant", "post plant", "spike", "planted", "defuse", "clutch"],
+  "Retake Strategies": ["retake", "re-take", "rotate", "rotation", "lurk"],
+  "Team Composition": ["comp", "composition", "team comp", "duelist", "initiator", "controller", "sentinel"],
+  "Mental Game and Consistency": ["tilt", "tilted", "mental", "focus", "consistency", "consistent", "frustrated"],
+  "VOD Review and Self-Analysis": ["vod", "review", "replay", "analyze", "analysis", "improve", "mistake"],
+};
+
+const OVERWATCH2_TOPIC_KEYWORDS: Record<string, string[]> = {
+  "Hero Mechanics and Cooldowns": ["cooldown", "ability", "primary", "secondary", "passive", "mechanic", "mechanics"],
+  "Ultimate Economy and Tracking": ["ult", "ultimate", "ult track", "ult economy", "ult charge", "ult advantage"],
+  "Team Composition and Synergy": ["comp", "composition", "synergy", "team comp", "dive", "poke", "brawl", "rush"],
+  "Positioning by Role": ["position", "positioning", "sightline", "high ground", "cover", "los", "line of sight"],
+  "Objective Play and Timing": ["objective", "point", "payload", "cart", "contest", "touch", "overtime", "stall"],
+  "Target Priority and Focus": ["focus", "target", "priority", "dive", "kill", "pick", "elim"],
+  "Peeling and Support Awareness": ["peel", "peeling", "support", "heal", "healing", "save", "protect"],
+  "Tank Space Creation": ["space", "tank", "frontline", "aggro", "pressure", "engage", "main tank", "off tank"],
+  "DPS Flank and Angles": ["flank", "angle", "dps", "damage", "off-angle", "rotate"],
+  "Map-Specific Strategies": ["map", "route", "choke", "spawn", "flank route"],
+  "Counter-Picking and Swapping": ["counter", "swap", "switch", "counterpick", "counter-pick"],
+  "Mental Game and Adaptation": ["tilt", "tilted", "mental", "adapt", "adaptation", "frustrated", "focus"],
+};
+
+const ROCKETLEAGUE_TOPIC_KEYWORDS: Record<string, string[]> = {
+  "Car Control and Recovery": ["car control", "recovery", "flip", "powerslide", "half-flip", "half flip", "wavedash", "wave dash", "landing"],
+  "Boost Management": ["boost", "small pad", "big boost", "100 boost", "starve", "boost starve", "pad"],
+  "Rotation and Positioning": ["rotation", "rotate", "position", "positioning", "back post", "far post", "shadow", "third man", "last man"],
+  "Aerial Mechanics": ["aerial", "aerials", "air", "flying", "fast aerial", "double jump", "air roll"],
+  "Ground Plays and Power Shots": ["ground", "power shot", "powershot", "50/50", "fifty", "dribble", "flick", "shot"],
+  "Defense and Shadow Defense": ["defense", "defend", "shadow", "shadow defense", "challenge", "block", "save"],
+  "Kickoffs": ["kickoff", "kick-off", "kick off", "faceoff", "face-off"],
+  "Team Play and Passing": ["pass", "passing", "team play", "teamplay", "assist", "infield", "backboard"],
+  "Game Sense and Reading Play": ["read", "reading", "game sense", "predict", "prediction", "anticipate"],
+  "Advanced Mechanics (Flip Resets, Air Dribbles, etc.)": ["flip reset", "reset", "air dribble", "ceiling", "ceiling shot", "musty", "breezi", "double tap"],
+  "Mode-Specific Strategy (1v1, 2v2, 3v3)": ["1v1", "1s", "2v2", "2s", "3v3", "3s", "ones", "twos", "threes", "solo", "duos"],
+  "Mental Game and Consistency": ["tilt", "tilted", "mental", "focus", "consistency", "consistent", "frustrated", "ranked anxiety"],
+};
+
+const CS2_TOPIC_KEYWORDS: Record<string, string[]> = {
+  "Crosshair Placement": ["crosshair", "aim", "headshot", "pre-aim", "preaim", "head level"],
+  "Spray Control and Recoil": ["spray", "recoil", "pattern", "burst", "tap", "spray control", "spray pattern"],
+  "Economy and Buy Decisions": ["eco", "economy", "save", "buy", "force", "force buy", "full buy", "half buy", "bonus"],
+  "Utility Usage (Smokes, Flashes, Molotovs)": ["smoke", "flash", "molotov", "molly", "nade", "grenade", "he", "utility", "util", "lineup"],
+  "Map Knowledge and Callouts": ["callout", "map", "position", "spot", "angle", "mirage", "dust2", "inferno", "nuke", "anubis", "ancient", "vertigo"],
+  "Positioning and Angles": ["angle", "position", "positioning", "off-angle", "peek", "peeking", "hold", "post", "site"],
+  "Movement and Counter-Strafing": ["movement", "counter-strafe", "counterstrafe", "strafe", "jiggle", "jiggle peek", "bunny hop", "bhop"],
+  "Trade Fragging and Teamplay": ["trade", "trading", "refrag", "teamplay", "team play", "support", "flash for"],
+  "Site Executes and Retakes": ["execute", "exec", "retake", "take", "site take", "plant", "defuse", "clutch"],
+  "AWP and Entry Fragging Roles": ["awp", "awper", "entry", "entry frag", "lurk", "lurker", "igl", "support", "rifler"],
+  "Anti-Eco and Force Buy Rounds": ["anti-eco", "anti eco", "force", "force buy", "pistol", "pistol round", "bonus round"],
+  "Mental Game and Consistency": ["tilt", "tilted", "mental", "focus", "consistency", "consistent", "frustrated", "toxic"],
+};
+
+const APEX_TOPIC_KEYWORDS: Record<string, string[]> = {
+  "Movement Mechanics": ["slide", "jump", "tap strafe", "tap-strafe", "wall bounce", "bunny hop", "bhop", "super glide", "superglide", "movement"],
+  "Legend Abilities and Synergy": ["tactical", "ultimate", "passive", "ability", "legend", "synergy", "combo", "ult"],
+  "Positioning and High Ground": ["position", "positioning", "high ground", "height", "cover", "rotation", "rotate"],
+  "Gun Skill and Recoil Control": ["aim", "recoil", "spray", "hipfire", "ads", "tracking", "flick", "beam"],
+  "Loot Priority and Inventory Management": ["loot", "inventory", "shield", "armor", "attachment", "ammo", "meds", "heal", "backpack"],
+  "Ring Rotation and Zone Play": ["ring", "zone", "rotate", "rotation", "circle", "storm", "edge", "center"],
+  "Third-Party Awareness": ["third party", "third-party", "3rd party", "ape", "aping", "push", "disengage", "reset"],
+  "Team Composition": ["comp", "composition", "team comp", "assault", "skirmisher", "recon", "support", "controller"],
+  "Armor Swapping and Fight Reset": ["armor swap", "shield swap", "swap", "reset", "bat", "battery", "cell", "med kit", "syringe"],
+  "Drop Spots and Early Game": ["drop", "landing", "hot drop", "cold drop", "loot", "early game", "spawn"],
+  "End Game and Final Circles": ["end game", "endgame", "final ring", "final circle", "last ring", "placement", "rp"],
+  "Mental Game and Consistency": ["tilt", "tilted", "mental", "focus", "consistency", "consistent", "frustrated", "ranked"],
+};
+
+const GAME_ID_TO_KEYWORDS: Record<string, Record<string, string[]>> = {
+  "614e99e6-40b0-48e6-9dcd-d8c3f1981f52": LOL_TOPIC_KEYWORDS,
+  "ab74ea87-6563-4448-bf84-e37c5c39275a": VALORANT_TOPIC_KEYWORDS,
+  "67da1904-004d-472c-8f37-32f0350ce53e": OVERWATCH2_TOPIC_KEYWORDS,
+  "7759f604-0199-4c42-8a04-81c9b10978b2": ROCKETLEAGUE_TOPIC_KEYWORDS,
+  "dad78506-9cc6-4bcb-b488-f87007702342": CS2_TOPIC_KEYWORDS,
+  "44d38835-4666-4a02-8eb4-25589a88ebd8": APEX_TOPIC_KEYWORDS,
+};
+
+function detectTopics(message: string, topicPriorities: string[], gameId: string): string[] {
   const lowerMessage = message.toLowerCase();
   const detectedTopics: string[] = [];
+  const keywordMap = GAME_ID_TO_KEYWORDS[gameId] || {};
 
   for (const topic of topicPriorities) {
-    const keywords = LOL_TOPIC_KEYWORDS[topic];
+    const keywords = keywordMap[topic];
     if (keywords) {
       for (const keyword of keywords) {
         if (lowerMessage.includes(keyword)) {
@@ -173,7 +258,7 @@ Deno.serve(async (req: Request) => {
     const topicPriorities = (configs as CoachingConfig[] || [])
       .filter((c) => c.config_key === "topic_priority")
       .map((c) => c.config_value);
-    const detectedTopics = detectTopics(message, topicPriorities);
+    const detectedTopics = detectTopics(message, topicPriorities, game_id);
 
     const messages: ChatMessage[] = [
       { role: "system", content: systemPrompt },
