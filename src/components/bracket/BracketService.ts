@@ -1209,7 +1209,7 @@ export const regenerateBracket = async (
     if (tournamentData.type === 'team') {
       const { data: teams, error: teamsError } = await supabase
         .from('teams')
-        .select('*, captain:captain_id(id, username, email, elo)')
+        .select('*, captain:captain_id(id, username, email)')
         .eq('tournament_id', tournamentId)
         .eq('status', 'approved');
 
@@ -1217,14 +1217,34 @@ export const regenerateBracket = async (
         return { success: false, matches: [], error: 'Failed to fetch teams' };
       }
 
-      participants = teams || [];
+      const teamIds = (teams || []).map(team => team.id).filter(Boolean);
+      let teamEloMap: Record<string, number> = {};
+
+      if (tournamentData.game_id && teamIds.length > 0) {
+        const { data: rankings } = await supabase
+          .from('team_rankings')
+          .select('team_id, elo_rating')
+          .eq('game_id', tournamentData.game_id)
+          .in('team_id', teamIds);
+
+        if (rankings) {
+          teamEloMap = Object.fromEntries(
+            rankings.map(r => [r.team_id, r.elo_rating])
+          );
+        }
+      }
+
+      participants = (teams || []).map(team => ({
+        ...team,
+        elo: teamEloMap[team.id] || 1000
+      }));
       teams?.forEach(team => {
         if (team.captain_id) validUserIds.add(team.captain_id);
       });
     } else {
       const { data: registrations, error: regError } = await supabase
         .from('tournament_registrations')
-        .select('*, user:user_id(id, username, email, elo)')
+        .select('*, user:user_id(id, username, email)')
         .eq('tournament_id', tournamentId)
         .eq('status', 'approved');
 
@@ -1232,11 +1252,28 @@ export const regenerateBracket = async (
         return { success: false, matches: [], error: 'Failed to fetch registrations' };
       }
 
+      const playerIds = (registrations || []).map(reg => reg.user_id).filter(Boolean);
+      let playerEloMap: Record<string, number> = {};
+
+      if (tournamentData.game_id && playerIds.length > 0) {
+        const { data: rankings } = await supabase
+          .from('player_rankings')
+          .select('player_id, elo_rating')
+          .eq('game_id', tournamentData.game_id)
+          .in('player_id', playerIds);
+
+        if (rankings) {
+          playerEloMap = Object.fromEntries(
+            rankings.map(r => [r.player_id, r.elo_rating])
+          );
+        }
+      }
+
       participants = (registrations || []).map(reg => ({
         id: reg.user_id,
         username: reg.user?.username || 'Unknown',
         email: reg.user?.email || '',
-        elo: reg.user?.elo || 1000
+        elo: playerEloMap[reg.user_id] || 1000
       }));
 
       registrations?.forEach(reg => {
