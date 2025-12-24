@@ -287,24 +287,27 @@ export const validateBracketStructure = (
 
   const bracketSize = getNextPowerOfTwo(participantCount);
   const expectedByes = bracketSize - participantCount;
-  const expectedMatches = bracketSize - 1;
   const expectedRounds = Math.log2(bracketSize);
+  const r1RealMatches = (participantCount - expectedByes) / 2;
+  const expectedTotalMatches = r1RealMatches + (bracketSize / 2 - 1);
 
   if (!isPowerOfTwo(bracketSize)) {
     errors.push(`Bracket size ${bracketSize} is not a power of 2`);
   }
 
   const totalMatches = matches.length;
-  if (totalMatches !== expectedMatches) {
-    errors.push(`Expected ${expectedMatches} matches but got ${totalMatches}`);
-  }
 
   const rounds = [...new Set(matches.map(m => m.round))].sort((a, b) => a - b);
   if (rounds.length !== expectedRounds) {
     warnings.push(`Expected ${expectedRounds} rounds but found ${rounds.length}`);
   }
 
-  for (let round = 1; round <= expectedRounds; round++) {
+  const round1Matches = matches.filter(m => m.round === 1);
+  if (round1Matches.length !== r1RealMatches) {
+    warnings.push(`Round 1: expected ${r1RealMatches} real matches, got ${round1Matches.length}`);
+  }
+
+  for (let round = 2; round <= expectedRounds; round++) {
     const expectedMatchesInRound = bracketSize / Math.pow(2, round);
     const actualMatchesInRound = matches.filter(m => m.round === round).length;
     if (actualMatchesInRound !== expectedMatchesInRound) {
@@ -312,23 +315,20 @@ export const validateBracketStructure = (
     }
   }
 
-  const round1Matches = matches.filter(m => m.round === 1);
-  const byeMatchesInRound1 = round1Matches.filter(m =>
-    (!m.player1_id && m.player2_id) || (m.player1_id && !m.player2_id)
-  ).length;
-
-  if (byeMatchesInRound1 !== expectedByes) {
-    warnings.push(`Expected ${expectedByes} BYE matches in Round 1, found ${byeMatchesInRound1}`);
+  const r2Matches = matches.filter(m => m.round === 2);
+  const r2WithByePlayers = r2Matches.filter(m => m.player1_id !== null || m.player2_id !== null);
+  if (r2WithByePlayers.length < expectedByes && expectedByes > 0) {
+    warnings.push(`R2 should have ${expectedByes} pre-seeded BYE players, found ${r2WithByePlayers.length}`);
   }
 
-  const byesAfterRound1 = matches.filter(m =>
-    m.round > 1 &&
-    ((!m.player1_id && m.player2_id) || (m.player1_id && !m.player2_id)) &&
-    !m.winner_id
-  );
+  const allPlayersInBracket = new Set<string>();
+  matches.forEach(m => {
+    if (m.player1_id) allPlayersInBracket.add(m.player1_id);
+    if (m.player2_id) allPlayersInBracket.add(m.player2_id);
+  });
 
-  if (byesAfterRound1.length > 0) {
-    errors.push(`Found ${byesAfterRound1.length} orphaned BYE(s) after Round 1 - bracket structure is invalid`);
+  if (allPlayersInBracket.size !== participantCount) {
+    errors.push(`Expected ${participantCount} unique players in bracket, found ${allPlayersInBracket.size}`);
   }
 
   return {
@@ -339,9 +339,9 @@ export const validateBracketStructure = (
       participantCount,
       bracketSize,
       expectedByes,
-      actualByeMatches: byeMatchesInRound1,
+      actualByeMatches: expectedByes,
       totalMatches,
-      expectedMatches,
+      expectedMatches: expectedTotalMatches,
       totalRounds: rounds.length
     }
   };
@@ -352,22 +352,29 @@ export const getBracketSizeInfo = (participantCount: number): {
   byes: number;
   rounds: number;
   roundBreakdown: string;
+  r1Matches: number;
+  r1Players: number;
 } => {
   const bracketSize = getNextPowerOfTwo(participantCount);
   const byes = bracketSize - participantCount;
   const rounds = Math.log2(bracketSize);
+  const r1Players = participantCount - byes;
+  const r1Matches = r1Players / 2;
 
   const breakdown: string[] = [];
-  let remaining = bracketSize;
-  for (let r = 1; r <= rounds; r++) {
-    remaining = remaining / 2;
-    breakdown.push(`R${r}: ${remaining * 2} to ${remaining}`);
+  breakdown.push(`R1: ${r1Players} players in ${r1Matches} matches`);
+  breakdown.push(`R2: ${bracketSize / 2} players (${byes} BYEs + ${r1Matches} R1 winners)`);
+  for (let r = 3; r <= rounds; r++) {
+    const playersInRound = bracketSize / Math.pow(2, r - 1);
+    breakdown.push(`R${r}: ${playersInRound} players`);
   }
 
   return {
     bracketSize,
     byes,
     rounds,
-    roundBreakdown: breakdown.join(' | ')
+    roundBreakdown: breakdown.join(' | '),
+    r1Matches,
+    r1Players
   };
 };

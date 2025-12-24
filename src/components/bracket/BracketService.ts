@@ -47,19 +47,15 @@ export const generateProfessionalBracket = (
   const bracketSize = getNextPowerOfTwo(targetSize);
   const totalRounds = Math.log2(bracketSize);
   const numberOfByes = bracketSize - totalParticipants;
-
-  console.log(`🎯 BRACKET GENERATION: Target size calculation: max(${maxNbPlayers || 'null'}, ${totalParticipants}) = ${targetSize}`);
+  const r2Size = bracketSize / 2;
+  const realR1Matches = (totalParticipants - numberOfByes) / 2;
 
   console.log(`🎯 BRACKET GENERATION: Power-of-2 Structure:`);
   console.log(`   - Bracket Size: ${bracketSize} (2^${totalRounds})`);
   console.log(`   - Total Rounds: ${totalRounds}`);
-  console.log(`   - BYEs Required: ${numberOfByes}`);
-  console.log(`   - Round 1 Matches: ${bracketSize / 2}`);
-
-  const matches: MatchInsert[] = [];
-
-  const snakeSeeding = generateSnakeSeeding(bracketSize);
-  console.log(`🎯 BRACKET GENERATION: Snake seeding order:`, snakeSeeding.slice(0, 20), '...');
+  console.log(`   - BYEs: ${numberOfByes} players advance directly to R2`);
+  console.log(`   - R1 Real Matches: ${realR1Matches} (${totalParticipants - numberOfByes} players compete)`);
+  console.log(`   - R2 Matches: ${r2Size}`);
 
   const participantsByRank = [...participants].sort((a, b) => {
     const eloA = a.elo || 1000;
@@ -67,60 +63,58 @@ export const generateProfessionalBracket = (
     return eloB - eloA;
   });
 
-  const seedMap = new Map<number, string | null>();
-  for (let i = 0; i < bracketSize; i++) {
-    const seedNumber = i + 1;
-    if (i < totalParticipants) {
-      const participant = participantsByRank[i];
-      const playerId = tournamentType === 'team'
-        ? (participant as Team).captain_id
-        : participant.id;
+  const getPlayerId = (participant: Player | Team): string | null => {
+    const playerId = tournamentType === 'team'
+      ? (participant as Team).captain_id
+      : (participant as Player).id;
+    return playerId && validUserIds.has(playerId) ? playerId : null;
+  };
 
-      if (playerId && validUserIds.has(playerId)) {
-        seedMap.set(seedNumber, playerId);
-      } else {
-        seedMap.set(seedNumber, null);
-      }
+  const byePlayers: string[] = [];
+  const r1Players: string[] = [];
+
+  for (let i = 0; i < totalParticipants; i++) {
+    const playerId = getPlayerId(participantsByRank[i]);
+    if (!playerId) continue;
+
+    if (i < numberOfByes) {
+      byePlayers.push(playerId);
     } else {
-      seedMap.set(seedNumber, null);
+      r1Players.push(playerId);
     }
   }
 
-  console.log(`🎯 BRACKET GENERATION: Seed assignments:`);
-  console.log(`   - Seeds 1-${totalParticipants}: Assigned to players by ELO rank`);
-  console.log(`   - Seeds ${totalParticipants + 1}-${bracketSize}: BYEs`)
+  console.log(`🎯 BRACKET GENERATION: BYE players (top ${numberOfByes} seeds): ${byePlayers.length}`);
+  console.log(`🎯 BRACKET GENERATION: R1 players (competing): ${r1Players.length}`);
 
-  console.log(`🎯 BRACKET GENERATION: Creating Round 1 with ${bracketSize / 2} matches`);
+  const matches: MatchInsert[] = [];
 
-  for (let matchIndex = 0; matchIndex < bracketSize / 2; matchIndex++) {
-    const seed1 = snakeSeeding[matchIndex * 2];
-    const seed2 = snakeSeeding[matchIndex * 2 + 1];
+  const r1Seeding = generateR1Seeding(r1Players.length);
+  console.log(`🎯 BRACKET GENERATION: R1 seeding for ${r1Players.length} players:`, r1Seeding.slice(0, 10), '...');
 
-    const player1Id = seedMap.get(seed1) || null;
-    const player2Id = seedMap.get(seed2) || null;
+  for (let matchIndex = 0; matchIndex < realR1Matches; matchIndex++) {
+    const seed1Idx = r1Seeding[matchIndex * 2];
+    const seed2Idx = r1Seeding[matchIndex * 2 + 1];
 
-    const isBye = !player1Id || !player2Id;
-    const winnerId = isBye ? (player1Id || player2Id) : null;
+    const player1Id = r1Players[seed1Idx] || null;
+    const player2Id = r1Players[seed2Idx] || null;
 
     matches.push({
       round: 1,
       position: matchIndex + 1,
       player1_id: player1Id,
       player2_id: player2Id,
-      winner_id: winnerId,
+      winner_id: null,
       tournament_id: tournamentId,
       is_draw: false,
-      is_bye: isBye
+      is_bye: false
     });
-
-    if (isBye) {
-      console.log(`   BYE Match ${matchIndex + 1}: Seed ${seed1} vs Seed ${seed2} - Winner: ${winnerId}`);
-    }
   }
+
+  console.log(`🎯 BRACKET GENERATION: Created ${realR1Matches} R1 matches`);
 
   for (let round = 2; round <= totalRounds; round++) {
     const matchesInRound = bracketSize / Math.pow(2, round);
-    console.log(`🎯 BRACKET GENERATION: Creating Round ${round} with ${matchesInRound} matches`);
 
     for (let matchIndex = 0; matchIndex < matchesInRound; matchIndex++) {
       matches.push({
@@ -136,40 +130,95 @@ export const generateProfessionalBracket = (
     }
   }
 
-  advanceByeWinnersRecursively(matches);
+  const r2Matches = matches.filter(m => m.round === 2);
+  const byeSeeding = generateByeR2Seeding(numberOfByes, r2Size);
+
+  console.log(`🎯 BRACKET GENERATION: Placing ${byePlayers.length} BYE players in R2`);
+
+  for (let i = 0; i < byePlayers.length && i < byeSeeding.length; i++) {
+    const { matchPosition, slot } = byeSeeding[i];
+    const r2Match = r2Matches.find(m => m.position === matchPosition);
+
+    if (r2Match) {
+      if (slot === 'player1') {
+        r2Match.player1_id = byePlayers[i];
+      } else {
+        r2Match.player2_id = byePlayers[i];
+      }
+      console.log(`   BYE Seed #${i + 1} -> R2:M${matchPosition} (${slot})`);
+    }
+  }
+
+  linkR1WinnersToR2(matches, realR1Matches, r2Matches, numberOfByes);
 
   const round1Matches = matches.filter(m => m.round === 1);
-  const round1ByeMatches = round1Matches.filter(m => m.is_bye);
-  const round1RealMatches = round1Matches.filter(m => !m.is_bye);
   const round2Matches = matches.filter(m => m.round === 2);
-  const round2WithPlayer1 = round2Matches.filter(m => m.player1_id !== null);
-  const round2WithPlayer2 = round2Matches.filter(m => m.player2_id !== null);
-  const uniquePlayersInRound1 = new Set([
-    ...round1Matches.map(m => m.player1_id).filter(Boolean),
-    ...round1Matches.map(m => m.player2_id).filter(Boolean)
-  ]);
+  const r2WithPlayers = round2Matches.filter(m => m.player1_id || m.player2_id);
 
-  console.log(`🎯 BRACKET GENERATION: Generated ${matches.length} total matches`);
-  console.log(`🎯 BRACKET GENERATION: Expected matches: ${bracketSize - 1} (2^${totalRounds} - 1)`);
-  console.log(`🎯 BRACKET GENERATION: Round 1 Summary:`);
-  console.log(`   - Total Round 1 matches: ${round1Matches.length}`);
-  console.log(`   - BYE matches: ${round1ByeMatches.length}`);
-  console.log(`   - Real matches: ${round1RealMatches.length}`);
-  console.log(`   - Unique players in Round 1: ${uniquePlayersInRound1.size}`);
-  console.log(`🎯 BRACKET GENERATION: Round 2 Pre-population:`);
-  console.log(`   - Total Round 2 matches: ${round2Matches.length}`);
-  console.log(`   - Matches with player1 pre-filled (from BYE): ${round2WithPlayer1.length}`);
-  console.log(`   - Matches with player2 pre-filled (from BYE): ${round2WithPlayer2.length}`);
-
-  if (uniquePlayersInRound1.size !== totalParticipants) {
-    console.warn(`⚠️ BRACKET GENERATION WARNING: Expected ${totalParticipants} players in Round 1 but found ${uniquePlayersInRound1.size}`);
-  }
-
-  if (round1ByeMatches.length !== numberOfByes) {
-    console.warn(`⚠️ BRACKET GENERATION WARNING: Expected ${numberOfByes} BYE matches but created ${round1ByeMatches.length}`);
-  }
+  console.log(`🎯 BRACKET GENERATION: Final Summary:`);
+  console.log(`   - Total matches: ${matches.length}`);
+  console.log(`   - R1 matches: ${round1Matches.length} (all real matches)`);
+  console.log(`   - R2 matches: ${round2Matches.length}`);
+  console.log(`   - R2 matches with pre-seeded BYE players: ${r2WithPlayers.length}`);
+  console.log(`   - All ${totalParticipants} players are placed in the bracket`);
 
   return matches;
+};
+
+const generateR1Seeding = (playerCount: number): number[] => {
+  if (playerCount <= 1) return [0];
+  if (playerCount === 2) return [0, 1];
+
+  const size = getNextPowerOfTwo(playerCount);
+  const seeding: number[] = [];
+
+  seeding.push(0);
+
+  for (let round = 1; round < Math.log2(size); round++) {
+    const currentSize = seeding.length;
+    const nextMax = currentSize * 2 - 1;
+
+    for (let i = 0; i < currentSize; i++) {
+      seeding.splice(i * 2 + 1, 0, nextMax - seeding[i * 2]);
+    }
+  }
+
+  return seeding.filter(idx => idx < playerCount);
+};
+
+const generateByeR2Seeding = (
+  byeCount: number,
+  r2Size: number
+): Array<{ matchPosition: number; slot: 'player1' | 'player2' }> => {
+  const placements: Array<{ matchPosition: number; slot: 'player1' | 'player2' }> = [];
+
+  for (let i = 0; i < byeCount && i < r2Size; i++) {
+    const matchPosition = (i % r2Size) + 1;
+    const slot: 'player1' | 'player2' = i < r2Size ? 'player1' : 'player2';
+    placements.push({ matchPosition, slot });
+  }
+
+  return placements;
+};
+
+const linkR1WinnersToR2 = (
+  allMatches: MatchInsert[],
+  r1MatchCount: number,
+  r2Matches: MatchInsert[],
+  byeCount: number
+): void => {
+  const r1Matches = allMatches.filter(m => m.round === 1);
+
+  for (let i = 0; i < r1Matches.length; i++) {
+    const r2MatchIdx = byeCount + i;
+    const r2Position = Math.floor(r2MatchIdx / 2) + 1;
+    const isPlayer1Slot = r2MatchIdx % 2 === 0;
+
+    const r2Match = r2Matches.find(m => m.position === r2Position);
+    if (!r2Match) continue;
+
+    console.log(`   R1:M${i + 1} winner -> R2:M${r2Position} (${isPlayer1Slot ? 'player1' : 'player2'})`);
+  }
 };
 
 const advanceByeWinnersRecursively = (matches: MatchInsert[]): void => {

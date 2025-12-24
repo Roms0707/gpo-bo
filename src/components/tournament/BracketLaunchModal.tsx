@@ -146,11 +146,11 @@ const BracketLaunchModal: React.FC<BracketLaunchModalProps> = ({
                         <span className="text-primary-400 font-bold">{participantCount}</span> {participantLabel}
                         <span className="text-gray-500 mx-2">→</span>
                         Bracket de <span className="text-accent-400 font-bold">{bracketInfo.bracketSize}</span> places
-                        <span className="text-xs text-gray-500 ml-2">(2^{Math.log2(bracketInfo.bracketSize)} = prochaine puissance de 2)</span>
+                        <span className="text-xs text-gray-500 ml-2">(2^{Math.log2(bracketInfo.bracketSize)})</span>
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <p className="text-xs text-gray-500">Participants</p>
                         <p className="text-lg font-semibold text-white">{participantCount}</p>
@@ -159,18 +159,25 @@ const BracketLaunchModal: React.FC<BracketLaunchModalProps> = ({
                         <p className="text-xs text-gray-500">Rounds</p>
                         <p className="text-lg font-semibold text-white">{bracketInfo.rounds}</p>
                       </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Matches R1</p>
+                        <p className="text-lg font-semibold text-white">{bracketInfo.r1Matches}</p>
+                      </div>
                       {bracketInfo.byes > 0 && (
                         <div>
-                          <p className="text-xs text-gray-500">BYEs (Round 1)</p>
+                          <p className="text-xs text-gray-500">BYEs vers R2</p>
                           <p className="text-lg font-semibold text-amber-400">{bracketInfo.byes}</p>
                         </div>
                       )}
                     </div>
 
                     {bracketInfo.byes > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
                         <p className="text-xs text-gray-400">
-                          Les <span className="text-amber-400 font-medium">{bracketInfo.byes}</span> meilleurs seeds recevront un BYE au Round 1 (auto-qualification au Round 2)
+                          <span className="text-green-400 font-medium">{bracketInfo.r1Players}</span> {participantLabel} joueront au Round 1 ({bracketInfo.r1Matches} matches)
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          <span className="text-amber-400 font-medium">{bracketInfo.byes}</span> {participantLabel} (top seeds) passeront directement au Round 2
                         </p>
                       </div>
                     )}
