@@ -1480,8 +1480,14 @@ export const progressToNextRound = async (
       .eq('id', tournamentId)
       .single();
 
+    // Fetch matches for the tournament
+    const { data: matches } = await supabase
+      .from('bracket_matches')
+      .select('*')
+      .eq('tournament_id', tournamentId);
+
     // Send match starting notifications to all players in the next round
-    const nextRoundMatches = matches.filter(m => m.round === nextRound);
+    const nextRoundMatches = (matches || []).filter(m => m.round === nextRound);
 
     for (const match of nextRoundMatches) {
       if (match.player1_id && match.player2_id) {
