@@ -155,12 +155,24 @@ export const generateProfessionalBracket = (
   const round2Matches = matches.filter(m => m.round === 2);
   const r2WithPlayers = round2Matches.filter(m => m.player1_id || m.player2_id);
 
+  const uniquePlayersInBracket = new Set<string>();
+  matches.forEach(m => {
+    if (m.player1_id) uniquePlayersInBracket.add(m.player1_id);
+    if (m.player2_id) uniquePlayersInBracket.add(m.player2_id);
+  });
+
   console.log(`🎯 BRACKET GENERATION: Final Summary:`);
   console.log(`   - Total matches: ${matches.length}`);
   console.log(`   - R1 matches: ${round1Matches.length} (all real matches)`);
   console.log(`   - R2 matches: ${round2Matches.length}`);
   console.log(`   - R2 matches with pre-seeded BYE players: ${r2WithPlayers.length}`);
-  console.log(`   - All ${totalParticipants} players are placed in the bracket`);
+  console.log(`   - Unique players in bracket: ${uniquePlayersInBracket.size} / ${totalParticipants} expected`);
+
+  if (uniquePlayersInBracket.size !== totalParticipants) {
+    console.error(`❌ BRACKET VALIDATION FAILED: Expected ${totalParticipants} players, found ${uniquePlayersInBracket.size}`);
+  } else {
+    console.log(`✅ All ${totalParticipants} players are correctly placed in the bracket`);
+  }
 
   return matches;
 };
@@ -174,7 +186,7 @@ const generateR1Seeding = (playerCount: number): number[] => {
 
   seeding.push(0);
 
-  for (let round = 1; round < Math.log2(size); round++) {
+  for (let round = 1; round <= Math.log2(size); round++) {
     const currentSize = seeding.length;
     const nextMax = currentSize * 2 - 1;
 
@@ -182,6 +194,8 @@ const generateR1Seeding = (playerCount: number): number[] => {
       seeding.splice(i * 2 + 1, 0, nextMax - seeding[i * 2]);
     }
   }
+
+  console.log(`🎯 R1 Seeding: Generated ${seeding.length} indices for ${playerCount} players (size=${size})`);
 
   return seeding.filter(idx => idx < playerCount);
 };
