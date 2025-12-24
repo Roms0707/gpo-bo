@@ -43,10 +43,12 @@ export const generateProfessionalBracket = (
     return [];
   }
 
-  const targetSize = maxNbPlayers || totalParticipants;
+  const targetSize = Math.max(maxNbPlayers || totalParticipants, totalParticipants);
   const bracketSize = getNextPowerOfTwo(targetSize);
   const totalRounds = Math.log2(bracketSize);
   const numberOfByes = bracketSize - totalParticipants;
+
+  console.log(`🎯 BRACKET GENERATION: Target size calculation: max(${maxNbPlayers || 'null'}, ${totalParticipants}) = ${targetSize}`);
 
   console.log(`🎯 BRACKET GENERATION: Power-of-2 Structure:`);
   console.log(`   - Bracket Size: ${bracketSize} (2^${totalRounds})`);
@@ -136,8 +138,36 @@ export const generateProfessionalBracket = (
 
   advanceByeWinnersRecursively(matches);
 
+  const round1Matches = matches.filter(m => m.round === 1);
+  const round1ByeMatches = round1Matches.filter(m => m.is_bye);
+  const round1RealMatches = round1Matches.filter(m => !m.is_bye);
+  const round2Matches = matches.filter(m => m.round === 2);
+  const round2WithPlayer1 = round2Matches.filter(m => m.player1_id !== null);
+  const round2WithPlayer2 = round2Matches.filter(m => m.player2_id !== null);
+  const uniquePlayersInRound1 = new Set([
+    ...round1Matches.map(m => m.player1_id).filter(Boolean),
+    ...round1Matches.map(m => m.player2_id).filter(Boolean)
+  ]);
+
   console.log(`🎯 BRACKET GENERATION: Generated ${matches.length} total matches`);
   console.log(`🎯 BRACKET GENERATION: Expected matches: ${bracketSize - 1} (2^${totalRounds} - 1)`);
+  console.log(`🎯 BRACKET GENERATION: Round 1 Summary:`);
+  console.log(`   - Total Round 1 matches: ${round1Matches.length}`);
+  console.log(`   - BYE matches: ${round1ByeMatches.length}`);
+  console.log(`   - Real matches: ${round1RealMatches.length}`);
+  console.log(`   - Unique players in Round 1: ${uniquePlayersInRound1.size}`);
+  console.log(`🎯 BRACKET GENERATION: Round 2 Pre-population:`);
+  console.log(`   - Total Round 2 matches: ${round2Matches.length}`);
+  console.log(`   - Matches with player1 pre-filled (from BYE): ${round2WithPlayer1.length}`);
+  console.log(`   - Matches with player2 pre-filled (from BYE): ${round2WithPlayer2.length}`);
+
+  if (uniquePlayersInRound1.size !== totalParticipants) {
+    console.warn(`⚠️ BRACKET GENERATION WARNING: Expected ${totalParticipants} players in Round 1 but found ${uniquePlayersInRound1.size}`);
+  }
+
+  if (round1ByeMatches.length !== numberOfByes) {
+    console.warn(`⚠️ BRACKET GENERATION WARNING: Expected ${numberOfByes} BYE matches but created ${round1ByeMatches.length}`);
+  }
 
   return matches;
 };
@@ -1294,9 +1324,15 @@ export const regenerateBracket = async (
       return { success: false, matches: [], error: 'Not enough participants to generate bracket' };
     }
 
-    const bracketInfo = getBracketSizeInfo(participants.length);
-    console.log(`📊 Bracket info: ${participants.length} participants → ${bracketInfo.bracketSize}-bracket with ${bracketInfo.byes} BYEs`);
-    console.log(`📊 Round breakdown: ${bracketInfo.roundBreakdown}`);
+    console.log(`📊 REGENERATE: Tournament max_nb_players: ${tournamentData.max_nb_players || 'not set'}`);
+    console.log(`📊 REGENERATE: Actual participants: ${participants.length}`);
+    console.log(`📊 REGENERATE: Valid user IDs count: ${validUserIds.size}`);
+
+    const effectiveMaxPlayers = Math.max(tournamentData.max_nb_players || participants.length, participants.length);
+    const bracketInfo = getBracketSizeInfo(effectiveMaxPlayers);
+    console.log(`📊 REGENERATE: Effective max players: ${effectiveMaxPlayers}`);
+    console.log(`📊 REGENERATE: Bracket info: ${effectiveMaxPlayers} → ${bracketInfo.bracketSize}-bracket with ${bracketInfo.byes} BYEs`);
+    console.log(`📊 REGENERATE: Round breakdown: ${bracketInfo.roundBreakdown}`);
 
     const generatedMatches = generateProfessionalBracket(
       participants,
@@ -1309,7 +1345,13 @@ export const regenerateBracket = async (
     const validation = validateGeneratedBracket(generatedMatches, participants.length);
     if (!validation.isValid) {
       console.error('Generated bracket failed validation:', validation.errors);
+    } else {
+      console.log('✅ REGENERATE: Bracket validation passed');
     }
+
+    const round1Matches = generatedMatches.filter(m => m.round === 1);
+    const byeMatches = round1Matches.filter(m => m.is_bye);
+    console.log(`📊 REGENERATE: Round 1 has ${round1Matches.length} matches (${byeMatches.length} BYEs, ${round1Matches.length - byeMatches.length} real)`);
 
     const savedMatches = await saveBracket(generatedMatches, validUserIds, tournamentId, 'draft');
 
