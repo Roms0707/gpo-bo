@@ -6,21 +6,25 @@ import { useFieldStore } from '../store/fieldStore';
 import { useGameStore } from '../store/gameStore';
 import { supabase } from '../lib/supabase';
 import TournamentGameInfo from '../components/tournament/TournamentGameInfo';
+import ScheduleTimeline from '../components/tournament/ScheduleTimeline';
+import StepIndicator from '../components/tournament/StepIndicator';
+import TournamentConfigInfo from '../components/tournament/TournamentConfigInfo';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import RadioGroup from '../components/ui/RadioGroup';
 import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../components/ui/Card';
 import Select from '../components/ui/Select';
-import Checkbox from '../components/ui/Checkbox';
 import Modal from '../components/ui/Modal';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import PrizeManager from '../components/tournament/PrizeManager';
 import CountrySelector from '../components/tournament/CountrySelector';
 import { ProjectConfigSelector } from '../components/tournament/ProjectConfigSelector';
 import { countries } from '../../src/data/countries';
-import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Check, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle, Star, Info } from 'lucide-react';
+import { Calendar, Upload, X, Globe, ArrowLeft, ArrowRight, Gamepad2, Users, Monitor, Smartphone, Tablet, Headphones, AlertTriangle, Star, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Database } from '../types/supabase';
+
+const STEP_LABELS = ['Information', 'Game', 'Scheduling', 'Registration', 'Prizes'];
 
 type Tournament = Database['public']['Tables']['tournaments']['Row'];
 
@@ -46,7 +50,7 @@ const EditTournamentPage: React.FC = () => {
   // Modal and step management
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
   
   // Tournament state
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -92,7 +96,11 @@ const EditTournamentPage: React.FC = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [twitchUrl, setTwitchUrl] = useState('');
+  const [hasDiscord, setHasDiscord] = useState(false);
   const [discordUrl, setDiscordUrl] = useState('');
+  const [discordServerId, setDiscordServerId] = useState('');
+  const [discordUrlError, setDiscordUrlError] = useState<string | null>(null);
+  const [discordServerIdError, setDiscordServerIdError] = useState<string | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   
   // Step 4: Prizes
@@ -102,12 +110,10 @@ const EditTournamentPage: React.FC = () => {
   const [privateServerCode, setPrivateServerCode] = useState('');
   
   // Image uploads
-  const [iconFile, setIconFile] = useState<File | null>(null);
   const [headerFile, setHeaderFile] = useState<File | null>(null);
   const [announcementFile, setAnnouncementFile] = useState<File | null>(null);
-  
+
   // Image previews
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
   const [headerPreview, setHeaderPreview] = useState<string | null>(null);
   const [announcementPreview, setAnnouncementPreview] = useState<string | null>(null);
 
@@ -171,7 +177,9 @@ const EditTournamentPage: React.FC = () => {
         }
         
         setTwitchUrl(data.twitch_url || '');
+        setHasDiscord(!!(data.discord_url || data.discord_server_id));
         setDiscordUrl(data.discord_url || '');
+        setDiscordServerId(data.discord_server_id || '');
         
         // Parse tournament format and extract player count information
         const format = data.tournament_format || 'Swiss';
@@ -285,10 +293,6 @@ const EditTournamentPage: React.FC = () => {
         setIsFeatured(data.is_featured || false);
         
         // Set image previews from existing URLs
-        if (data.icon_url) {
-          setIconPreview(data.icon_url);
-        }
-        
         if (data.header_url) {
           setHeaderPreview(data.header_url);
         }
@@ -367,6 +371,10 @@ const EditTournamentPage: React.FC = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const handleStepClick = (step: number) => {
+    setCurrentStep(step);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: React.Dispatch<React.SetStateAction<File | null>>, setPreview: React.Dispatch<React.SetStateAction<string | null>>) => {
@@ -452,17 +460,8 @@ const EditTournamentPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user || !tournament) return;
-    
+
     try {
-      // Upload icon if a new one is provided
-      let iconUrl = tournament.icon_url;
-      if (iconFile) {
-        const newIconUrl = await uploadFile(iconFile, 'icons');
-        if (newIconUrl) {
-          iconUrl = newIconUrl;
-        }
-      }
-      
       // Upload header if a new one is provided
       let headerUrl = tournament.header_url;
       if (headerFile) {
@@ -515,11 +514,11 @@ const EditTournamentPage: React.FC = () => {
         registration_end_date: registrationEndDate || null,
         status: new Date() < new Date(startDate) ? 'upcoming' :
                (new Date() >= new Date(startDate) && new Date() <= new Date(endDate)) ? 'active' : 'past',
-        icon_url: iconUrl,
         header_url: headerUrl,
         main_prize: mainPrize,
         twitch_url: twitchUrl,
         discord_url: discordUrl,
+        discord_server_id: discordServerId || null,
         compatible_devices: devicesString,
         announcement_url: announcementUrl,
         tournament_format: finalTournamentFormat,
@@ -573,120 +572,12 @@ const EditTournamentPage: React.FC = () => {
     }
   };
 
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
-        <React.Fragment key={step}>
-          <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 ${
-            step < currentStep 
-              ? 'bg-primary-600 border-primary-600 text-white' 
-              : step === currentStep
-                ? 'bg-primary-600 border-primary-600 text-white'
-                : 'bg-gray-200 dark:bg-dark-200 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
-          }`}>
-            {step < currentStep ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <span className="text-sm font-medium">{step}</span>
-            )}
-          </div>
-          {step < totalSteps && (
-            <div className={`w-16 h-0.5 mx-2 transition-all duration-200 ${
-              step < currentStep ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
 
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Tournament Information</h2>
         <p className="text-gray-400">Update the basic information about your tournament</p>
-      </div>
-
-      <RadioGroup
-        name="tournamentType"
-        label="Tournament Type"
-        value={tournamentType}
-        onChange={(value) => setTournamentType(value as 'solo' | 'team')}
-        options={[
-          { 
-            value: 'solo', 
-            label: 'Solo Tournament', 
-            description: 'Individual players compete against each other' 
-          },
-          { 
-            value: 'team', 
-            label: 'Team Tournament', 
-            description: 'Teams of players compete against other teams' 
-          },
-        ]}
-      />
-      
-      {tournamentType === 'team' && (
-        <Input
-          label="Maximum Players per Team"
-          type="number"
-          min="1"
-          max="20"
-          value={maxPlayersPerTeam.toString()}
-          onChange={(e) => setMaxPlayersPerTeam(parseInt(e.target.value) || 5)}
-          placeholder="Enter max players per team"
-          required
-        />
-      )}
-      
-      <RadioGroup
-        name="locationType"
-        label="Tournament Location"
-        value={locationType}
-        onChange={(value) => setLocationType(value as 'online' | 'offline')}
-        options={[
-          { 
-            value: 'online', 
-            label: 'Online Tournament', 
-            description: 'Tournament will be played online' 
-          },
-          { 
-            value: 'offline', 
-            label: 'Offline Tournament', 
-            description: 'Tournament will be played at a physical location' 
-          },
-        ]}
-      />
-      
-      {locationType === 'offline' && (
-        <Input
-          label="Location Name"
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          required
-          placeholder="Enter the venue or location name"
-        />
-      )}
-      
-      <Input
-        label="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        placeholder="Enter tournament title"
-      />
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Description
-        </label>
-        <textarea
-          className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-200 px-3 py-2 text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-          rows={4}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe your tournament..."
-        />
       </div>
 
       <div className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg">
@@ -725,6 +616,162 @@ const EditTournamentPage: React.FC = () => {
             />
           </button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Tournament Type
+          </label>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setTournamentType('solo')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${tournamentType === 'solo'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${tournamentType === 'solo' ? 'bg-primary-500/20' : 'bg-dark-300'}`}>
+                  <Users className={`w-5 h-5 ${tournamentType === 'solo' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${tournamentType === 'solo' ? 'text-primary-300' : 'text-white'}`}>
+                    Solo Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Individual players compete</p>
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTournamentType('team')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${tournamentType === 'team'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${tournamentType === 'team' ? 'bg-primary-500/20' : 'bg-dark-300'}`}>
+                  <Users className={`w-5 h-5 ${tournamentType === 'team' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${tournamentType === 'team' ? 'text-primary-300' : 'text-white'}`}>
+                    Team Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Teams compete against each other</p>
+                </div>
+              </div>
+            </button>
+          </div>
+          {tournamentType === 'team' && (
+            <div className="mt-3">
+              <Input
+                label="Maximum Players per Team"
+                type="number"
+                min="1"
+                max="20"
+                value={maxPlayersPerTeam.toString()}
+                onChange={(e) => setMaxPlayersPerTeam(parseInt(e.target.value) || 5)}
+                placeholder="Enter max players per team"
+                required
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Tournament Location
+          </label>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setLocationType('online')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${locationType === 'online'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${locationType === 'online' ? 'bg-primary-500/20' : 'bg-dark-300'}`}>
+                  <Globe className={`w-5 h-5 ${locationType === 'online' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${locationType === 'online' ? 'text-primary-300' : 'text-white'}`}>
+                    Online Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Played remotely online</p>
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocationType('offline')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${locationType === 'offline'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${locationType === 'offline' ? 'bg-primary-500/20' : 'bg-dark-300'}`}>
+                  <Globe className={`w-5 h-5 ${locationType === 'offline' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${locationType === 'offline' ? 'text-primary-300' : 'text-white'}`}>
+                    Offline Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Physical venue location</p>
+                </div>
+              </div>
+            </button>
+          </div>
+          {locationType === 'offline' && (
+            <div className="mt-3">
+              <Input
+                label="Location Name"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                required
+                placeholder="Enter the venue or location name"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Input
+        label="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        placeholder="Enter tournament title"
+      />
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Description
+        </label>
+        <textarea
+          className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-200 px-3 py-2 text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describe your tournament..."
+        />
       </div>
 
       <ProjectConfigSelector
@@ -811,213 +858,50 @@ const EditTournamentPage: React.FC = () => {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Registration</h2>
-        <p className="text-gray-400">Configure registration settings and tournament schedule</p>
+        <h2 className="text-2xl font-bold text-white mb-2">Scheduling</h2>
+        <p className="text-gray-400">Set your tournament schedule and registration dates</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Registration Start Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Registration Start Date
-          </label>
-          <Input
-            type="datetime-local"
-            value={registrationStartDate}
-            onChange={(e) => setRegistrationStartDate(e.target.value)}
-            placeholder="dd/mm/yyyy, --:--"
-          />
-        </div>
-
-        {/* Registration End Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Registration End Date
-          </label>
-          <Input
-            type="datetime-local"
-            value={registrationEndDate}
-            onChange={(e) => setRegistrationEndDate(e.target.value)}
-            placeholder="dd/mm/yyyy, --:--"
-          />
-        </div>
-
-        {/* Tournament Start Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tournament Start Date
-          </label>
-          <Input
-            type="datetime-local"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-            placeholder="dd/mm/yyyy, --:--"
-          />
-        </div>
-
-        {/* Tournament End Date */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Tournament End Date
-          </label>
-          <Input
-            type="datetime-local"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-            placeholder="dd/mm/yyyy, --:--"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Twitch URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Twitch URL
-          </label>
-          <Input
-            type="url"
-            value={twitchUrl}
-            onChange={(e) => setTwitchUrl(e.target.value)}
-            placeholder="https://twitch.tv/your-channel"
-          />
-        </div>
-
-        {/* Discord URL */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Discord URL
-          </label>
-          <Input
-            type="url"
-            value={discordUrl}
-            onChange={(e) => setDiscordUrl(e.target.value)}
-            placeholder="https://discord.gg/your-server"
-          />
-        </div>
-      </div>
-
-      {/* Private Server Code */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Private Server Code
-        </label>
-        <Input
-          type="text"
-          value={privateServerCode}
-          onChange={(e) => setPrivateServerCode(e.target.value)}
-          placeholder="Enter private server code (e.g., game password, access key)"
+      <div className="p-6 bg-gradient-to-br from-blue-500/5 via-emerald-500/5 to-amber-500/5 border border-blue-500/20 rounded-2xl">
+        <ScheduleTimeline
+          registrationStartDate={registrationStartDate}
+          setRegistrationStartDate={setRegistrationStartDate}
+          registrationEndDate={registrationEndDate}
+          setRegistrationEndDate={setRegistrationEndDate}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          This code will be displayed on the tournament details page for participants when the tournament is live.
-        </p>
       </div>
-
-      {/* Tournament Icon */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Tournament Icon
-        </label>
-        <div className="mt-1 flex items-center space-x-4">
-          {iconPreview ? (
-            <div className="relative">
-              <img 
-                src={iconPreview} 
-                alt="Tournament icon preview" 
-                className="h-16 w-16 object-cover rounded-md"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveFile(setIconFile, setIconPreview, tournament?.icon_url || null)}
-                className="absolute -top-2 -right-2 bg-error-500 text-white rounded-full p-1 shadow-sm hover:bg-error-600 transition-colors"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <label className="flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-200 hover:bg-gray-50 dark:hover:bg-dark-100 cursor-pointer transition-colors">
-              <Upload className="h-5 w-5 mr-2" />
-              <span>Upload Icon</span>
-              <input
-                type="file"
-                className="sr-only"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, setIconFile, setIconPreview)}
-              />
-            </label>
-          )}
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Recommended size: 128x128px
-          </span>
-        </div>
-      </div>
-      
-      {/* Tournament Header */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Tournament Header
-        </label>
-        <div className="mt-1 flex items-center space-x-4">
-          {headerPreview ? (
-            <div className="relative">
-              <img 
-                src={headerPreview} 
-                alt="Tournament header preview" 
-                className="h-32 w-64 object-cover rounded-md"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveFile(setHeaderFile, setHeaderPreview, tournament?.header_url || null)}
-                className="absolute -top-2 -right-2 bg-error-500 text-white rounded-full p-1 shadow-sm hover:bg-error-600 transition-colors"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <label className="flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-dark-200 hover:bg-gray-50 dark:hover:bg-dark-100 cursor-pointer transition-colors">
-              <Upload className="h-5 w-5 mr-2" />
-              <span>Upload Header</span>
-              <input
-                type="file"
-                className="sr-only"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, setHeaderFile, setHeaderPreview)}
-              />
-            </label>
-          )}
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Recommended size: 1200x400px
-          </span>
-        </div>
-      </div>
-
-      {/* Available Fields */}
-      {fields.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Available Information
-          </label>
-          <div className="bg-gray-50 dark:bg-dark-200 p-4 rounded-md border border-gray-200 dark:border-dark-300">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {fields.map((field) => (
-                <Checkbox
-                  key={field.id}
-                  id={`field-${field.id}`}
-                  label={field.name}
-                  checked={selectedFields.includes(field.id)}
-                  onChange={() => toggleFieldSelection(field.id)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 
   const renderStep4 = () => (
+    <TournamentConfigInfo
+      twitchUrl={twitchUrl}
+      setTwitchUrl={setTwitchUrl}
+      hasDiscord={hasDiscord}
+      setHasDiscord={setHasDiscord}
+      discordUrl={discordUrl}
+      setDiscordUrl={setDiscordUrl}
+      discordServerId={discordServerId}
+      setDiscordServerId={setDiscordServerId}
+      headerFile={headerFile}
+      setHeaderFile={setHeaderFile}
+      headerPreview={headerPreview}
+      setHeaderPreview={setHeaderPreview}
+      selectedFields={selectedFields}
+      toggleFieldSelection={toggleFieldSelection}
+      fields={fields}
+      handleRemoveFile={handleRemoveFile}
+      privateServerCode={privateServerCode}
+      setPrivateServerCode={setPrivateServerCode}
+      showPrivateServerCode={true}
+    />
+  );
+
+  const renderStep5 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Prizes</h2>
@@ -1043,6 +927,8 @@ const EditTournamentPage: React.FC = () => {
         return renderStep3();
       case 4:
         return renderStep4();
+      case 5:
+        return renderStep5();
       default:
         return renderStep1();
     }
@@ -1060,6 +946,8 @@ const EditTournamentPage: React.FC = () => {
       case 3:
         return startDate !== '' && endDate !== '';
       case 4:
+        return true;
+      case 5:
         return true;
       default:
         return false;
@@ -1112,9 +1000,9 @@ const EditTournamentPage: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={`Edit Tournament: ${tournament.title}`}
-        size="2xl"
+        size="5xl"
         footer={
-          <div className="flex justify-between w-full">
+          <div className="flex justify-between items-center w-full">
             <Button
               variant="ghost"
               onClick={currentStep === 1 ? handleCloseModal : prevStep}
@@ -1122,29 +1010,37 @@ const EditTournamentPage: React.FC = () => {
             >
               {currentStep === 1 ? 'Cancel' : 'Back'}
             </Button>
-            
-            {currentStep < totalSteps ? (
+
+            <div className="flex items-center gap-3">
               <Button
-                onClick={nextStep}
-                disabled={!canProceed()}
-                rightIcon={<ArrowRight size={16} />}
-              >
-                Next Step
-              </Button>
-            ) : (
-              <Button
+                variant="secondary"
                 onClick={handleSubmit}
                 isLoading={isLoading}
-                disabled={!canProceed()}
               >
-                Update Tournament
+                Save Changes
               </Button>
-            )}
+
+              {currentStep < totalSteps && (
+                <Button
+                  onClick={nextStep}
+                  disabled={!canProceed()}
+                  rightIcon={<ArrowRight size={16} />}
+                >
+                  Next Step
+                </Button>
+              )}
+            </div>
           </div>
         }
       >
         <div className="max-h-[70vh] overflow-y-auto px-1">
-          {renderStepIndicator()}
+          <StepIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            stepLabels={STEP_LABELS}
+            onStepClick={handleStepClick}
+            allowFreeNavigation={true}
+          />
           {renderCurrentStep()}
         </div>
       </Modal>

@@ -82,8 +82,9 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
   const [infoSectionTextColor, setInfoSectionTextColor] = useState<string | null>(null);
   const [productId, setProductId] = useState('');
   const [campaignId, setCampaignId] = useState('');
-  const [subscriptionRedirectUrl, setSubscriptionRedirectUrl] = useState('');
-  const [subscriptionUrlWarning, setSubscriptionUrlWarning] = useState('');
+  const [templateId, setTemplateId] = useState('');
+  const [packageId, setPackageId] = useState('');
+  const [lpRedirectNoAccount, setLpRedirectNoAccount] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
 
@@ -122,8 +123,9 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setInfoSectionTextColor(config.info_section_text_color || null);
       setProductId(config.product_id || '');
       setCampaignId(config.campaign_id || '');
-      setSubscriptionRedirectUrl(config.subscription_redirect_url || '');
-      setSubscriptionUrlWarning('');
+      setTemplateId(config.template_id || '');
+      setPackageId(config.package_id || '');
+      setLpRedirectNoAccount(config.lp_redirect_no_account || '');
       setIsActive(config.is_active);
       setDomain(config.domain || '');
       setIsDefault(config.is_default || false);
@@ -153,25 +155,6 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       setCompletedSteps(new Set([1, 2, 3, 4, 5]));
     }
   }, [config, isOpen]);
-
-  const validateSubscriptionUrl = (url: string): boolean => {
-    if (!url.trim()) return true;
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
-  const handleSubscriptionUrlChange = (value: string) => {
-    setSubscriptionRedirectUrl(value);
-    if (value.trim() && !validateSubscriptionUrl(value)) {
-      setSubscriptionUrlWarning('URL format appears invalid. Please enter a valid URL (e.g., https://example.com/subscribe)');
-    } else {
-      setSubscriptionUrlWarning('');
-    }
-  };
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -402,7 +385,9 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
         kliento_otp_sms_template: isKlientoOtp ? klientoOtpSmsTemplate.trim() : null,
         default_phone_country_iso: phoneCountryIso,
         default_phone_country_code: phoneCountryCode,
-        subscription_redirect_url: subscriptionRedirectUrl.trim() || null,
+        template_id: templateId.trim() || null,
+        package_id: packageId.trim() || null,
+        lp_redirect_no_account: lpRedirectNoAccount.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
         legal_email: legalEmail.trim(),
@@ -929,21 +914,31 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
             </div>
 
             {authMethod === 'kliento' && (
-              <div className="mt-3 md:mt-4">
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
+                  <Input
+                    label="Template ID"
+                    value={templateId}
+                    onChange={(e) => setTemplateId(e.target.value)}
+                    placeholder="template-123"
+                    helperText="Kliento template identifier (optional)"
+                  />
+                  <Input
+                    label="Package ID"
+                    value={packageId}
+                    onChange={(e) => setPackageId(e.target.value)}
+                    placeholder="package-456"
+                    helperText="Kliento package identifier (optional)"
+                  />
+                </div>
                 <Input
-                  label="Subscription Redirect URL"
-                  value={subscriptionRedirectUrl}
-                  onChange={(e) => handleSubscriptionUrlChange(e.target.value)}
-                  placeholder="https://example.com/subscribe"
-                  helperText="URL where expired subscription users are redirected to re-subscribe (optional)"
+                  label="LP Redirection If No Account"
+                  value={lpRedirectNoAccount}
+                  onChange={(e) => setLpRedirectNoAccount(e.target.value)}
+                  placeholder="https://example.com/signup"
+                  helperText="Redirect URL for users without an existing account (optional)"
                 />
-                {subscriptionUrlWarning && (
-                  <div className="flex items-start gap-2 mt-2 p-2 bg-warning-500/10 border border-warning-500/30 rounded-lg">
-                    <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-warning-400">{subscriptionUrlWarning}</p>
-                  </div>
-                )}
-              </div>
+              </>
             )}
 
             <div className="mt-3 md:mt-4">

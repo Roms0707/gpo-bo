@@ -23,6 +23,7 @@ export interface Database {
           username: string | null
           bio: string | null
           discord_handle: string | null
+          discord_user_id: string | null
           twitter_handle: string | null
           avatar_url: string | null
           steam_id: string | null
@@ -51,6 +52,7 @@ export interface Database {
           username?: string | null
           bio?: string | null
           discord_handle?: string | null
+          discord_user_id?: string | null
           twitter_handle?: string | null
           avatar_url?: string | null
           steam_id?: string | null
@@ -79,6 +81,7 @@ export interface Database {
           username?: string | null
           bio?: string | null
           discord_handle?: string | null
+          discord_user_id?: string | null
           twitter_handle?: string | null
           avatar_url?: string | null
           steam_id?: string | null
@@ -136,6 +139,7 @@ export interface Database {
           bracket_launched_at: string | null
           is_featured: boolean | null
           config_id: string | null
+          discord_server_id: string | null
         }
         Insert: {
           id?: string
@@ -159,6 +163,7 @@ export interface Database {
           twitch_url?: string | null
           compatible_devices?: string | null
           discord_url?: string | null
+          discord_server_id?: string | null
           tournament_format?: string | null
           game_id?: string | null
           eligible_countries?: string | null
@@ -200,6 +205,7 @@ export interface Database {
           twitch_url?: string | null
           compatible_devices?: string | null
           discord_url?: string | null
+          discord_server_id?: string | null
           tournament_format?: string | null
           game_id?: string | null
           eligible_countries?: string | null

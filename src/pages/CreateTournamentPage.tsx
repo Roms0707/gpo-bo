@@ -10,12 +10,14 @@ import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../compone
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// Import custom components
 import StepIndicator from '../components/tournament/StepIndicator';
 import TournamentBasicInfo from '../components/tournament/TournamentBasicInfo';
 import TournamentGameInfo from '../components/tournament/TournamentGameInfo';
 import TournamentRegistrationInfo from '../components/tournament/TournamentRegistrationInfo';
+import TournamentConfigInfo from '../components/tournament/TournamentConfigInfo';
 import PrizeManager from '../components/tournament/PrizeManager';
+
+const STEP_LABELS = ['Information', 'Game', 'Scheduling', 'Registration', 'Prizes'];
 
 interface Prize {
   position: number;
@@ -32,12 +34,10 @@ const CreateTournamentPage: React.FC = () => {
   const { createTournament, isLoading } = useTournamentStore();
   const { fields, fetchFields } = useFieldStore();
   const { games, fetchGames } = useGameStore();
-  
-  // Step management
+
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
-  
-  // Step 1: Basic Information
+  const totalSteps = 5;
+
   const [tournamentType, setTournamentType] = useState<'solo' | 'team'>('solo');
   const [locationType, setLocationType] = useState<'online' | 'offline'>('online');
   const [locationName, setLocationName] = useState('');
@@ -47,48 +47,39 @@ const CreateTournamentPage: React.FC = () => {
   const [maxPlayersPerTeam, setMaxPlayersPerTeam] = useState(5);
   const [isFeatured, setIsFeatured] = useState(false);
   const [configId, setConfigId] = useState<string | null>(null);
-  
-  // Step 2: Game Information
+
   const [selectedGameId, setSelectedGameId] = useState('');
   const [tournamentFormat, setTournamentFormat] = useState('Swiss');
   const [maxPlayers, setMaxPlayers] = useState('16');
   const [customPlayerCount, setCustomPlayerCount] = useState('');
   const [minimumAge, setMinimumAge] = useState(13);
   const [compatibleDevices, setCompatibleDevices] = useState<string[]>([]);
-  
-  // Round Robin specific settings
+
   const [roundRobinGroupSize, setRoundRobinGroupSize] = useState('4');
   const [roundRobinMaxPlayers, setRoundRobinMaxPlayers] = useState('16');
-  
-  // Battle Royale specific settings
+
   const [selectedBattleRoyaleGame, setSelectedBattleRoyaleGame] = useState('');
-  
-  // New field for max_nb_players
+
   const [maxNbPlayers, setMaxNbPlayers] = useState('16');
 
-  // Backup players settings
   const [allowBackups, setAllowBackups] = useState(false);
   const [maxBackupPlayers, setMaxBackupPlayers] = useState('0');
 
-  // Step 3: Registration
   const [registrationStartDate, setRegistrationStartDate] = useState('');
   const [registrationEndDate, setRegistrationEndDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [twitchUrl, setTwitchUrl] = useState('');
+  const [hasDiscord, setHasDiscord] = useState(false);
   const [discordUrl, setDiscordUrl] = useState('');
+  const [discordServerId, setDiscordServerId] = useState('');
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
-  
-  // Step 4: Prizes
+
   const [prizes, setPrizes] = useState<Prize[]>([]);
-  
-  // Image uploads
-  const [iconFile, setIconFile] = useState<File | null>(null);
+
   const [headerFile, setHeaderFile] = useState<File | null>(null);
   const [announcementFile, setAnnouncementFile] = useState<File | null>(null);
-  
-  // Image previews
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
+
   const [headerPreview, setHeaderPreview] = useState<string | null>(null);
   const [announcementPreview, setAnnouncementPreview] = useState<string | null>(null);
 
@@ -97,7 +88,6 @@ const CreateTournamentPage: React.FC = () => {
     fetchGames();
   }, [fetchFields, fetchGames]);
 
-  // Update max players when group size changes
   useEffect(() => {
     if (roundRobinGroupSize === '4') {
       setRoundRobinMaxPlayers('16');
@@ -106,7 +96,6 @@ const CreateTournamentPage: React.FC = () => {
     }
   }, [roundRobinGroupSize]);
 
-  // Reset player selection when format changes
   useEffect(() => {
     if (tournamentFormat === 'Swiss') {
       setMaxPlayers('8');
@@ -120,7 +109,7 @@ const CreateTournamentPage: React.FC = () => {
   }, [tournamentFormat, roundRobinGroupSize]);
 
   const toggleFieldSelection = (fieldId: string) => {
-    setSelectedFields(prev => 
+    setSelectedFields(prev =>
       prev.includes(fieldId)
         ? prev.filter(id => id !== fieldId)
         : [...prev, fieldId]
@@ -139,11 +128,17 @@ const CreateTournamentPage: React.FC = () => {
     }
   };
 
+  const handleStepClick = (step: number) => {
+    if (step <= currentStep) {
+      setCurrentStep(step);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: React.Dispatch<React.SetStateAction<File | null>>, setPreview: React.Dispatch<React.SetStateAction<string | null>>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFile(file);
-      
+
       const reader = new FileReader();
       reader.onload = (event) => {
         setPreview(event.target?.result as string);
@@ -160,25 +155,24 @@ const CreateTournamentPage: React.FC = () => {
   const uploadFile = async (file: File, folder: string): Promise<string | null> => {
     try {
       if (!file) return null;
-      
-      const fileExt = file.name.split('.').pop();
+
       const fileName = `${Date.now()}_${file.name}`;
       const filePath = `${folder}/${fileName}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('tournament-image-bucket')
         .upload(filePath, file);
-        
+
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
         toast.error(`Error uploading file: ${uploadError.message}`);
         return null;
       }
-      
+
       const { data } = supabase.storage
         .from('tournament-image-bucket')
         .getPublicUrl(filePath);
-        
+
       return data.publicUrl;
     } catch (error) {
       console.error('Error in file upload:', error);
@@ -192,17 +186,17 @@ const CreateTournamentPage: React.FC = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `tournament-prizes/${fileName}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('tournament-image-bucket')
         .upload(filePath, file);
-        
+
       if (uploadError) throw uploadError;
-      
+
       const { data } = supabase.storage
         .from('tournament-image-bucket')
         .getPublicUrl(filePath);
-        
+
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading prize image:', error);
@@ -212,18 +206,8 @@ const CreateTournamentPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
-    
+
     try {
-      // Upload files
-      let iconUrl = null;
-      if (iconFile) {
-        iconUrl = await uploadFile(iconFile, 'icons');
-        if (!iconUrl) {
-          toast.error('Failed to upload tournament icon');
-          return;
-        }
-      }
-      
       let headerUrl = null;
       if (headerFile) {
         headerUrl = await uploadFile(headerFile, 'headers');
@@ -232,7 +216,7 @@ const CreateTournamentPage: React.FC = () => {
           return;
         }
       }
-      
+
       let announcementUrl = null;
       if (announcementFile) {
         announcementUrl = await uploadFile(announcementFile, 'announcements');
@@ -241,11 +225,10 @@ const CreateTournamentPage: React.FC = () => {
           return;
         }
       }
-      
+
       const devicesString = compatibleDevices.length > 0 ? compatibleDevices.join(',') : null;
       const countriesString = configId ? null : (eligibleCountries.length > 0 ? eligibleCountries.join(',') : null);
-      
-      // Prepare tournament format string with player count information
+
       let finalTournamentFormat = tournamentFormat;
       if (tournamentFormat === 'Round Robin') {
         finalTournamentFormat = `Round Robin (${roundRobinGroupSize} players per group, max ${roundRobinMaxPlayers} players)`;
@@ -258,12 +241,10 @@ const CreateTournamentPage: React.FC = () => {
         finalTournamentFormat = `Battle Royale - ${selectedGame?.name || 'Unknown'}`;
       }
 
-      // Prepare main prize from first prize (for backward compatibility)
       const mainPrize = prizes.length > 0 ? prizes[0].description : '';
-      
-      // Determine which game ID to use
+
       const finalGameId = tournamentFormat === 'Battle Royale' ? selectedBattleRoyaleGame : selectedGameId;
-      
+
       const result = await createTournament({
         title,
         description,
@@ -277,11 +258,12 @@ const CreateTournamentPage: React.FC = () => {
         created_by: user.id,
         status: new Date() < new Date(startDate) ? 'upcoming' :
                 (new Date() >= new Date(startDate) && new Date() <= new Date(endDate)) ? 'active' : 'past',
-        icon_url: iconUrl,
+        icon_url: null,
         header_url: headerUrl,
         main_prize: mainPrize,
         twitch_url: twitchUrl,
         discord_url: discordUrl,
+        discord_server_id: discordServerId || null,
         compatible_devices: devicesString,
         announcement_url: announcementUrl,
         tournament_format: finalTournamentFormat,
@@ -295,59 +277,57 @@ const CreateTournamentPage: React.FC = () => {
         is_featured: isFeatured,
         config_id: configId,
       });
-      
+
       if (result.error) throw result.error;
-      
+
       const newTournament = result.data;
-      
-      // Save prizes if any
+
       if (prizes.length > 0 && newTournament) {
         const prizeInserts = [];
-        
+
         for (const prize of prizes) {
           let prizeImageUrl = null;
-          
-          // Upload prize image if provided
+
           if (prize.imageFile) {
             prizeImageUrl = await uploadPrizeImage(prize.imageFile);
           }
-          
+
           prizeInserts.push({
             tournament_id: newTournament.id,
             position: prize.position,
             title: prize.title,
-            prize_name: prize.description, // Store description in prize_name field
+            prize_name: prize.description,
             image_url: prizeImageUrl
           });
         }
-        
+
         const { error: prizeError } = await supabase
           .from('tournament_prizes')
           .insert(prizeInserts);
-          
+
         if (prizeError) {
           console.error('Error saving prizes:', prizeError);
           toast.error('Tournament created but failed to save prizes');
         }
       }
-      
+
       if (selectedFields.length > 0 && newTournament) {
         const fieldValues = selectedFields.map(fieldId => ({
           tournament_id: newTournament.id,
           field_id: fieldId,
           value: 'default'
         }));
-        
+
         const { error: fieldValueError } = await supabase
           .from('tournament_field_values')
           .insert(fieldValues);
-          
+
         if (fieldValueError) {
           console.error('Error saving field values:', fieldValueError);
           toast.error('Tournament created but failed to save custom field values');
         }
       }
-      
+
       toast.success('Tournament created successfully!');
       navigate('/');
     } catch (error) {
@@ -428,14 +408,19 @@ const CreateTournamentPage: React.FC = () => {
             setStartDate={setStartDate}
             endDate={endDate}
             setEndDate={setEndDate}
+          />
+        );
+      case 4:
+        return (
+          <TournamentConfigInfo
             twitchUrl={twitchUrl}
             setTwitchUrl={setTwitchUrl}
+            hasDiscord={hasDiscord}
+            setHasDiscord={setHasDiscord}
             discordUrl={discordUrl}
             setDiscordUrl={setDiscordUrl}
-            iconFile={iconFile}
-            setIconFile={setIconFile}
-            iconPreview={iconPreview}
-            setIconPreview={setIconPreview}
+            discordServerId={discordServerId}
+            setDiscordServerId={setDiscordServerId}
             headerFile={headerFile}
             setHeaderFile={setHeaderFile}
             headerPreview={headerPreview}
@@ -443,11 +428,10 @@ const CreateTournamentPage: React.FC = () => {
             selectedFields={selectedFields}
             toggleFieldSelection={toggleFieldSelection}
             fields={fields}
-            handleFileChange={handleFileChange}
             handleRemoveFile={handleRemoveFile}
           />
         );
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -483,13 +467,15 @@ const CreateTournamentPage: React.FC = () => {
         return startDate !== '' && endDate !== '';
       case 4:
         return true;
+      case 5:
+        return true;
       default:
         return false;
     }
   };
 
   const handleDeviceToggle = (device: string) => {
-    setCompatibleDevices(prev => 
+    setCompatibleDevices(prev =>
       prev.includes(device)
         ? prev.filter(d => d !== device)
         : [...prev, device]
@@ -497,7 +483,7 @@ const CreateTournamentPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -512,12 +498,17 @@ const CreateTournamentPage: React.FC = () => {
         <CardHeader>
           <CardTitle>Create Tournament</CardTitle>
         </CardHeader>
-        
+
         <CardContent>
-          <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
+          <StepIndicator
+            currentStep={currentStep}
+            totalSteps={totalSteps}
+            stepLabels={STEP_LABELS}
+            onStepClick={handleStepClick}
+          />
           {renderCurrentStep()}
         </CardContent>
-        
+
         <CardFooter className="flex justify-between">
           <Button
             variant="ghost"
@@ -526,7 +517,7 @@ const CreateTournamentPage: React.FC = () => {
           >
             {currentStep === 1 ? 'Cancel' : 'Back'}
           </Button>
-          
+
           {currentStep < totalSteps ? (
             <Button
               onClick={nextStep}

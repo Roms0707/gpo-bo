@@ -42,7 +42,7 @@ const LoginPage: React.FC = () => {
               Gaming Tournaments
             </h2>
             <p className="text-center text-gray-600 dark:text-gray-400">
-              Admin Dashboard Login
+              Admin Dashboard
             </p>
           </div>
 

@@ -31,7 +31,10 @@ export interface ProjectConfiguration {
   kliento_otp_sms_template: string | null;
   default_phone_country_iso: string | null;
   default_phone_country_code: string | null;
-  subscription_redirect_url: string | null;
+  template_id: string | null;
+  sp_template: string | null;
+  package_id: string | null;
+  lp_redirect_no_account: string | null;
   default_trailer_url: string | null;
   typewriter_phrase_1: string | null;
   typewriter_phrase_2: string | null;
@@ -69,7 +72,10 @@ export interface CreateProjectConfigData {
   kliento_otp_sms_template?: string | null;
   default_phone_country_iso?: string | null;
   default_phone_country_code?: string | null;
-  subscription_redirect_url?: string | null;
+  template_id?: string | null;
+  sp_template?: string | null;
+  package_id?: string | null;
+  lp_redirect_no_account?: string | null;
   default_trailer_url?: string | null;
   typewriter_phrase_1?: string | null;
   typewriter_phrase_2?: string | null;
@@ -488,6 +494,8 @@ export const createProjectConfiguration = async (
 
     const isKlientoOtp = configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp';
 
+    const templateValue = configData.template_id || null;
+
     const { data, error } = await supabase
       .from('project_configurations')
       .insert([{
@@ -498,6 +506,8 @@ export const createProjectConfiguration = async (
         auth_method: configData.auth_method || 'email',
         kliento_auth_type: configData.auth_method === 'kliento' ? (configData.kliento_auth_type || 'password') : null,
         kliento_otp_sms_template: isKlientoOtp ? (configData.kliento_otp_sms_template || DEFAULT_OTP_SMS_TEMPLATE) : null,
+        template_id: templateValue,
+        sp_template: templateValue,
       }])
       .select()
       .single();
@@ -586,6 +596,10 @@ export const updateProjectConfiguration = async (
     const isKlientoOtp = configData.auth_method === 'kliento' && configData.kliento_auth_type === 'otp';
     if (!isKlientoOtp && updateData.kliento_otp_sms_template !== undefined) {
       updateData.kliento_otp_sms_template = null;
+    }
+
+    if (updateData.template_id !== undefined) {
+      updateData.sp_template = updateData.template_id;
     }
 
     const { data, error } = await supabase
@@ -680,7 +694,10 @@ export const duplicateProjectConfiguration = async (
       info_section_text_color: sourceConfig.info_section_text_color,
       product_id: sourceConfig.product_id,
       campaign_id: sourceConfig.campaign_id,
-      subscription_redirect_url: sourceConfig.subscription_redirect_url,
+      template_id: sourceConfig.template_id,
+      sp_template: sourceConfig.sp_template,
+      package_id: sourceConfig.package_id,
+      lp_redirect_no_account: sourceConfig.lp_redirect_no_account,
       default_trailer_url: sourceConfig.default_trailer_url,
       typewriter_phrase_1: sourceConfig.typewriter_phrase_1,
       typewriter_phrase_2: sourceConfig.typewriter_phrase_2,

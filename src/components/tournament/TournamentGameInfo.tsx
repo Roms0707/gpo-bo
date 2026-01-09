@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Monitor, Smartphone, Tablet, Gamepad2, Headphones, Crosshair } from 'lucide-react';
 import Input from '../ui/Input';
-import Select from '../ui/Select';
+import GameSelectorGrid from './GameSelectorGrid';
+import GameSelectorModal from './GameSelectorModal';
+import TournamentFormatSelector from './TournamentFormatSelector';
 
 interface TournamentGameInfoProps {
   selectedGameId: string;
@@ -22,17 +24,13 @@ interface TournamentGameInfoProps {
   setRoundRobinMaxPlayers: (count: string) => void;
   tournamentType: 'solo' | 'team';
   games: any[];
-  // New props for max_nb_players
   maxNbPlayers: string;
   setMaxNbPlayers: (count: string) => void;
-  // New props for Battle Royale
   selectedBattleRoyaleGame: string;
   setSelectedBattleRoyaleGame: (id: string) => void;
-  // New props for team configuration
   setTournamentType: (type: 'solo' | 'team') => void;
   maxPlayersPerTeam: number;
   setMaxPlayersPerTeam: (count: number) => void;
-  // New props for backup players
   allowBackups: boolean;
   setAllowBackups: (allow: boolean) => void;
   maxBackupPlayers: string;
@@ -70,12 +68,9 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
   maxBackupPlayers,
   setMaxBackupPlayers
 }) => {
-  // Debug logging to track tournamentFormat prop value
-  console.log('DEBUG: TournamentGameInfo rendering. tournamentFormat prop:', tournamentFormat);
-  console.log('DEBUG: TournamentGameInfo rendering. selectedGameId prop:', selectedGameId);
-  console.log('DEBUG: TournamentGameInfo rendering. selectedBattleRoyaleGame prop:', selectedBattleRoyaleGame);
+  const [showGameModal, setShowGameModal] = useState(false);
+  const [showBattleRoyaleModal, setShowBattleRoyaleModal] = useState(false);
 
-  // Helper function to get max players based on tournament format
   const getMaxPlayers = (): string => {
     if (tournamentFormat === 'Swiss') return maxPlayers;
     if (tournamentFormat === 'Round Robin') return roundRobinMaxPlayers;
@@ -84,24 +79,20 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
     return '0';
   };
 
-  // Check if Apex Legends is selected for Battle Royale
   const isApexSelected = tournamentFormat === 'Battle Royale' && selectedBattleRoyaleGame &&
     games.find(game => game.id === selectedBattleRoyaleGame)?.name.toLowerCase().includes('apex');
-  // Get Battle Royale games
-  console.log("Available games:", games.map(game => game.name));
-  const battleRoyaleGames = games.filter(game => 
-    game.name.toLowerCase().includes('warzone') || 
+
+  const battleRoyaleGames = games.filter(game =>
+    game.name.toLowerCase().includes('warzone') ||
     game.name.toLowerCase().includes('call of duty') ||
-    game.name.toLowerCase().includes('freefire') || 
+    game.name.toLowerCase().includes('freefire') ||
     game.name.toLowerCase().includes('free fire') ||
     game.name.toLowerCase().includes('apex') ||
     game.name.toLowerCase().includes('fortnite') ||
     game.name.toLowerCase().includes('pubg') ||
     game.name.toLowerCase().includes('battle royale')
   );
-  console.log("Filtered Battle Royale games:", battleRoyaleGames.map(game => game.name));
 
-  // Update maxNbPlayers when format or player count changes
   useEffect(() => {
     if (tournamentFormat === 'Swiss') {
       setMaxNbPlayers(maxPlayers);
@@ -110,89 +101,89 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
     } else if (tournamentFormat === 'Single Elimination') {
       setMaxNbPlayers(customPlayerCount);
     } else if (tournamentFormat === 'Battle Royale' && selectedBattleRoyaleGame) {
-      // Set max players based on selected Battle Royale game
       const selectedGame = games.find(game => game.id === selectedBattleRoyaleGame);
       if (selectedGame) {
         const gameName = selectedGame.name.toLowerCase().trim();
         if (gameName.includes('warzone') || gameName.includes('call of duty') || gameName.includes('cod')) {
-            setMaxNbPlayers('150');
+          setMaxNbPlayers('150');
         } else if (gameName.includes('apex') || gameName.includes('legends')) {
-            setMaxNbPlayers('60');
+          setMaxNbPlayers('60');
         } else if (gameName.includes('fortnite') || gameName.includes('pubg') || gameName.includes('playerunknown')) {
-            setMaxNbPlayers('100');
+          setMaxNbPlayers('100');
         } else if (gameName.includes('freefire') || gameName.includes('free fire') || gameName.includes('garena')) {
-            setMaxNbPlayers('50');
+          setMaxNbPlayers('50');
         } else {
-            setMaxNbPlayers('100');
+          setMaxNbPlayers('100');
         }
       }
     }
   }, [tournamentFormat, maxPlayers, roundRobinMaxPlayers, customPlayerCount, selectedBattleRoyaleGame, games, setMaxNbPlayers]);
 
-  // Handle Battle Royale game selection
   const handleBattleRoyaleGameChange = (gameId: string) => {
     setSelectedBattleRoyaleGame(gameId);
     setSelectedGameId(gameId);
-    
-    // Set max players based on selected game
+
     const selectedGame = games.find(game => game.id === gameId);
     if (selectedGame) {
       const gameName = selectedGame.name.toLowerCase().trim();
       if (gameName.includes('warzone') || gameName.includes('call of duty') || gameName.includes('cod')) {
-          setMaxNbPlayers('150');
+        setMaxNbPlayers('150');
       } else if (gameName.includes('apex') || gameName.includes('legends')) {
-          setMaxNbPlayers('60');
-          // Apex Legends is team-based: 20 squads of 3 players
-          setTournamentType('team');
-          setMaxPlayersPerTeam(3);
+        setMaxNbPlayers('60');
+        setTournamentType('team');
+        setMaxPlayersPerTeam(3);
       } else if (gameName.includes('fortnite') || gameName.includes('pubg') || gameName.includes('playerunknown')) {
-          setMaxNbPlayers('100');
+        setMaxNbPlayers('100');
       } else if (gameName.includes('freefire') || gameName.includes('free fire') || gameName.includes('garena')) {
-          setMaxNbPlayers('50');
+        setMaxNbPlayers('50');
       } else {
-          setMaxNbPlayers('100');
+        setMaxNbPlayers('100');
       }
     }
   };
 
+  const selectedGameName = games.find(g => g.id === selectedGameId)?.name || '';
+  const selectedBRGameName = games.find(g => g.id === selectedBattleRoyaleGame)?.name || '';
+
   return (
     <div className="space-y-6">
-      <Select
-        label="Tournament Format"
-        value={tournamentFormat}
-        onChange={(e) => setTournamentFormat(e.target.value)}
-        options={[
-          { value: 'Swiss', label: 'Swiss' },
-          { value: 'Round Robin', label: 'Round Robin' },
-          { value: 'Single Elimination', label: 'Single Elimination' },
-          { value: 'Battle Royale', label: 'Battle Royale' }
-        ]}
-      />
-      
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-white mb-2">Game Information</h2>
+        <p className="text-gray-400">Select a game and configure the tournament format</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          Tournament Format
+        </label>
+        <TournamentFormatSelector
+          selectedFormat={tournamentFormat}
+          onFormatSelect={setTournamentFormat}
+        />
+      </div>
+
       {tournamentFormat === 'Battle Royale' ? (
-        // Battle Royale specific configuration
         <div className="space-y-6">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
             <h3 className="text-lg font-medium text-yellow-900 dark:text-yellow-200 mb-4 flex items-center">
               <Crosshair className="h-5 w-5 mr-2 text-yellow-500" />
               Battle Royale Configuration
             </h3>
-            
+
             <div className="space-y-4">
-              <Select
-                label="Select Battle Royale Game"
-                value={selectedBattleRoyaleGame}
-                onChange={(e) => handleBattleRoyaleGameChange(e.target.value)}
-                options={[
-                  { value: '', label: 'Select a game' },
-                  ...battleRoyaleGames.map(game => ({
-                    value: game.id,
-                    label: game.name
-                  }))
-                ]}
-                required
-              />
-              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Select Battle Royale Game
+                </label>
+                <GameSelectorGrid
+                  games={battleRoyaleGames}
+                  selectedGameId={selectedBattleRoyaleGame}
+                  onSelect={handleBattleRoyaleGameChange}
+                  maxDisplay={6}
+                  onViewAll={() => setShowBattleRoyaleModal(true)}
+                />
+              </div>
+
               {selectedBattleRoyaleGame && (
                 <div className="bg-dark-200 p-3 rounded-md">
                   <div className="flex justify-between items-center">
@@ -211,7 +202,7 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
                   )}
                 </div>
               )}
-              
+
               <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   <strong>Note:</strong> Battle Royale tournaments require manual entry of player placements and eliminations after each match.
@@ -219,13 +210,21 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
               </div>
             </div>
           </div>
+
+          <GameSelectorModal
+            isOpen={showBattleRoyaleModal}
+            onClose={() => setShowBattleRoyaleModal(false)}
+            games={battleRoyaleGames}
+            selectedGameId={selectedBattleRoyaleGame}
+            onSelect={handleBattleRoyaleGameChange}
+            title="Select Battle Royale Game"
+          />
         </div>
       ) : tournamentFormat === 'Round Robin' ? (
-        // Round Robin specific configuration
         <div className="space-y-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="text-lg font-medium text-blue-900 dark:text-blue-200 mb-4">Round Robin Configuration</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -256,13 +255,13 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
                   </label>
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Select The Maximum Of {tournamentType === 'team' ? 'Teams' : 'Players'} For The Group That You Selected
                 </label>
                 <div className="grid grid-cols-3 gap-3">
-                  {roundRobinGroupSize === '4' ? 
+                  {roundRobinGroupSize === '4' ?
                     ['16', '32', '64'].map((limit) => (
                       <label key={limit} className="flex items-center cursor-pointer">
                         <input
@@ -308,7 +307,6 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
           </div>
         </div>
       ) : tournamentFormat === 'Swiss' ? (
-        // Swiss tournament configuration
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Number of {tournamentType === 'team' ? 'Teams' : 'Players'}
@@ -338,7 +336,6 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
           </div>
         </div>
       ) : tournamentFormat === 'Single Elimination' ? (
-        // Single Elimination tournament configuration
         <div>
           <Input
             label={`Number of ${tournamentType === 'team' ? 'Teams' : 'Players'}`}
@@ -354,23 +351,36 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
           </p>
         </div>
       ) : null}
-      
+
       {tournamentFormat !== 'Battle Royale' && (
-        <Select
-          label="Tournament Game"
-          value={selectedGameId}
-          onChange={(e) => setSelectedGameId(e.target.value)}
-          options={[
-            { value: '', label: 'Select a game' },
-            ...games.map(game => ({
-              value: game.id,
-              label: game.name
-            }))
-          ]}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Tournament Game
+          </label>
+          <GameSelectorGrid
+            games={games}
+            selectedGameId={selectedGameId}
+            onSelect={setSelectedGameId}
+            maxDisplay={6}
+            onViewAll={() => setShowGameModal(true)}
+          />
+          {selectedGameName && (
+            <p className="mt-2 text-sm text-primary-400">
+              Selected: <span className="font-medium">{selectedGameName}</span>
+            </p>
+          )}
+
+          <GameSelectorModal
+            isOpen={showGameModal}
+            onClose={() => setShowGameModal(false)}
+            games={games}
+            selectedGameId={selectedGameId}
+            onSelect={setSelectedGameId}
+            title="Select Tournament Game"
+          />
+        </div>
       )}
 
-      {/* Backup Players Configuration */}
       {tournamentFormat && tournamentFormat !== 'Battle Royale' && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-4">
           <div className="flex items-start space-x-3">
@@ -424,7 +434,7 @@ const TournamentGameInfo: React.FC<TournamentGameInfoProps> = ({
         onChange={(e) => setMinimumAge(parseInt(e.target.value))}
         required
       />
-      
+
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
           Select Type of Device

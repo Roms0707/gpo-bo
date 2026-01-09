@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, ArrowLeft, Star, AlertTriangle, Building2, Info } from 'lucide-react';
+import { Globe, Star, AlertTriangle, Info, Users, User, Wifi, MapPin } from 'lucide-react';
 import Input from '../ui/Input';
 import RadioGroup from '../ui/RadioGroup';
 import CountrySelector from './CountrySelector';
@@ -88,90 +88,8 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
   return (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Tournament Creation</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">Tournament Information</h2>
         <p className="text-gray-400">Let's start with the basic information about your tournament</p>
-      </div>
-
-      <RadioGroup
-        name="tournamentType"
-        label="Tournament Type"
-        value={tournamentType}
-        onChange={(value) => setTournamentType(value as 'solo' | 'team')}
-        options={[
-          { 
-            value: 'solo', 
-            label: 'Solo Tournament', 
-            description: 'Individual players compete against each other' 
-          },
-          { 
-            value: 'team', 
-            label: 'Team Tournament', 
-            description: 'Teams of players compete against other teams' 
-          },
-        ]}
-      />
-
-      {tournamentType === 'team' && (
-        <Input
-          label="Maximum Players per Team"
-          type="number"
-          min="1"
-          max="20"
-          value={maxPlayersPerTeam.toString()}
-          onChange={(e) => setMaxPlayersPerTeam(parseInt(e.target.value) || 5)}
-          placeholder="Enter max players per team"
-          required
-        />
-      )}
-      
-      <RadioGroup
-        name="locationType"
-        label="Tournament Location"
-        value={locationType}
-        onChange={(value) => setLocationType(value as 'online' | 'offline')}
-        options={[
-          { 
-            value: 'online', 
-            label: 'Online Tournament', 
-            description: 'Tournament will be played online' 
-          },
-          { 
-            value: 'offline', 
-            label: 'Offline Tournament', 
-            description: 'Tournament will be played at a physical location' 
-          },
-        ]}
-      />
-      
-      {locationType === 'offline' && (
-        <Input
-          label="Location Name"
-          value={locationName}
-          onChange={(e) => setLocationName(e.target.value)}
-          required
-          placeholder="Enter the venue or location name"
-        />
-      )}
-      
-      <Input
-        label="Title"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        placeholder="Enter tournament title"
-      />
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Description
-        </label>
-        <textarea
-          className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-200 px-3 py-2 text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-          rows={4}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe your tournament..."
-        />
       </div>
 
       <div className="p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg">
@@ -210,6 +128,174 @@ const TournamentBasicInfo: React.FC<TournamentBasicInfoProps> = ({
             />
           </button>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Tournament Type
+          </label>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setTournamentType('solo')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${tournamentType === 'solo'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`
+                  p-2 rounded-lg
+                  ${tournamentType === 'solo' ? 'bg-primary-500/20' : 'bg-dark-300'}
+                `}>
+                  <User className={`w-5 h-5 ${tournamentType === 'solo' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${tournamentType === 'solo' ? 'text-primary-300' : 'text-white'}`}>
+                    Solo Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Individual players compete</p>
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTournamentType('team')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${tournamentType === 'team'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`
+                  p-2 rounded-lg
+                  ${tournamentType === 'team' ? 'bg-primary-500/20' : 'bg-dark-300'}
+                `}>
+                  <Users className={`w-5 h-5 ${tournamentType === 'team' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${tournamentType === 'team' ? 'text-primary-300' : 'text-white'}`}>
+                    Team Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Teams compete against each other</p>
+                </div>
+              </div>
+            </button>
+          </div>
+          {tournamentType === 'team' && (
+            <div className="mt-3">
+              <Input
+                label="Maximum Players per Team"
+                type="number"
+                min="1"
+                max="20"
+                value={maxPlayersPerTeam.toString()}
+                onChange={(e) => setMaxPlayersPerTeam(parseInt(e.target.value) || 5)}
+                placeholder="Enter max players per team"
+                required
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Tournament Location
+          </label>
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setLocationType('online')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${locationType === 'online'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`
+                  p-2 rounded-lg
+                  ${locationType === 'online' ? 'bg-primary-500/20' : 'bg-dark-300'}
+                `}>
+                  <Wifi className={`w-5 h-5 ${locationType === 'online' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${locationType === 'online' ? 'text-primary-300' : 'text-white'}`}>
+                    Online Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Played remotely online</p>
+                </div>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocationType('offline')}
+              className={`
+                w-full p-4 rounded-xl border-2 transition-all duration-200 text-left
+                ${locationType === 'offline'
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-dark-200 hover:border-gray-500 bg-dark-200/50'
+                }
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`
+                  p-2 rounded-lg
+                  ${locationType === 'offline' ? 'bg-primary-500/20' : 'bg-dark-300'}
+                `}>
+                  <MapPin className={`w-5 h-5 ${locationType === 'offline' ? 'text-primary-400' : 'text-gray-400'}`} />
+                </div>
+                <div>
+                  <p className={`font-medium ${locationType === 'offline' ? 'text-primary-300' : 'text-white'}`}>
+                    Offline Tournament
+                  </p>
+                  <p className="text-xs text-gray-400">Physical venue location</p>
+                </div>
+              </div>
+            </button>
+          </div>
+          {locationType === 'offline' && (
+            <div className="mt-3">
+              <Input
+                label="Location Name"
+                value={locationName}
+                onChange={(e) => setLocationName(e.target.value)}
+                required
+                placeholder="Enter the venue or location name"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Input
+        label="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+        placeholder="Enter tournament title"
+      />
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Description
+        </label>
+        <textarea
+          className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-200 px-3 py-2 text-gray-900 dark:text-white focus:border-primary-500 dark:focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+          rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Describe your tournament..."
+        />
       </div>
 
       <ProjectConfigSelector

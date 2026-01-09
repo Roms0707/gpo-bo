@@ -398,6 +398,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         twitch_url: sourceTournament.twitch_url,
         compatible_devices: sourceTournament.compatible_devices,
         discord_url: sourceTournament.discord_url,
+        discord_server_id: sourceTournament.discord_server_id,
         tournament_format: sourceTournament.tournament_format,
         eligible_countries: targetConfigId !== undefined
           ? (targetConfigId ? null : sourceTournament.eligible_countries)
