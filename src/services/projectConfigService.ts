@@ -35,6 +35,7 @@ export interface ProjectConfiguration {
   sp_template: string | null;
   package_id: string | null;
   lp_redirect_no_account: string | null;
+  service_id: string | null;
   default_trailer_url: string | null;
   typewriter_phrase_1: string | null;
   typewriter_phrase_2: string | null;
@@ -76,6 +77,7 @@ export interface CreateProjectConfigData {
   sp_template?: string | null;
   package_id?: string | null;
   lp_redirect_no_account?: string | null;
+  service_id?: string | null;
   default_trailer_url?: string | null;
   typewriter_phrase_1?: string | null;
   typewriter_phrase_2?: string | null;
@@ -448,6 +450,10 @@ export const createProjectConfiguration = async (
       throw new Error('Kliento authentication requires a Product ID');
     }
 
+    if (configData.auth_method === 'kliento' && !configData.service_id?.trim()) {
+      throw new Error('Kliento authentication requires a Service ID');
+    }
+
     if (configData.kliento_auth_type && !validateKlientoAuthType(configData.kliento_auth_type)) {
       throw new Error('Invalid kliento_auth_type. Must be one of: password, otp');
     }
@@ -551,6 +557,10 @@ export const updateProjectConfiguration = async (
 
     if (configData.auth_method === 'kliento' && !configData.product_id?.trim()) {
       throw new Error('Kliento authentication requires a Product ID');
+    }
+
+    if (configData.auth_method === 'kliento' && !configData.service_id?.trim()) {
+      throw new Error('Kliento authentication requires a Service ID');
     }
 
     if (configData.kliento_auth_type && !validateKlientoAuthType(configData.kliento_auth_type)) {
@@ -698,6 +708,7 @@ export const duplicateProjectConfiguration = async (
       sp_template: sourceConfig.sp_template,
       package_id: sourceConfig.package_id,
       lp_redirect_no_account: sourceConfig.lp_redirect_no_account,
+      service_id: sourceConfig.service_id,
       default_trailer_url: sourceConfig.default_trailer_url,
       typewriter_phrase_1: sourceConfig.typewriter_phrase_1,
       typewriter_phrase_2: sourceConfig.typewriter_phrase_2,

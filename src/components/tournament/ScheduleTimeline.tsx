@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, Check, Plus, Zap } from 'lucide-react';
-import MilestoneCard from './MilestoneCard';
+import DateRangeCard from './DateRangeCard';
 
 interface ScheduleTimelineProps {
   registrationStartDate: string;
@@ -17,7 +17,10 @@ interface CustomMilestone {
   id: string;
   label: string;
   sublabel: string;
-  value: string;
+  startLabel: string;
+  endLabel: string;
+  startValue: string;
+  endValue: string;
 }
 
 const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
@@ -34,6 +37,8 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
   const [showAddMilestone, setShowAddMilestone] = useState(false);
   const [newMilestoneLabel, setNewMilestoneLabel] = useState('');
   const [newMilestoneSublabel, setNewMilestoneSublabel] = useState('');
+  const [newMilestoneStartLabel, setNewMilestoneStartLabel] = useState('');
+  const [newMilestoneEndLabel, setNewMilestoneEndLabel] = useState('');
   const [showPresets, setShowPresets] = useState(false);
 
   const calculateDuration = (date1: string, date2: string): string | undefined => {
@@ -62,15 +67,13 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     };
 
     if (dates.regStart && dates.regEnd && dates.regStart >= dates.regEnd) {
-      errors.set('regStart', 'Must be before registration closes');
-      errors.set('regEnd', 'Must be after registration opens');
+      errors.set('registration', 'Registration opens must be before registration closes');
     }
     if (dates.regEnd && dates.tournStart && dates.regEnd > dates.tournStart) {
-      errors.set('regEnd', 'Should close before tournament starts');
+      errors.set('registration', 'Registration should close before tournament starts');
     }
     if (dates.tournStart && dates.tournEnd && dates.tournStart >= dates.tournEnd) {
-      errors.set('tournStart', 'Must be before tournament ends');
-      errors.set('tournEnd', 'Must be after tournament starts');
+      errors.set('tournament', 'Tournament start must be before tournament end');
     }
 
     return errors;
@@ -78,56 +81,22 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
 
   const validationErrors = getValidationErrors();
 
-  const defaultMilestones = [
-    {
-      id: 'regStart',
-      label: 'Registration Opens',
-      sublabel: 'When players can sign up for the tournament',
-      value: registrationStartDate,
-      setValue: setRegistrationStartDate,
-      required: false,
-      color: 'emerald'
-    },
-    {
-      id: 'regEnd',
-      label: 'Registration Closes',
-      sublabel: 'Last opportunity for players to sign up',
-      value: registrationEndDate,
-      setValue: setRegistrationEndDate,
-      required: false,
-      color: 'amber'
-    },
-    {
-      id: 'tournStart',
-      label: 'Tournament Begins',
-      sublabel: 'Competition officially starts',
-      value: startDate,
-      setValue: setStartDate,
-      required: true,
-      color: 'blue'
-    },
-    {
-      id: 'tournEnd',
-      label: 'Tournament Ends',
-      sublabel: 'Finals conclude and winners announced',
-      value: endDate,
-      setValue: setEndDate,
-      required: true,
-      color: 'rose'
-    }
-  ];
-
   const handleAddCustomMilestone = () => {
-    if (newMilestoneLabel.trim()) {
+    if (newMilestoneLabel.trim() && newMilestoneStartLabel.trim() && newMilestoneEndLabel.trim()) {
       const newMilestone: CustomMilestone = {
         id: `custom-${Date.now()}`,
         label: newMilestoneLabel.trim(),
         sublabel: newMilestoneSublabel.trim() || 'Custom milestone',
-        value: ''
+        startLabel: newMilestoneStartLabel.trim(),
+        endLabel: newMilestoneEndLabel.trim(),
+        startValue: '',
+        endValue: ''
       };
       setCustomMilestones([...customMilestones, newMilestone]);
       setNewMilestoneLabel('');
       setNewMilestoneSublabel('');
+      setNewMilestoneStartLabel('');
+      setNewMilestoneEndLabel('');
       setShowAddMilestone(false);
     }
   };
@@ -136,9 +105,9 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     setCustomMilestones(customMilestones.filter(m => m.id !== id));
   };
 
-  const handleCustomMilestoneChange = (id: string, value: string) => {
+  const handleCustomMilestoneChange = (id: string, startValue: string, endValue: string) => {
     setCustomMilestones(customMilestones.map(m =>
-      m.id === id ? { ...m, value } : m
+      m.id === id ? { ...m, startValue, endValue } : m
     ));
   };
 
@@ -156,11 +125,14 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
     setShowPresets(false);
   };
 
-  const totalMilestones = defaultMilestones.length + customMilestones.length;
-  const completedMilestones = defaultMilestones.filter(m => m.value).length +
-    customMilestones.filter(m => m.value).length;
-  const requiredComplete = defaultMilestones.filter(m => m.required && m.value).length ===
-    defaultMilestones.filter(m => m.required).length;
+  const totalRanges = 2 + customMilestones.length;
+  const completedRanges =
+    (registrationStartDate && registrationEndDate ? 1 : 0) +
+    (startDate && endDate ? 1 : 0) +
+    customMilestones.filter(m => m.startValue && m.endValue).length;
+  const requiredComplete = startDate && endDate;
+
+  const gapDuration = calculateDuration(registrationEndDate, startDate);
 
   return (
     <div className="space-y-6">
@@ -185,7 +157,7 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
           </button>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-dark-200 rounded-lg">
             <span className={`text-sm font-medium ${requiredComplete ? 'text-emerald-400' : 'text-gray-400'}`}>
-              {completedMilestones}/{totalMilestones}
+              {completedRanges}/{totalRanges}
             </span>
             {requiredComplete && (
               <div className="p-0.5 bg-emerald-500/20 rounded-full">
@@ -226,53 +198,72 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       )}
 
       <div className="space-y-0">
-        {defaultMilestones.map((milestone, index) => {
-          const prevMilestone = index > 0 ? defaultMilestones[index - 1] : null;
-          const duration = prevMilestone
-            ? calculateDuration(prevMilestone.value, milestone.value)
-            : undefined;
+        <DateRangeCard
+          id="registration"
+          label="Registration Period"
+          sublabel="When players can sign up for the tournament"
+          startDate={registrationStartDate}
+          endDate={registrationEndDate}
+          onRangeChange={(start, end) => {
+            setRegistrationStartDate(start);
+            setRegistrationEndDate(end);
+          }}
+          startLabel="Opens"
+          endLabel="Closes"
+          required={false}
+          color="emerald"
+          isFirst={true}
+          isLast={customMilestones.length === 0 && !startDate && !endDate}
+          hasError={validationErrors.has('registration')}
+          errorMessage={validationErrors.get('registration')}
+        />
 
-          return (
-            <MilestoneCard
-              key={milestone.id}
-              id={milestone.id}
-              label={milestone.label}
-              sublabel={milestone.sublabel}
-              value={milestone.value}
-              onChange={milestone.setValue}
-              required={milestone.required}
-              color={milestone.color}
-              isFirst={index === 0}
-              isLast={index === defaultMilestones.length - 1 && customMilestones.length === 0}
-              hasError={validationErrors.has(milestone.id)}
-              errorMessage={validationErrors.get(milestone.id)}
-              minDate={prevMilestone?.value}
-              durationFromPrevious={duration}
-            />
-          );
-        })}
+        <DateRangeCard
+          id="tournament"
+          label="Tournament Period"
+          sublabel="When the competition takes place"
+          startDate={startDate}
+          endDate={endDate}
+          onRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+          }}
+          startLabel="Begins"
+          endLabel="Ends"
+          required={true}
+          color="blue"
+          isFirst={false}
+          isLast={customMilestones.length === 0}
+          hasError={validationErrors.has('tournament')}
+          errorMessage={validationErrors.get('tournament')}
+          minDate={registrationEndDate}
+          durationLabel={gapDuration}
+        />
 
         {customMilestones.map((milestone, index) => {
-          const prevValue = index === 0
-            ? defaultMilestones[defaultMilestones.length - 1].value
-            : customMilestones[index - 1].value;
-          const duration = calculateDuration(prevValue, milestone.value);
+          const prevEndDate = index === 0
+            ? endDate
+            : customMilestones[index - 1].endValue;
+          const duration = calculateDuration(prevEndDate, milestone.startValue);
 
           return (
-            <MilestoneCard
+            <DateRangeCard
               key={milestone.id}
               id={milestone.id}
               label={milestone.label}
               sublabel={milestone.sublabel}
-              value={milestone.value}
-              onChange={(value) => handleCustomMilestoneChange(milestone.id, value)}
+              startDate={milestone.startValue}
+              endDate={milestone.endValue}
+              onRangeChange={(start, end) => handleCustomMilestoneChange(milestone.id, start, end)}
+              startLabel={milestone.startLabel}
+              endLabel={milestone.endLabel}
               required={false}
-              color="purple"
+              color="cyan"
               isFirst={false}
               isLast={index === customMilestones.length - 1}
               hasError={false}
-              minDate={prevValue}
-              durationFromPrevious={duration}
+              minDate={prevEndDate}
+              durationLabel={duration}
               isCustom
               onDelete={() => handleDeleteCustomMilestone(milestone.id)}
             />
@@ -283,7 +274,7 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
       {showAddMilestone ? (
         <div className="p-4 bg-dark-200 rounded-xl border border-dark-300 space-y-4">
           <div className="flex items-center gap-2">
-            <Plus className="w-4 h-4 text-purple-400" />
+            <Plus className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-medium text-white">Add Custom Milestone</span>
           </div>
           <div className="space-y-3">
@@ -291,7 +282,7 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               type="text"
               value={newMilestoneLabel}
               onChange={(e) => setNewMilestoneLabel(e.target.value)}
-              placeholder="Milestone name (e.g., 'Check-in Opens')"
+              placeholder="Period name (e.g., 'Check-in Period')"
               className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none text-sm"
             />
             <input
@@ -301,6 +292,22 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
               placeholder="Description (optional)"
               className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none text-sm"
             />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={newMilestoneStartLabel}
+                onChange={(e) => setNewMilestoneStartLabel(e.target.value)}
+                placeholder="Start label (e.g., 'Opens')"
+                className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none text-sm"
+              />
+              <input
+                type="text"
+                value={newMilestoneEndLabel}
+                onChange={(e) => setNewMilestoneEndLabel(e.target.value)}
+                placeholder="End label (e.g., 'Closes')"
+                className="w-full px-3 py-2 bg-dark-300 border border-dark-300 rounded-lg text-white placeholder-gray-500 focus:border-primary-500 focus:outline-none text-sm"
+              />
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -309,6 +316,8 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
                 setShowAddMilestone(false);
                 setNewMilestoneLabel('');
                 setNewMilestoneSublabel('');
+                setNewMilestoneStartLabel('');
+                setNewMilestoneEndLabel('');
               }}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 bg-dark-300 hover:bg-dark-100 rounded-lg transition-colors"
             >
@@ -317,8 +326,8 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
             <button
               type="button"
               onClick={handleAddCustomMilestone}
-              disabled={!newMilestoneLabel.trim()}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-purple-500 hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+              disabled={!newMilestoneLabel.trim() || !newMilestoneStartLabel.trim() || !newMilestoneEndLabel.trim()}
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-cyan-500 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               Add Milestone
             </button>
@@ -328,7 +337,7 @@ const ScheduleTimeline: React.FC<ScheduleTimelineProps> = ({
         <button
           type="button"
           onClick={() => setShowAddMilestone(true)}
-          className="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-600 hover:border-purple-500 text-gray-400 hover:text-purple-400 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-600 hover:border-cyan-500 text-gray-400 hover:text-cyan-400 rounded-xl transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span className="text-sm font-medium">Add Custom Milestone</span>

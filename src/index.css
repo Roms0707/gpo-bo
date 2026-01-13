@@ -176,3 +176,143 @@
   overflow-y: auto;
   position: relative;
 }
+
+/* Litepicker dark theme styling */
+.litepicker-container .litepicker {
+  font-family: inherit;
+  --litepicker-container-months-color-bg: #1e2127;
+  --litepicker-container-months-box-shadow-color: rgba(0, 0, 0, 0.3);
+  --litepicker-footer-color-bg: #1e2127;
+  --litepicker-footer-box-shadow-color: rgba(0, 0, 0, 0.3);
+  --litepicker-tooltip-color-bg: #21252b;
+  --litepicker-month-header-color: #ffffff;
+  --litepicker-button-prev-month-color: #9ca3af;
+  --litepicker-button-next-month-color: #9ca3af;
+  --litepicker-button-prev-month-color-hover: #ffffff;
+  --litepicker-button-next-month-color-hover: #ffffff;
+  --litepicker-month-width: calc(var(--litepicker-day-width) * 7);
+  --litepicker-month-weekday-color: #6b7280;
+  --litepicker-day-width: 40px;
+  --litepicker-day-color: #d1d5db;
+  --litepicker-day-color-hover: #ffffff;
+  --litepicker-is-today-color: #60a5fa;
+  --litepicker-is-in-range-color: rgba(59, 130, 246, 0.2);
+  --litepicker-is-locked-color: #374151;
+  --litepicker-is-start-color: #ffffff;
+  --litepicker-is-start-color-bg: #3b82f6;
+  --litepicker-is-end-color: #ffffff;
+  --litepicker-is-end-color-bg: #3b82f6;
+  --litepicker-button-cancel-color: #9ca3af;
+  --litepicker-button-cancel-color-bg: #374151;
+  --litepicker-button-apply-color: #ffffff;
+  --litepicker-button-apply-color-bg: #3b82f6;
+  --litepicker-button-reset-color: #f87171;
+  --litepicker-button-reset-color-hover: #ef4444;
+  --litepicker-highlighted-day-color: #60a5fa;
+  --litepicker-highlighted-day-color-bg: rgba(96, 165, 250, 0.1);
+}
+
+.litepicker-container .litepicker .container__months {
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 12px;
+}
+
+.litepicker-container .litepicker .container__months .month-item {
+  padding: 8px;
+}
+
+.litepicker-container .litepicker .container__months .month-item-header {
+  padding: 8px 0;
+}
+
+.litepicker-container .litepicker .container__months .month-item-header div > .month-item-name,
+.litepicker-container .litepicker .container__months .month-item-header div > .month-item-year {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.litepicker-container .litepicker .container__months .month-item-header button {
+  color: #9ca3af;
+  background: #21252b;
+  border-radius: 8px;
+  padding: 4px;
+  transition: all 0.15s ease;
+}
+
+.litepicker-container .litepicker .container__months .month-item-header button:hover {
+  color: #ffffff;
+  background: #374151;
+}
+
+.litepicker-container .litepicker .container__months .month-item-weekdays-row > div {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 0;
+}
+
+.litepicker-container .litepicker .container__days > div,
+.litepicker-container .litepicker .container__days > a {
+  width: 36px;
+  height: 36px;
+  margin: 2px;
+  border-radius: 8px;
+  color: #d1d5db;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.litepicker-container .litepicker .container__days .day-item:hover {
+  background: #374151;
+  color: #ffffff;
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-today {
+  color: #60a5fa;
+  font-weight: 600;
+  background: rgba(96, 165, 250, 0.1);
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-locked {
+  color: #4b5563;
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-in-range {
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 0;
+  color: #93c5fd;
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-start-date {
+  background: #3b82f6;
+  color: #ffffff;
+  border-radius: 8px 0 0 8px;
+  font-weight: 600;
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-end-date {
+  background: #3b82f6;
+  color: #ffffff;
+  border-radius: 0 8px 8px 0;
+  font-weight: 600;
+}
+
+.litepicker-container .litepicker .container__days .day-item.is-start-date.is-end-date {
+  border-radius: 8px;
+}
+
+.litepicker-container .litepicker .container__tooltip {
+  background: #21252b;
+  color: #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #374151;
+}

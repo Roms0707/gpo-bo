@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, FileText } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, FileText, Loader2, RefreshCw } from 'lucide-react';
 
 interface FileUploadInputProps {
   label: string;
@@ -26,26 +26,49 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (file: File | null) => {
+    setLocalError(null);
+
     if (!file) {
       setLocalPreview(null);
+      setIsLoading(false);
       onChange(null);
       return;
     }
 
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      onChange(null);
+      setLocalError(`File size exceeds ${maxSizeMB}MB limit`);
+      setIsLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
+    setLocalPreview(null);
+
     if (file.type.startsWith('image/')) {
+      setIsLoading(true);
       const reader = new FileReader();
+
       reader.onloadend = () => {
         setLocalPreview(reader.result as string);
+        setIsLoading(false);
       };
+
+      reader.onerror = () => {
+        setLocalError('Failed to read file. Please try again.');
+        setIsLoading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      };
+
       reader.readAsDataURL(file);
     }
 
@@ -85,11 +108,15 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
   };
 
   const handleClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     fileInputRef.current?.click();
   };
 
-  const displayPreview = localPreview || previewUrl;
-  const hasFile = value || displayPreview;
+  const displayPreview = localPreview || (value ? null : previewUrl);
+  const hasFile = value || previewUrl;
+  const displayError = error || localError;
 
   return (
     <div className="space-y-2">
@@ -101,7 +128,7 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-4
-          ${isDragging ? 'border-primary-500 bg-primary-500/10' : error ? 'border-error-500' : 'border-gray-300 dark:border-dark-200'}
+          ${isDragging ? 'border-primary-500 bg-primary-500/10' : displayError ? 'border-error-500' : 'border-gray-300 dark:border-dark-200'}
           ${hasFile ? '' : 'cursor-pointer hover:border-primary-400 hover:bg-primary-500/5'}
           transition-colors
         `}
@@ -120,14 +147,32 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
 
         {hasFile ? (
           <div className="space-y-3">
-            {displayPreview && (
-              <div className="flex justify-center">
-                <img
-                  src={displayPreview}
-                  alt="Preview"
-                  className="max-h-32 object-contain rounded"
-                />
+            {isLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
               </div>
+            ) : (
+              <>
+                {(displayPreview || (value && localPreview)) && (
+                  <div className="flex justify-center">
+                    <img
+                      src={localPreview || displayPreview || ''}
+                      alt="Preview"
+                      className="max-h-32 object-contain rounded"
+                    />
+                  </div>
+                )}
+
+                {!localPreview && !displayPreview && previewUrl && !value && (
+                  <div className="flex justify-center">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="max-h-32 object-contain rounded"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {value && (
@@ -145,14 +190,24 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
                     ({(value.size / 1024).toFixed(1)} KB)
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleRemove}
-                  className="ml-2 p-1 hover:bg-gray-200 dark:hover:bg-dark-100 rounded transition-colors flex-shrink-0"
-                  title="Remove file"
-                >
-                  <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                </button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleClick}
+                    className="p-1 hover:bg-gray-200 dark:hover:bg-dark-100 rounded transition-colors"
+                    title="Replace file"
+                  >
+                    <RefreshCw className="w-4 h-4 text-primary-500" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    className="p-1 hover:bg-gray-200 dark:hover:bg-dark-100 rounded transition-colors"
+                    title="Remove file"
+                  >
+                    <X className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -187,12 +242,12 @@ const FileUploadInput: React.FC<FileUploadInputProps> = ({
         )}
       </div>
 
-      {helperText && !error && (
+      {helperText && !displayError && (
         <p className="text-xs text-gray-500 dark:text-gray-400">{helperText}</p>
       )}
 
-      {error && (
-        <p className="text-xs text-error-500">{error}</p>
+      {displayError && (
+        <p className="text-xs text-error-500">{displayError}</p>
       )}
     </div>
   );

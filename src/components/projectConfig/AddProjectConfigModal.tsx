@@ -76,6 +76,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [templateId, setTemplateId] = useState('');
   const [packageId, setPackageId] = useState('');
   const [lpRedirectNoAccount, setLpRedirectNoAccount] = useState('');
+  const [serviceId, setServiceId] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
@@ -121,6 +122,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setTemplateId('');
     setPackageId('');
     setLpRedirectNoAccount('');
+    setServiceId('');
     setIsActive(true);
     setExtraMetadata('{}');
     setAuthMethod('email');
@@ -174,6 +176,10 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
 
       if (authMethod === 'kliento' && !productId.trim()) {
         newErrors.authMethod = 'Kliento authentication requires a Product ID (configure in Integration step)';
+      }
+
+      if (authMethod === 'kliento' && !serviceId.trim()) {
+        newErrors.serviceId = 'Kliento authentication requires a Service ID (configure in Integration step)';
       }
 
       if (authMethod === 'kliento' && klientoAuthType === 'otp') {
@@ -368,6 +374,7 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         template_id: templateId.trim() || null,
         package_id: packageId.trim() || null,
         lp_redirect_no_account: lpRedirectNoAccount.trim() || null,
+        service_id: serviceId.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
         support_email: supportEmail.trim(),
         legal_email: legalEmail.trim(),
@@ -927,13 +934,24 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                     helperText="Kliento package identifier (optional)"
                   />
                 </div>
-                <Input
-                  label="LP Redirection If No Account"
-                  value={lpRedirectNoAccount}
-                  onChange={(e) => setLpRedirectNoAccount(e.target.value)}
-                  placeholder="https://example.com/signup"
-                  helperText="Redirect URL for users without an existing account (optional)"
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
+                  <Input
+                    label="LP Redirection If No Account"
+                    value={lpRedirectNoAccount}
+                    onChange={(e) => setLpRedirectNoAccount(e.target.value)}
+                    placeholder="https://example.com/signup"
+                    helperText="Redirect URL for users without an existing account (optional)"
+                  />
+                  <Input
+                    label="Service ID"
+                    value={serviceId}
+                    onChange={(e) => setServiceId(e.target.value)}
+                    placeholder="service-123"
+                    helperText="Kliento service identifier (required)"
+                    required
+                    error={authMethod === 'kliento' && !serviceId.trim() ? 'Required for Kliento authentication' : undefined}
+                  />
+                </div>
               </>
             )}
 
