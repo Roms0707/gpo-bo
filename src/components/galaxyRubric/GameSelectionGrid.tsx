@@ -37,7 +37,8 @@ const GameSelectionGrid: React.FC<GameSelectionGridProps> = ({
       setIsLoading(true);
       const { data, error } = await supabase
         .from('games')
-        .select('id, name, publisher, image_url')
+        .select('id, name, publisher, image_url, sort_priority')
+        .order('sort_priority', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) throw error;

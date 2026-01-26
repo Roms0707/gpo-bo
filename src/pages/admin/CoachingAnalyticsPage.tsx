@@ -106,7 +106,7 @@ const CoachingAnalyticsPage: React.FC = () => {
         fetchQuestionsPerDay(30),
         fetchTopTopics(10),
         fetchFrequentlyAskedQuestions(20),
-        supabase.from('games').select('id, name').order('name'),
+        supabase.from('games').select('id, name, sort_priority').order('sort_priority').order('name'),
         fetchAllDetectedTopics(),
       ]);
 

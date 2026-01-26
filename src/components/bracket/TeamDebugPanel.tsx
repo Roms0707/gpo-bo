@@ -26,7 +26,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
   validRegistrationsCount = 0
 }) => {
   const [showSqlQuery, setShowSqlQuery] = useState(true);
-  
+
   if (!show) return null;
 
   // For team tournaments
@@ -44,7 +44,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
             <p>Required team size: <span className="font-mono">{tournament.max_players_per_team || 5}</span> members</p>
             <p>Total teams: <span className="font-mono">{allTeams.length}</span>, Approved teams: <span className="font-mono">{approvedTeams.length}</span></p>
           </div>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
@@ -93,16 +93,16 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
               </tbody>
             </table>
           </div>
-          
+
           <div className="mt-3 text-xs text-gray-400">
             <p>Team approval criteria: Captain must be approved AND team must have at least the required number of members.</p>
           </div>
-          
+
           {sqlQuery && (
             <div className="mt-4">
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => setShowSqlQuery(!showSqlQuery)}
                 className="text-xs flex items-center text-yellow-400 mb-2"
               >
@@ -110,7 +110,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
                 {showSqlQuery ? 'Hide SQL Query' : 'Show SQL Query'}
                 {showSqlQuery ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
               </Button>
-              
+
               {showSqlQuery && (
                 <div className="bg-dark-400 p-3 rounded-md overflow-x-auto">
                   <pre className="text-xs text-green-400 whitespace-pre-wrap">{sqlQuery}</pre>
@@ -122,7 +122,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
       </Card>
     );
   }
-  
+
   // For solo tournaments
   return (
     <Card className="mb-4 bg-dark-300 border-yellow-500/30">
@@ -138,7 +138,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
           <p>Valid player registrations: <span className="font-mono">{validRegistrationsCount}</span></p>
           <p>Players with complete data: <span className="font-mono">{players.length}</span></p>
         </div>
-        
+
         <div className="bg-dark-400 p-3 rounded-md overflow-x-auto mb-4">
           <h4 className="font-semibold text-warning-400 flex items-center mb-2 text-xs">
             <Database className="h-3 w-3 mr-1" />
@@ -146,7 +146,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
           </h4>
           <pre className="text-xs text-green-400 whitespace-pre-wrap">{sqlQuery}</pre>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-collapse">
             <thead>
@@ -181,7 +181,7 @@ const TeamDebugPanel: React.FC<TeamDebugPanelProps> = ({
             </tbody>
           </table>
         </div>
-        
+
         <div className="mt-3 text-xs text-gray-400">
           <p>All players shown have been approved for this tournament.</p>
         </div>

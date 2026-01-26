@@ -27,7 +27,7 @@ DECLARE
   v_config_id TEXT;
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    DELETE FROM game_trailers 
+    DELETE FROM game_trailers
     WHERE tournament_id = OLD.id;
     RETURN OLD;
   END IF;
@@ -62,7 +62,7 @@ BEGIN
         NOW(),
         NOW()
       )
-      ON CONFLICT (tournament_id) 
+      ON CONFLICT (tournament_id)
       WHERE tournament_id IS NOT NULL
       DO UPDATE SET
         game_id = EXCLUDED.game_id,
@@ -74,7 +74,7 @@ BEGIN
     END IF;
 
   ELSIF NEW.is_featured = FALSE AND OLD.is_featured = TRUE THEN
-    DELETE FROM game_trailers 
+    DELETE FROM game_trailers
     WHERE tournament_id = NEW.id;
   END IF;
 
@@ -92,8 +92,8 @@ FOR EACH ROW
 EXECUTE FUNCTION sync_featured_tournament_to_game_trailers();
 
 -- Update comment
-COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS 
-'Automatically syncs featured tournaments to game_trailers table for hero carousel display. 
+COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS
+'Automatically syncs featured tournaments to game_trailers table for hero carousel display.
 Uses tournament config_id (falls back to default if NULL).
 When is_featured=true, creates/updates entry with tournament title, game trailer URL, and config_id.
 When is_featured=false, removes the entry.';

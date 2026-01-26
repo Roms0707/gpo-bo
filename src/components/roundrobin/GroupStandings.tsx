@@ -49,8 +49,8 @@ const GroupStandings: React.FC<GroupStandingsProps> = ({
                   return (a.groupPosition || 0) - (b.groupPosition || 0);
                 })
                 .map((participant) => (
-                  <tr 
-                    key={participant.id} 
+                  <tr
+                    key={participant.id}
                     className={`border-b border-gray-100 dark:border-dark-300 ${
                       participant.isQualified ? 'bg-success-900/10' : ''
                     }`}

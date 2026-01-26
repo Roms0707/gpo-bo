@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 
 /**
  * Calculate new ELO ratings for two players based on match result
- * 
+ *
  * @param winnerElo Current ELO rating of the winner
  * @param loserElo Current ELO rating of the loser
  * @param isDraw Whether the match was a draw
@@ -18,19 +18,19 @@ export const calculateEloChange = (
   // Calculate expected scores (probability of winning)
   const expectedWinner = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
   const expectedLoser = 1 / (1 + Math.pow(10, (winnerElo - loserElo) / 400));
-  
+
   // Actual scores
   const winnerScore = isDraw ? 0.5 : 1;
   const loserScore = isDraw ? 0.5 : 0;
-  
+
   // Calculate ELO changes
   const winnerChange = Math.round(kFactor * (winnerScore - expectedWinner));
   const loserChange = Math.round(kFactor * (loserScore - expectedLoser));
-  
+
   // Calculate new ELO ratings
   const newWinnerElo = winnerElo + winnerChange;
   const newLoserElo = loserElo + loserChange;
-  
+
   return {
     newWinnerElo,
     newLoserElo,
@@ -40,7 +40,7 @@ export const calculateEloChange = (
 
 /**
  * Update player rankings in the database after a match
- * 
+ *
  * @param winnerId ID of the winning player
  * @param loserId ID of the losing player
  * @param gameId ID of the game
@@ -71,53 +71,53 @@ export const updatePlayerRankings = async (
       .from('users')
       .select('id')
       .in('id', [winnerId, loserId]);
-    
+
     if (usersError) throw usersError;
-    
+
     // Create a set of valid user IDs for quick lookup
     const validUserIds = new Set(users.map(user => user.id));
-    
+
     // Check if both users exist
     if (!validUserIds.has(winnerId) || !validUserIds.has(loserId)) {
-      console.error('Error updating player rankings: Invalid user IDs', { 
-        winnerId, 
-        loserId, 
+      console.error('Error updating player rankings: Invalid user IDs', {
+        winnerId,
+        loserId,
         winnerExists: validUserIds.has(winnerId),
         loserExists: validUserIds.has(loserId)
       });
       return false;
     }
-    
+
     // Fetch current rankings for both players
     const { data: rankings, error: rankingsError } = await supabase
       .from('player_rankings')
       .select('*')
       .in('user_id', [winnerId, loserId])
       .eq('game_id', gameId);
-    
+
     if (rankingsError) throw rankingsError;
-    
+
     // Find winner and loser rankings
     const winnerRanking = rankings.find(r => r.user_id === winnerId);
     const loserRanking = rankings.find(r => r.user_id === loserId);
-    
+
     // Default ELO if no ranking exists
     const defaultElo = 1000;
-    
+
     // Get current ELO ratings
     const currentWinnerElo = winnerRanking?.elo_rating || defaultElo;
     const currentLoserElo = loserRanking?.elo_rating || defaultElo;
-    
+
     // Calculate new ELO ratings
     const { newWinnerElo, newLoserElo, eloChange } = calculateEloChange(
       currentWinnerElo,
       currentLoserElo,
       isDraw
     );
-    
+
     // Prepare updates for both players
     const updates = [];
-    
+
     // Winner update
     if (winnerRanking) {
       updates.push({
@@ -145,13 +145,13 @@ export const updatePlayerRankings = async (
         })
         .select()
         .single();
-      
+
       if (newWinnerError) {
         console.error('Error creating new winner ranking:', newWinnerError, { winnerId, gameId });
         throw newWinnerError;
       }
     }
-    
+
     // Loser update
     if (loserRanking) {
       updates.push({
@@ -179,22 +179,22 @@ export const updatePlayerRankings = async (
         })
         .select()
         .single();
-      
+
       if (newLoserError) {
         console.error('Error creating new loser ranking:', newLoserError, { loserId, gameId });
         throw newLoserError;
       }
     }
-    
+
     // Update existing rankings
     if (updates.length > 0) {
       const { error: updateError } = await supabase
         .from('player_rankings')
         .upsert(updates);
-      
+
       if (updateError) throw updateError;
     }
-    
+
     // Record the match result
     const { error: matchResultError } = await supabase
       .from('match_results')
@@ -209,9 +209,9 @@ export const updatePlayerRankings = async (
         score_loser: scoreLoser,
         elo_change: eloChange
       });
-    
+
     if (matchResultError) throw matchResultError;
-    
+
     return true;
   } catch (error) {
     console.error('Error updating player rankings:', error);
@@ -221,7 +221,7 @@ export const updatePlayerRankings = async (
 
 /**
  * Update team rankings in the database after a match
- * 
+ *
  * @param winnerTeamId ID of the winning team
  * @param loserTeamId ID of the losing team
  * @param gameId ID of the game
@@ -252,53 +252,53 @@ export const updateTeamRankings = async (
       .from('teams')
       .select('id')
       .in('id', [winnerTeamId, loserTeamId]);
-    
+
     if (teamsError) throw teamsError;
-    
+
     // Create a set of valid team IDs for quick lookup
     const validTeamIds = new Set(teams.map(team => team.id));
-    
+
     // Check if both teams exist
     if (!validTeamIds.has(winnerTeamId) || !validTeamIds.has(loserTeamId)) {
-      console.error('Error updating team rankings: Invalid team IDs', { 
-        winnerTeamId, 
-        loserTeamId, 
+      console.error('Error updating team rankings: Invalid team IDs', {
+        winnerTeamId,
+        loserTeamId,
         winnerExists: validTeamIds.has(winnerTeamId),
         loserExists: validTeamIds.has(loserTeamId)
       });
       return false;
     }
-    
+
     // Fetch current rankings for both teams
     const { data: rankings, error: rankingsError } = await supabase
       .from('team_rankings')
       .select('*')
       .in('team_id', [winnerTeamId, loserTeamId])
       .eq('game_id', gameId);
-    
+
     if (rankingsError) throw rankingsError;
-    
+
     // Find winner and loser rankings
     const winnerRanking = rankings.find(r => r.team_id === winnerTeamId);
     const loserRanking = rankings.find(r => r.team_id === loserTeamId);
-    
+
     // Default ELO if no ranking exists
     const defaultElo = 1000;
-    
+
     // Get current ELO ratings
     const currentWinnerElo = winnerRanking?.elo_rating || defaultElo;
     const currentLoserElo = loserRanking?.elo_rating || defaultElo;
-    
+
     // Calculate new ELO ratings
     const { newWinnerElo, newLoserElo, eloChange } = calculateEloChange(
       currentWinnerElo,
       currentLoserElo,
       isDraw
     );
-    
+
     // Prepare updates for both teams
     const updates = [];
-    
+
     // Winner update
     if (winnerRanking) {
       updates.push({
@@ -326,13 +326,13 @@ export const updateTeamRankings = async (
         })
         .select()
         .single();
-      
+
       if (newWinnerError) {
         console.error('Error creating new winner team ranking:', newWinnerError, { winnerTeamId, gameId });
         throw newWinnerError;
       }
     }
-    
+
     // Loser update
     if (loserRanking) {
       updates.push({
@@ -360,22 +360,22 @@ export const updateTeamRankings = async (
         })
         .select()
         .single();
-      
+
       if (newLoserError) {
         console.error('Error creating new loser team ranking:', newLoserError, { loserTeamId, gameId });
         throw newLoserError;
       }
     }
-    
+
     // Update existing rankings
     if (updates.length > 0) {
       const { error: updateError } = await supabase
         .from('team_rankings')
         .upsert(updates);
-      
+
       if (updateError) throw updateError;
     }
-    
+
     // Record the match result
     const { error: matchResultError } = await supabase
       .from('match_results')
@@ -390,9 +390,9 @@ export const updateTeamRankings = async (
         score_loser: scoreLoser,
         elo_change: eloChange
       });
-    
+
     if (matchResultError) throw matchResultError;
-    
+
     return true;
   } catch (error) {
     console.error('Error updating team rankings:', error);
@@ -402,7 +402,7 @@ export const updateTeamRankings = async (
 
 /**
  * Determine rank tier based on ELO rating
- * 
+ *
  * @param elo ELO rating
  * @returns Rank tier string
  */

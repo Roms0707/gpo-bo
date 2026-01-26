@@ -7,7 +7,7 @@
 */
 
 -- Update the default for new records
-ALTER TABLE admin_settings 
+ALTER TABLE admin_settings
 ALTER COLUMN timezone SET DEFAULT 'Europe/Paris';
 
 -- Update existing records to use Europe/Paris timezone

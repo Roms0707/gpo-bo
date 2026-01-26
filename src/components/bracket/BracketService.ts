@@ -526,7 +526,7 @@ export const saveBracket = async (
 };
 
 export const insertMatches = async (
-  matches: MatchInsert[], 
+  matches: MatchInsert[],
   validUserIds: Set<string>,
   tournamentId?: string,
   bracketStatus?: 'draft' | 'live'
@@ -542,7 +542,7 @@ export const insertMatches = async (
       // Ensure winner_id is either null or a valid user ID
       winner_id: match.winner_id && validUserIds.has(match.winner_id) ? match.winner_id : null
     }));
-    
+
     // Insert matches without deleting existing ones
     const { data, error } = await supabase
       .from('tournament_matches')

@@ -10,13 +10,13 @@ interface EmptyBracketMessageProps {
   registrationsCount?: number;
 }
 
-const EmptyBracketMessage: React.FC<EmptyBracketMessageProps> = ({ 
+const EmptyBracketMessage: React.FC<EmptyBracketMessageProps> = ({
   tournament,
   sqlQuery,
   registrationsCount = 0
 }) => {
   const navigate = useNavigate();
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -54,13 +54,13 @@ const EmptyBracketMessage: React.FC<EmptyBracketMessageProps> = ({
                   <li>Ensure that player accounts exist in the database</li>
                   <li>For team tournaments, verify that teams have captains and enough members</li>
                 </ol>
-                
+
                 {registrationsCount > 0 && (
                   <div className="mt-3 p-2 bg-warning-900/20 border border-warning-500/30 rounded">
                     <p className="text-warning-300">Found {registrationsCount} approved registrations, but they couldn't be used in the bracket.</p>
                   </div>
                 )}
-                
+
                 {sqlQuery && (
                   <div className="mt-3">
                     <h5 className="font-semibold text-yellow-400 mb-1">SQL Query Used:</h5>
@@ -69,7 +69,7 @@ const EmptyBracketMessage: React.FC<EmptyBracketMessageProps> = ({
                 )}
               </div>
             </div>
-            <Button 
+            <Button
               onClick={() => navigate('/registrations')}
               size="lg"
               className="px-6"

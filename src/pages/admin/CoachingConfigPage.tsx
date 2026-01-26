@@ -106,7 +106,8 @@ const CoachingConfigPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('games')
-        .select('id, name, image_url')
+        .select('id, name, image_url, sort_priority')
+        .order('sort_priority')
         .order('name');
 
       if (error) throw error;

@@ -27,7 +27,7 @@ const RoundRobinMatches: React.FC<RoundRobinMatchesProps> = ({
 }) => {
   const getParticipantName = (participantId: string | null) => {
     if (!participantId) return 'TBD';
-    
+
     if (tournament?.type === 'team') {
       const team = teams.find(t => t.captain_id === participantId);
       return team ? team.name : 'Unknown Team';
@@ -121,7 +121,7 @@ const RoundRobinMatches: React.FC<RoundRobinMatchesProps> = ({
                 <Users className="h-5 w-5 mr-2 text-primary-400" />
                 Group {round}
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {roundMatches.map((match, matchIndex) => {
                   const matchNumber = matchNumberMap.get(match.id) || 0;
@@ -157,7 +157,7 @@ const RoundRobinMatches: React.FC<RoundRobinMatchesProps> = ({
                         </button>
                       </div>
                     )}
-                    
+
                     <div className="space-y-3">
                       {/* Player 1 */}
                       <div
@@ -183,9 +183,9 @@ const RoundRobinMatches: React.FC<RoundRobinMatchesProps> = ({
                           <Trophy className="h-4 w-4 text-success-500" />
                         )}
                       </div>
-                      
+
                       <div className="text-center text-gray-400 text-sm">vs</div>
-                      
+
                       {/* Player 2 */}
                       <div
                         className={`flex items-center justify-between p-2 rounded cursor-pointer transition-all ${
@@ -211,7 +211,7 @@ const RoundRobinMatches: React.FC<RoundRobinMatchesProps> = ({
                         )}
                       </div>
                     </div>
-                    
+
                       {match.winner_id && (
                         <div className="mt-3 text-center">
                           <span className="text-xs text-success-400 bg-success-900/20 px-2 py-1 rounded">

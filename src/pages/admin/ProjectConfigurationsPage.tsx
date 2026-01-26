@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle, Mail, MessageCircle, Phone, Files } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Settings, Plus, Edit, Trash2, Power, PowerOff, Copy, Search, Grid3x3, CheckCircle, AlertTriangle, Mail, MessageCircle, Phone, Files, MoreVertical, ChevronRight, X } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -28,6 +28,92 @@ const AUTH_METHOD_CONFIG: Record<AuthMethod, { label: string; icon: React.ReactN
   kliento: { label: 'Kliento', icon: <Phone className="w-3 h-3" />, badgeVariant: 'success' },
 };
 
+interface MoreMenuProps {
+  config: ProjectConfiguration;
+  onManageRubrics: () => void;
+  onDuplicate: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+const MoreMenu: React.FC<MoreMenuProps> = ({ config, onManageRubrics, onDuplicate, onEdit, onDelete }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) &&
+          buttonRef.current && !buttonRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const handleAction = (action: () => void) => {
+    setIsOpen(false);
+    action();
+  };
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-1.5 rounded-lg hover:bg-dark-200 transition-colors"
+        title="More actions"
+      >
+        <MoreVertical size={16} className="text-gray-400" />
+      </button>
+      {isOpen && (
+        <div
+          ref={menuRef}
+          className="absolute right-0 mt-1 w-44 bg-dark-200 border border-dark-100 rounded-lg shadow-xl z-50 py-1"
+          style={{ bottom: 'auto', top: '100%' }}
+        >
+          <button
+            onClick={() => handleAction(onManageRubrics)}
+            className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-dark-100 flex items-center gap-2"
+          >
+            <Grid3x3 size={14} />
+            Manage Rubrics
+          </button>
+          <button
+            onClick={() => handleAction(onDuplicate)}
+            className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-dark-100 flex items-center gap-2"
+          >
+            <Files size={14} />
+            Duplicate
+          </button>
+          <button
+            onClick={() => handleAction(onEdit)}
+            className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-dark-100 flex items-center gap-2"
+          >
+            <Edit size={14} />
+            Edit
+          </button>
+          <div className="border-t border-dark-100 my-1" />
+          <button
+            onClick={() => handleAction(onDelete)}
+            className="w-full px-3 py-2 text-left text-sm text-error-500 hover:bg-dark-100 flex items-center gap-2"
+          >
+            <Trash2 size={14} />
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ProjectConfigurationsPage: React.FC = () => {
   const { user } = useAuthStore();
   const [configs, setConfigs] = useState<ProjectConfiguration[]>([]);
@@ -45,6 +131,7 @@ const ProjectConfigurationsPage: React.FC = () => {
   const [isDuplicateModalOpen, setIsDuplicateModalOpen] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [newConfigId, setNewConfigId] = useState('');
+  const [detailPanelConfig, setDetailPanelConfig] = useState<ProjectConfiguration | null>(null);
 
   if (user?.role !== 'master_admin') {
     return (
@@ -162,6 +249,14 @@ const ProjectConfigurationsPage: React.FC = () => {
     setIsDuplicateModalOpen(true);
   };
 
+  const toggleDetailPanel = (config: ProjectConfiguration) => {
+    if (detailPanelConfig?.id === config.id) {
+      setDetailPanelConfig(null);
+    } else {
+      setDetailPanelConfig(config);
+    }
+  };
+
   const getColorPreview = (primaryColor: string, secondaryColor: string) => {
     return (
       <div className="flex gap-1">
@@ -239,7 +334,9 @@ const ProjectConfigurationsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6 max-w-full overflow-hidden px-2 md:px-0">
+    <>
+    <div className="flex gap-4 max-w-full overflow-hidden">
+      <div className={`space-y-4 md:space-y-6 overflow-hidden px-2 md:px-0 transition-all duration-300 ${detailPanelConfig ? 'flex-1 min-w-0' : 'w-full'}`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h1 className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-2">
@@ -388,56 +485,38 @@ const ProjectConfigurationsPage: React.FC = () => {
                         {config.config_id}
                       </div>
                     </div>
-                    <div className="flex gap-0.5 flex-shrink-0">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => handleToggleActive(config)}
+                        className="p-1.5 rounded-lg hover:bg-dark-200 transition-colors"
+                        title={config.is_active ? 'Deactivate' : 'Activate'}
+                      >
+                        {config.is_active ? (
+                          <Power size={16} className="text-success-500" />
+                        ) : (
+                          <PowerOff size={16} className="text-gray-500" />
+                        )}
+                      </button>
+                      <MoreMenu
+                        config={config}
+                        onManageRubrics={() => {
                           setSelectedConfig(config);
                           setIsRubricModalOpen(true);
                         }}
-                        className="p-1.5"
-                      >
-                        <Grid3x3 size={14} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => openDuplicateModal(config)}
-                        className="p-1.5"
-                      >
-                        <Files size={14} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
+                        onDuplicate={() => openDuplicateModal(config)}
+                        onEdit={() => {
                           setSelectedConfig(config);
                           setIsEditModalOpen(true);
                         }}
-                        className="p-1.5"
-                      >
-                        <Edit size={14} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
+                        onDelete={() => {
                           setSelectedConfig(config);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="text-error-500 p-1.5"
-                      >
-                        <Trash2 size={14} />
-                      </Button>
+                      />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs min-w-0">
-                    <div className="min-w-0">
-                      <span className="text-gray-400 text-[10px]">Brand:</span>
-                      <p className="text-white truncate">{config.brand_name}</p>
-                    </div>
                     <div className="min-w-0">
                       <span className="text-gray-400 text-[10px]">Domain:</span>
                       {config.domain ? (
@@ -454,94 +533,64 @@ const ProjectConfigurationsPage: React.FC = () => {
                         {getAuthMethodBadge(config)}
                       </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="text-gray-400 text-[10px]">Legal:</span>
-                      <div className="flex items-center gap-1">
-                        {isLegalInfoComplete(config) ? (
-                          <CheckCircle className="h-3 w-3 text-success-500" />
-                        ) : (
-                          <AlertTriangle className="h-3 w-3 text-warning-500" />
-                        )}
-                      </div>
-                    </div>
-                    {config.campaign_id && (
-                      <div className="min-w-0">
-                        <span className="text-gray-400 text-[10px]">Rubrics:</span>
-                        <p className="text-white">
-                          {mappingCounts[config.id] !== undefined ? (
-                            <Badge variant={mappingCounts[config.id] > 0 ? 'success' : 'default'} className="text-[10px] px-1.5 py-0.5">
-                              {mappingCounts[config.id]}
-                            </Badge>
-                          ) : (
-                            '-'
-                          )}
-                        </p>
-                      </div>
-                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-dark-200 min-w-0">
-                    {config.logo_path && (
-                      <img
-                        src={config.logo_path}
-                        alt={config.logo_alt_text}
-                        className="h-5 w-auto object-contain max-w-[60px]"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    {getColorPreview(config.primary_color, config.secondary_color)}
-                    <button
-                      onClick={() => handleToggleActive(config)}
-                      className="ml-auto px-2 py-1 rounded text-[10px] font-medium transition-colors flex-shrink-0"
-                      style={{
-                        backgroundColor: config.is_active ? 'rgba(34, 197, 94, 0.1)' : 'rgba(107, 114, 128, 0.1)',
-                        color: config.is_active ? 'rgb(34, 197, 94)' : 'rgb(107, 114, 128)',
-                      }}
-                    >
-                      {config.is_active ? 'Active' : 'Inactive'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => toggleDetailPanel(config)}
+                    className={`w-full flex items-center justify-center gap-1 py-1.5 text-xs transition-colors border-t border-dark-200 mt-2 ${
+                      detailPanelConfig?.id === config.id ? 'text-primary-500' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <span>View details</span>
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               ))}
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden lg:block -mx-6 overflow-x-auto">
-              <div className="px-6 min-w-max">
+            <div className="hidden lg:block">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">Config ID</TableHead>
-                    <TableHead className="whitespace-nowrap">Name</TableHead>
+                    <TableHead className="whitespace-nowrap w-8"></TableHead>
+                    <TableHead className="whitespace-nowrap">Config</TableHead>
                     <TableHead className="whitespace-nowrap">Domain</TableHead>
                     <TableHead className="whitespace-nowrap">Auth</TableHead>
-                    <TableHead className="whitespace-nowrap">Brand</TableHead>
-                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Logo</TableHead>
-                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Colors</TableHead>
-                    <TableHead className="hidden 2xl:table-cell whitespace-nowrap">Product ID</TableHead>
-                    <TableHead className="hidden 2xl:table-cell whitespace-nowrap">Campaign ID</TableHead>
-                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Rubrics</TableHead>
                     <TableHead className="whitespace-nowrap">Status</TableHead>
-                    <TableHead className="hidden xl:table-cell whitespace-nowrap">Legal Info</TableHead>
                     <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredConfigs.map((config) => (
-                    <TableRow key={config.id}>
+                    <TableRow
+                      key={config.id}
+                      className={detailPanelConfig?.id === config.id ? 'bg-primary-500/10 border-l-2 border-l-primary-500' : ''}
+                    >
                       <TableCell className="whitespace-nowrap">
-                        <div className="font-mono text-xs text-white truncate max-w-[100px]">
-                          {config.config_id}
+                        <button
+                          onClick={() => toggleDetailPanel(config)}
+                          className={`p-1 rounded transition-colors ${
+                            detailPanelConfig?.id === config.id
+                              ? 'bg-primary-500/20 text-primary-500'
+                              : 'hover:bg-dark-200 text-gray-400'
+                          }`}
+                          title="View details"
+                        >
+                          <ChevronRight size={16} className={`transition-transform ${detailPanelConfig?.id === config.id ? 'rotate-180' : ''}`} />
+                        </button>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div>
+                          <div className="text-white text-sm font-medium truncate max-w-[180px]">{config.config_name}</div>
+                          <div className="font-mono text-[10px] text-gray-400 truncate max-w-[180px]">
+                            {config.config_id}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
-                        <div className="text-white text-sm truncate max-w-[140px]">{config.config_name}</div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
                         {config.domain ? (
-                          <div className="text-sm text-white font-mono truncate max-w-[160px]">{config.domain}</div>
+                          <div className="text-sm text-white font-mono truncate max-w-[200px]">{config.domain}</div>
                         ) : config.is_default ? (
                           <Badge variant="success">Default</Badge>
                         ) : (
@@ -550,51 +599,6 @@ const ProjectConfigurationsPage: React.FC = () => {
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {getAuthMethodBadge(config)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <div className="text-white text-sm truncate max-w-[120px]">{config.brand_name}</div>
-                      </TableCell>
-                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {config.logo_path ? (
-                            <img
-                              src={config.logo_path}
-                              alt={config.logo_alt_text}
-                              className="h-8 w-auto object-contain max-w-[80px]"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
-                            />
-                          ) : (
-                            <div className="h-8 w-8 bg-dark-200 rounded flex items-center justify-center">
-                              <Settings className="h-4 w-4 text-gray-500" />
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                        {getColorPreview(config.primary_color, config.secondary_color)}
-                      </TableCell>
-                      <TableCell className="hidden 2xl:table-cell whitespace-nowrap">
-                        <div className="text-xs text-gray-400 truncate max-w-[80px]">
-                          {config.product_id || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden 2xl:table-cell whitespace-nowrap">
-                        <div className="text-xs text-gray-400 truncate max-w-[80px]">
-                          {config.campaign_id || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {mappingCounts[config.id] !== undefined ? (
-                            <Badge variant={mappingCounts[config.id] > 0 ? 'success' : 'default'}>
-                              {mappingCounts[config.id]}
-                            </Badge>
-                          ) : (
-                            <span className="text-gray-500 text-sm">-</span>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <button
@@ -609,82 +613,191 @@ const ProjectConfigurationsPage: React.FC = () => {
                           )}
                         </button>
                       </TableCell>
-                      <TableCell className="hidden xl:table-cell whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {isLegalInfoComplete(config) ? (
-                            <div className="flex items-center gap-1" title="All legal information complete">
-                              <CheckCircle className="h-4 w-4 text-success-500" />
-                              <span className="text-xs text-success-500 whitespace-nowrap">Complete</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1" title="Legal information incomplete">
-                              <AlertTriangle className="h-4 w-4 text-warning-500" />
-                              <span className="text-xs text-warning-500 whitespace-nowrap">Incomplete</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            title="Manage Rubric Mappings"
-                            onClick={() => {
-                              setSelectedConfig(config);
-                              setIsRubricModalOpen(true);
-                            }}
-                            className="p-1.5"
-                          >
-                            <Grid3x3 size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            title="Duplicate Configuration"
-                            onClick={() => openDuplicateModal(config)}
-                            className="p-1.5"
-                          >
-                            <Files size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            title="Edit Configuration"
-                            onClick={() => {
-                              setSelectedConfig(config);
-                              setIsEditModalOpen(true);
-                            }}
-                            className="p-1.5"
-                          >
-                            <Edit size={14} />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            title="Delete Configuration"
-                            onClick={() => {
-                              setSelectedConfig(config);
-                              setIsDeleteModalOpen(true);
-                            }}
-                            className="text-error-500 hover:text-error-600 p-1.5"
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
+                        <MoreMenu
+                          config={config}
+                          onManageRubrics={() => {
+                            setSelectedConfig(config);
+                            setIsRubricModalOpen(true);
+                          }}
+                          onDuplicate={() => openDuplicateModal(config)}
+                          onEdit={() => {
+                            setSelectedConfig(config);
+                            setIsEditModalOpen(true);
+                          }}
+                          onDelete={() => {
+                            setSelectedConfig(config);
+                            setIsDeleteModalOpen(true);
+                          }}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              </div>
             </div>
             </>
           )}
         </CardContent>
       </Card>
+    </div>
 
-      <AddProjectConfigModal
+    {/* Detail Panel - Slides in from right */}
+    {detailPanelConfig && (
+      <div className="w-80 flex-shrink-0 bg-dark-300 border border-dark-200 rounded-lg overflow-hidden animate-in slide-in-from-right duration-300">
+        <div className="flex items-center justify-between p-3 border-b border-dark-200 bg-dark-400">
+          <h3 className="text-sm font-semibold text-white truncate">{detailPanelConfig.config_name}</h3>
+          <button
+            onClick={() => setDetailPanelConfig(null)}
+            className="p-1 rounded hover:bg-dark-200 transition-colors text-gray-400 hover:text-white"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Config ID</span>
+            <p className="text-sm text-white font-mono">{detailPanelConfig.config_id}</p>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Brand</span>
+            <p className="text-sm text-white">{detailPanelConfig.brand_name}</p>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Logo</span>
+            <div className="flex items-center gap-2 mt-1">
+              {detailPanelConfig.logo_path ? (
+                <img
+                  src={detailPanelConfig.logo_path}
+                  alt={detailPanelConfig.logo_alt_text}
+                  className="h-10 w-auto object-contain max-w-[100px] bg-dark-200 rounded p-1"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="h-10 w-10 bg-dark-200 rounded flex items-center justify-center">
+                  <Settings className="h-4 w-4 text-gray-500" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Colors</span>
+            <div className="flex gap-2 mt-1">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded border border-gray-600"
+                  style={{ backgroundColor: detailPanelConfig.primary_color }}
+                />
+                <span className="text-xs text-gray-300 font-mono">{detailPanelConfig.primary_color}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-8 h-8 rounded border border-gray-600"
+                  style={{ backgroundColor: detailPanelConfig.secondary_color }}
+                />
+                <span className="text-xs text-gray-300 font-mono">{detailPanelConfig.secondary_color}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Product ID</span>
+              <p className="text-xs text-gray-300 font-mono break-all">
+                {detailPanelConfig.product_id || '-'}
+              </p>
+            </div>
+            <div>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Campaign ID</span>
+              <p className="text-xs text-gray-300 font-mono break-all">
+                {detailPanelConfig.campaign_id || '-'}
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Rubrics</span>
+            <div className="mt-1">
+              {mappingCounts[detailPanelConfig.id] !== undefined ? (
+                <Badge variant={mappingCounts[detailPanelConfig.id] > 0 ? 'success' : 'default'}>
+                  {mappingCounts[detailPanelConfig.id]} configured
+                </Badge>
+              ) : (
+                <span className="text-gray-500 text-sm">-</span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Legal Info</span>
+            <div className="flex items-center gap-2 mt-1">
+              {isLegalInfoComplete(detailPanelConfig) ? (
+                <>
+                  <CheckCircle className="h-4 w-4 text-success-500" />
+                  <span className="text-sm text-success-500">Complete</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-4 w-4 text-warning-500" />
+                  <span className="text-sm text-warning-500">Incomplete</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {detailPanelConfig.domain && (
+            <div>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wide block mb-1">Domain</span>
+              <p className="text-sm text-white font-mono break-all">{detailPanelConfig.domain}</p>
+            </div>
+          )}
+
+          <div className="pt-3 border-t border-dark-200 space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              leftIcon={<Edit size={14} />}
+              onClick={() => {
+                setSelectedConfig(detailPanelConfig);
+                setIsEditModalOpen(true);
+              }}
+            >
+              Edit Configuration
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              leftIcon={<Grid3x3 size={14} />}
+              onClick={() => {
+                setSelectedConfig(detailPanelConfig);
+                setIsRubricModalOpen(true);
+              }}
+            >
+              Manage Rubrics
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start"
+              leftIcon={<Files size={14} />}
+              onClick={() => openDuplicateModal(detailPanelConfig)}
+            >
+              Duplicate
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+    </div>
+
+    <AddProjectConfigModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={loadConfigurations}
@@ -719,14 +832,16 @@ const ProjectConfigurationsPage: React.FC = () => {
           setSelectedConfig(null);
         }}
         title="Delete Configuration"
+        size="sm"
         footer={
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <Button
               variant="ghost"
               onClick={() => {
                 setIsDeleteModalOpen(false);
                 setSelectedConfig(null);
               }}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -735,30 +850,27 @@ const ProjectConfigurationsPage: React.FC = () => {
               onClick={handleDelete}
               isLoading={isDeleting}
               leftIcon={<Trash2 size={16} />}
+              className="w-full sm:w-auto"
             >
-              Delete Configuration
+              Delete
             </Button>
           </div>
         }
       >
         {selectedConfig && (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-gray-300 text-sm">
               Are you sure you want to delete this configuration? This action cannot be undone.
             </p>
-            <div className="bg-dark-200 p-4 rounded-lg">
-              <div className="space-y-2">
+            <div className="bg-dark-200 p-3 rounded-lg">
+              <div className="space-y-1.5">
                 <div>
-                  <span className="text-sm text-gray-400">Config ID:</span>
-                  <p className="font-mono text-white">{selectedConfig.config_id}</p>
+                  <span className="text-xs text-gray-400">Config ID:</span>
+                  <p className="font-mono text-white text-sm">{selectedConfig.config_id}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-400">Name:</span>
-                  <p className="text-white">{selectedConfig.config_name}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-gray-400">Brand:</span>
-                  <p className="text-white">{selectedConfig.brand_name}</p>
+                  <span className="text-xs text-gray-400">Name:</span>
+                  <p className="text-white text-sm">{selectedConfig.config_name}</p>
                 </div>
               </div>
             </div>
@@ -774,6 +886,7 @@ const ProjectConfigurationsPage: React.FC = () => {
           setNewConfigId('');
         }}
         title="Duplicate Configuration"
+        size="sm"
         footer={
           <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
             <Button
@@ -801,17 +914,17 @@ const ProjectConfigurationsPage: React.FC = () => {
       >
         {selectedConfig && (
           <div className="space-y-4">
-            <p className="text-gray-300">
+            <p className="text-gray-300 text-sm">
               Create a copy of this configuration with a new Config ID.
             </p>
-            <div className="bg-dark-200 p-3 md:p-4 rounded-lg">
-              <div className="space-y-2">
+            <div className="bg-dark-200 p-3 rounded-lg">
+              <div className="space-y-1.5">
                 <div>
-                  <span className="text-xs md:text-sm text-gray-400">Source Config:</span>
+                  <span className="text-xs text-gray-400">Source Config:</span>
                   <p className="font-mono text-white text-sm truncate">{selectedConfig.config_id}</p>
                 </div>
                 <div>
-                  <span className="text-xs md:text-sm text-gray-400">Name:</span>
+                  <span className="text-xs text-gray-400">Name:</span>
                   <p className="text-white text-sm truncate">{selectedConfig.config_name}</p>
                 </div>
               </div>
@@ -825,14 +938,14 @@ const ProjectConfigurationsPage: React.FC = () => {
               required
             />
             <div className="bg-primary-500/10 border border-primary-500/30 rounded-lg p-3">
-              <p className="text-xs md:text-sm text-primary-300">
-                The duplicate will be created as inactive with no domain assigned. You can edit it after creation.
+              <p className="text-xs text-primary-300">
+                The duplicate will be created as inactive with no domain assigned.
               </p>
             </div>
           </div>
         )}
       </Modal>
-    </div>
+    </>
   );
 };
 

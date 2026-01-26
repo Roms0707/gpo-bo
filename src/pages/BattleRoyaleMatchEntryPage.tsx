@@ -9,12 +9,12 @@ import Select from '../components/ui/Select';
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import toast from 'react-hot-toast';
-import { 
-  getPlacementPoints, 
-  getEliminationPoints, 
+import {
+  getPlacementPoints,
+  getEliminationPoints,
   calculateTotalMatchPoints,
   getBattleRoyaleGameInfo,
-  isValidPlacement 
+  isValidPlacement
 } from '../utils/battleRoyalePoints';
 
 interface Tournament {
@@ -56,7 +56,7 @@ interface ExistingResult {
 const BattleRoyaleMatchEntryPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<number>(1);
@@ -191,7 +191,7 @@ const BattleRoyaleMatchEntryPage: React.FC = () => {
     if (!tournament || !gameInfo) return;
 
     const numValue = parseInt(value) || 0;
-    
+
     // Validate placement
     if (field === 'placement' && numValue > 0 && !isValidPlacement(numValue, gameInfo.maxPlayers)) {
       toast.error(`Placement must be between 1 and ${gameInfo.maxPlayers}`);
@@ -335,7 +335,7 @@ const BattleRoyaleMatchEntryPage: React.FC = () => {
         >
           Back to Tournament
         </Button>
-        
+
         <div className="flex items-center space-x-2">
           <Badge variant="accent">Battle Royale</Badge>
           <Badge variant="primary">{tournament.game.name}</Badge>

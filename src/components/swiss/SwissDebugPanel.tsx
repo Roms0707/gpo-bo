@@ -40,12 +40,12 @@ const SwissDebugPanel: React.FC<SwissDebugPanelProps> = ({
   };
 
   const knockoutSize = getKnockoutSize(participants.length);
-  
+
   // Count qualified and eliminated participants
   const qualifiedCount = participants.filter(p => p.wins >= 3 || p.isQualified).length;
   const eliminatedCount = participants.filter(p => p.losses >= 3 || p.isEliminated).length;
   const activeCount = participants.length - qualifiedCount - eliminatedCount;
-  
+
   // Check if 50% threshold is reached
   const fiftyPercentReached = qualifiedCount >= Math.ceil(participants.length / 2);
 
@@ -77,7 +77,7 @@ const SwissDebugPanel: React.FC<SwissDebugPanelProps> = ({
           <p>Active Participants: <span className="font-mono">{activeCount}</span></p>
           <p>50% Threshold Reached: <span className="font-mono">{fiftyPercentReached.toString()}</span></p>
         </div>
-        
+
         <div className="mt-3">
           <h4 className="font-semibold text-yellow-400 mb-1 text-xs">Swiss Tournament Rules:</h4>
           <ul className="text-xs text-gray-300 list-disc pl-4 space-y-1">
@@ -88,7 +88,7 @@ const SwissDebugPanel: React.FC<SwissDebugPanelProps> = ({
             <li>Maximum knockout size is 16 participants</li>
           </ul>
         </div>
-        
+
         {sqlQuery && (
           <div className="mt-3">
             <h4 className="font-semibold text-yellow-400 mb-1 text-xs">SQL Query:</h4>

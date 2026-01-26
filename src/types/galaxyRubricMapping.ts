@@ -3,6 +3,7 @@ export interface GalaxyRubricMapping {
   project_config_id: string;
   game_id: string;
   rubric_id: string;
+  rubric_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -11,6 +12,7 @@ export interface CreateGalaxyRubricMappingData {
   project_config_id: string;
   game_id: string;
   rubric_id: string;
+  rubric_name?: string;
 }
 
 export interface Game {

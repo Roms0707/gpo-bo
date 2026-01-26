@@ -155,12 +155,20 @@ export const bulkCreateRubricMappings = async (
 
     const { data, error } = await supabase
       .from('galaxy_rubric_mappings')
-      .insert(mappings)
+      .upsert(mappings, {
+        onConflict: 'project_config_id,game_id,rubric_id',
+        ignoreDuplicates: true,
+      })
       .select();
 
     if (error) throw error;
 
-    toast.success(`${mappings.length} rubric mapping(s) created successfully`);
+    const createdCount = data?.length || 0;
+    if (createdCount > 0) {
+      toast.success(`${createdCount} rubric mapping(s) created successfully`);
+    } else {
+      toast.success('Rubric mappings already exist');
+    }
     return { data: data as GalaxyRubricMapping[], error: null };
   } catch (error) {
     console.error('Error bulk creating rubric mappings:', error);
@@ -184,5 +192,31 @@ export const getMappingCountByProject = async (
   } catch (error) {
     console.error('Error getting mapping count:', error);
     return { count: 0, error: error as Error };
+  }
+};
+
+export const bulkUpdateRubricNames = async (
+  updates: { id: string; rubric_name: string }[]
+): Promise<{ updatedCount: number; error: Error | null }> => {
+  try {
+    if (updates.length === 0) {
+      return { updatedCount: 0, error: null };
+    }
+
+    let updatedCount = 0;
+    for (const update of updates) {
+      const { error } = await supabase
+        .from('galaxy_rubric_mappings')
+        .update({ rubric_name: update.rubric_name })
+        .eq('id', update.id);
+
+      if (error) throw error;
+      updatedCount++;
+    }
+
+    return { updatedCount, error: null };
+  } catch (error) {
+    console.error('Error bulk updating rubric names:', error);
+    return { updatedCount: 0, error: error as Error };
   }
 };

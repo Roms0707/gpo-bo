@@ -12,7 +12,7 @@
       - `detected_topics` (text array) - Topics detected in the question
       - `category` (text, nullable) - Question category
       - `created_at` (timestamptz) - When the question was asked
-    
+
     - `coaching_ai_config`
       - `id` (uuid, primary key)
       - `game_id` (uuid) - Reference to the game

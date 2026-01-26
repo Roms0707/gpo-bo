@@ -129,7 +129,16 @@ export const areColorsSimilar = (color1: string, color2: string, threshold: numb
 };
 
 export const validateConfigId = (configId: string): boolean => {
-  return /^[a-z0-9-]{3,50}$/.test(configId);
+  return /^[a-z0-9_-]{3,50}$/.test(configId);
+};
+
+export const sanitizeConfigId = (input: string): string => {
+  return input
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '')
+    .replace(/[-_]{2,}/g, '-')
+    .replace(/^[-_]+|[-_]+$/g, '');
 };
 
 export const validateEmail = (email: string): boolean => {
@@ -423,7 +432,7 @@ export const createProjectConfiguration = async (
 ): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
   try {
     if (!validateConfigId(configData.config_id)) {
-      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens (3-50 chars)');
+      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens or underscores (3-50 chars)');
     }
 
     if (!validateHexColor(configData.primary_color)) {
@@ -532,7 +541,7 @@ export const updateProjectConfiguration = async (
 ): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
   try {
     if (configData.config_id && !validateConfigId(configData.config_id)) {
-      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens (3-50 chars)');
+      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens or underscores (3-50 chars)');
     }
 
     if (configData.primary_color && !validateHexColor(configData.primary_color)) {
@@ -683,7 +692,7 @@ export const duplicateProjectConfiguration = async (
 ): Promise<{ data: ProjectConfiguration | null; error: Error | null }> => {
   try {
     if (!validateConfigId(newConfigId)) {
-      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens (3-50 chars)');
+      throw new Error('Invalid config_id format. Use lowercase alphanumeric with hyphens or underscores (3-50 chars)');
     }
 
     const existingConfig = await fetchProjectConfigurationByConfigId(newConfigId);

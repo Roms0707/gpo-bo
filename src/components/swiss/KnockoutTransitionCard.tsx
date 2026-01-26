@@ -18,7 +18,7 @@ const KnockoutTransitionCard: React.FC<KnockoutTransitionCardProps> = ({
 }) => {
   // Count participants with 3 wins (auto-qualified)
   const autoQualifiedCount = qualifiedParticipants.filter(p => p.wins >= 3).length;
-  
+
   // Count participants qualified by ranking
   const rankQualifiedCount = qualifiedParticipants.length - autoQualifiedCount;
 
@@ -41,7 +41,7 @@ const KnockoutTransitionCard: React.FC<KnockoutTransitionCardProps> = ({
               </span>
             )}
           </p>
-          
+
           <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-2">
             {qualifiedParticipants.slice(0, 4).map((participant, index) => (
               <div key={participant.id} className="bg-dark-200 p-2 rounded-lg flex items-center space-x-2">
@@ -60,7 +60,7 @@ const KnockoutTransitionCard: React.FC<KnockoutTransitionCardProps> = ({
               </div>
             ))}
           </div>
-          
+
           <Button
             onClick={onGenerateKnockout}
             isLoading={isGeneratingKnockout}

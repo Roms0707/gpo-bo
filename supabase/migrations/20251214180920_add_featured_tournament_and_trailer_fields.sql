@@ -54,8 +54,8 @@ BEGIN
 END $$;
 
 -- Create index on is_featured for efficient filtering of featured tournaments
-CREATE INDEX IF NOT EXISTS idx_tournaments_is_featured 
-ON tournaments(is_featured) 
+CREATE INDEX IF NOT EXISTS idx_tournaments_is_featured
+ON tournaments(is_featured)
 WHERE is_featured = true;
 
 -- Add a comment to document the purpose of each new column

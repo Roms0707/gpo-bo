@@ -62,7 +62,7 @@ const BattleRoyaleLeaderboard: React.FC<BattleRoyaleLeaderboardProps> = ({
 
       // Fetch player information
       const playerIds = [...new Set(results.map(r => r.player_id))];
-      
+
       if (playerIds.length === 0) {
         setPlayerStats([]);
         setIsLoading(false);
@@ -220,7 +220,7 @@ const BattleRoyaleLeaderboard: React.FC<BattleRoyaleLeaderboardProps> = ({
               </TableHeader>
               <TableBody>
                 {playerStats.map((stats, index) => (
-                  <TableRow 
+                  <TableRow
                     key={stats.player_id}
                     className={index < 3 ? 'bg-primary-900/10' : ''}
                   >

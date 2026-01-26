@@ -1,6 +1,6 @@
 /**
  * Battle Royale Points Calculation Utilities
- * 
+ *
  * This module contains functions to calculate points for Battle Royale tournaments
  * based on placement and eliminations according to the specified point distribution tables.
  */
@@ -19,7 +19,7 @@ const PLACEMENT_POINTS = {
     61: 3, 62: 3, 63: 3, 64: 3, 65: 3, 66: 3, 67: 3, 68: 3, 69: 3, 70: 3, 71: 3, 72: 3, 73: 3, 74: 3, 75: 3, // 61-75th
     // 76-100th get 0 points (default)
   },
-  
+
   // For games with 150 players max (Warzone)
   150: {
     1: 30, 2: 28, 3: 26, 4: 24, 5: 23, 6: 22, 7: 21, 8: 20, 9: 19, 10: 18,
@@ -32,7 +32,7 @@ const PLACEMENT_POINTS = {
     84: 3, 85: 3, 86: 3, 87: 3, 88: 3, 89: 3, 90: 3, 91: 3, 92: 3, 93: 3, 94: 3, 95: 3, 96: 3, 97: 3, 98: 3, 99: 3, 100: 3, 101: 3, 102: 3, 103: 3, 104: 3, 105: 3, 106: 3, 107: 3, 108: 3, 109: 3, 110: 3, 111: 3, 112: 3, 113: 3, // 84-113th
     // 114-150th get 0 points (default)
   },
-  
+
   // For games with 60 players max (Apex Legends)
   60: {
     1: 12, 2: 9, 3: 7, 4: 5, 5: 4,
@@ -41,7 +41,7 @@ const PLACEMENT_POINTS = {
     11: 1, 12: 1, 13: 1, 14: 1, 15: 1, // 11-15th
     // 16-20th get 0 points (default)
   },
-  
+
   // For games with 50 players max (Free Fire)
   50: {
     1: 30, 2: 28, 3: 26, 4: 24, 5: 23, 6: 22, 7: 21, 8: 20, 9: 19, 10: 18,
@@ -73,10 +73,10 @@ const ELIMINATION_POINTS = {
  */
 export const getPlacementPoints = (gameName: string, maxPlayers: number, placement: number): number => {
   const gameNameLower = gameName.toLowerCase().trim();
-  
+
   // Determine which point table to use based on max players
   let pointTable: Record<number, number> = {};
-  
+
   if (maxPlayers === 60) {
     pointTable = PLACEMENT_POINTS[60];
   } else if (maxPlayers === 50) {
@@ -87,7 +87,7 @@ export const getPlacementPoints = (gameName: string, maxPlayers: number, placeme
     // Default to 100 players table for other cases
     pointTable = PLACEMENT_POINTS[100];
   }
-  
+
   // Return points for the placement, or 0 if not in the table
   return pointTable[placement] || 0;
 };
@@ -97,17 +97,17 @@ export const getPlacementPoints = (gameName: string, maxPlayers: number, placeme
  */
 export const getEliminationPoints = (gameName: string, eliminations: number): number => {
   const gameNameLower = gameName.toLowerCase().trim();
-  
+
   // Find the points per elimination for this game
   let pointsPerElimination = 0;
-  
+
   for (const [gameKey, points] of Object.entries(ELIMINATION_POINTS)) {
     if (gameNameLower.includes(gameKey)) {
       pointsPerElimination = points;
       break;
     }
   }
-  
+
   return pointsPerElimination * eliminations;
 };
 
@@ -115,14 +115,14 @@ export const getEliminationPoints = (gameName: string, eliminations: number): nu
  * Calculate total match points (placement + eliminations)
  */
 export const calculateTotalMatchPoints = (
-  gameName: string, 
-  maxPlayers: number, 
-  placement: number, 
+  gameName: string,
+  maxPlayers: number,
+  placement: number,
   eliminations: number
 ): number => {
   const placementPoints = getPlacementPoints(gameName, maxPlayers, placement);
   const eliminationPoints = getEliminationPoints(gameName, eliminations);
-  
+
   return placementPoints + eliminationPoints;
 };
 
@@ -131,7 +131,7 @@ export const calculateTotalMatchPoints = (
  */
 export const getMaxPlayersForGame = (gameName: string): number => {
   const gameNameLower = gameName.toLowerCase().trim();
-  
+
   if (gameNameLower.includes('warzone') || gameNameLower.includes('call of duty') || gameNameLower.includes('cod')) {
     return 150;
   } else if (gameNameLower.includes('apex') || gameNameLower.includes('legends')) {
@@ -158,16 +158,16 @@ export const isValidPlacement = (placement: number, maxPlayers: number): boolean
 export const getBattleRoyaleGameInfo = (gameName: string) => {
   const gameNameLower = gameName.toLowerCase().trim();
   const maxPlayers = getMaxPlayersForGame(gameName);
-  
+
   let isTeamBased = false;
   let playersPerTeam = 1;
-  
+
   // Apex Legends is team-based with 3 players per squad
   if (gameNameLower.includes('apex') || gameNameLower.includes('legends')) {
     isTeamBased = true;
     playersPerTeam = 3;
   }
-  
+
   return {
     maxPlayers,
     isTeamBased,

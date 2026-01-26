@@ -130,12 +130,12 @@ const RRBracketPage: React.FC = () => {
         .from('tournament_matches')
         .select('*')
         .eq('tournament_id', id);
-        
+
       if (existingMatchesError) throw existingMatchesError;
-      
+
       // Fetch participants based on tournament type
       let participants: Player[] | Team[] = [];
-      
+
       if (tournamentData.type === 'solo') {
         participants = await fetchSoloPlayers(tournamentData, userIdSet, id, setSqlQuery, setRegistrationsCount);
         setPlayers(participants as Player[]);
@@ -143,7 +143,7 @@ const RRBracketPage: React.FC = () => {
         participants = await fetchTeams(tournamentData, userIdSet, id);
         setTeams(participants as Team[]);
       }
-      
+
       // If we have existing matches, use them
       if (existingMatches && existingMatches.length > 0) {
         console.log(`Found ${existingMatches.length} existing matches for this tournament`);
@@ -151,17 +151,17 @@ const RRBracketPage: React.FC = () => {
         setEditableMatches(existingMatches);
         setBracketGenerated(true);
         setIsDraftMode(tournamentData.bracket_status === 'draft');
-        
+
         // Calculate participant standings from existing matches
         if (participants.length > 0) {
           const participantsWithStandings = calculateParticipantStandings(participants, existingMatches, tournamentData);
-          
+
           if (tournamentData.type === 'solo') {
             setPlayers(participantsWithStandings as Player[]);
           } else {
             setTeams(participantsWithStandings as Team[]);
           }
-          
+
           calculateUnassignedParticipants(participants, tournamentData);
         }
       } else {
@@ -169,19 +169,19 @@ const RRBracketPage: React.FC = () => {
         if (participants.length > 0) {
           console.log(`Generating professional seeded bracket for ${participants.length} approved participants...`);
           const generatedMatches = await generateRoundRobinMatches(participants, tournamentData, userIdSet, id!, bracketGenerated);
-          
+
           if (generatedMatches.length > 0) {
             // Save matches in draft mode initially
             const savedMatches = await insertMatches(generatedMatches, userIdSet, id!, 'draft');
-            
+
             if (savedMatches) {
               setMatches(savedMatches);
               setEditableMatches(savedMatches);
               setBracketGenerated(true);
               setIsDraftMode(true);
-              
+
               calculateUnassignedParticipants(participants, tournamentData);
-              
+
               const unassigned = participants.slice(Math.floor(participants.length / getGroupSize(tournamentData)) * getGroupSize(tournamentData));
               if (unassigned.length > 0) {
                 toast.success(`Round Robin bracket generated! ${unassigned.length} participants are on the waiting list.`);
@@ -217,9 +217,9 @@ const RRBracketPage: React.FC = () => {
   };
 
   const handleSwapPlayers = (matchId: string) => {
-    setEditableMatches(prevMatches => 
-      prevMatches.map(match => 
-        match.id === matchId 
+    setEditableMatches(prevMatches =>
+      prevMatches.map(match =>
+        match.id === matchId
           ? { ...match, player1_id: match.player2_id, player2_id: match.player1_id }
           : match
       )
@@ -228,22 +228,22 @@ const RRBracketPage: React.FC = () => {
 
   const handlePushBracketLive = async () => {
     if (!id) return;
-    
+
     try {
       setIsUpdatingBracketStatus(true);
-      
+
       // Save the current editable matches and set bracket status to live
       const savedMatches = await saveBracket(editableMatches, validUserIds, id, 'live');
-      
+
       if (savedMatches) {
         setMatches(savedMatches);
         setIsDraftMode(false);
-        
+
         // Update tournament state
         if (tournament) {
           setTournament({ ...tournament, bracket_status: 'live' });
         }
-        
+
         toast.success('Bracket is now live! Players can start competing.');
       }
     } catch (error) {
@@ -256,25 +256,25 @@ const RRBracketPage: React.FC = () => {
 
   const handleEditBracket = async () => {
     if (!id) return;
-    
+
     try {
       setIsUpdatingBracketStatus(true);
-      
+
       // Update tournament bracket status to draft
       const { error } = await supabase
         .from('tournaments')
         .update({ bracket_status: 'draft' })
         .eq('id', id);
-      
+
       if (error) throw error;
-      
+
       setIsDraftMode(true);
-      
+
       // Update tournament state
       if (tournament) {
         setTournament({ ...tournament, bracket_status: 'draft' });
       }
-      
+
       toast.success('Bracket is now in draft mode. You can make changes.');
     } catch (error) {
       console.error('Error setting bracket to draft:', error);
@@ -295,7 +295,7 @@ const RRBracketPage: React.FC = () => {
       toast.error('Cannot select winners while bracket is in draft mode');
       return;
     }
-    
+
     try {
       // Find the match
       const match = matches.find(m => m.id === matchId);
@@ -318,10 +318,10 @@ const RRBracketPage: React.FC = () => {
       if (error) throw error;
 
       // Update local state
-      const updatedMatches = matches.map(match => 
+      const updatedMatches = matches.map(match =>
         match.id === matchId ? { ...match, winner_id: winnerId } : match
       );
-      
+
       setMatches(updatedMatches);
       setEditableMatches(updatedMatches);
 
@@ -343,13 +343,13 @@ const RRBracketPage: React.FC = () => {
             .select('id, captain_id')
             .in('captain_id', [winnerId, loserId])
             .eq('tournament_id', tournament.id);
-          
+
           if (teamError) {
             console.error('Error fetching team data:', teamError);
           } else if (teamData && teamData.length === 2) {
             const winnerTeam = teamData.find(t => t.captain_id === winnerId);
             const loserTeam = teamData.find(t => t.captain_id === loserId);
-            
+
             if (winnerTeam && loserTeam) {
               await updateTeamRankings(
                 winnerTeam.id,
@@ -366,7 +366,7 @@ const RRBracketPage: React.FC = () => {
       // Recalculate standings
       const participants = tournament?.type === 'team' ? teams : players;
       const participantsWithStandings = calculateParticipantStandings(participants, updatedMatches, tournament!);
-      
+
       if (tournament?.type === 'solo') {
         setPlayers(participantsWithStandings as Player[]);
       } else {
@@ -393,9 +393,9 @@ const RRBracketPage: React.FC = () => {
   const generateKnockoutStage = async () => {
     try {
       setIsGeneratingKnockout(true);
-      
+
       const qualifiedParticipants = getQualifiedParticipants();
-      
+
       if (qualifiedParticipants.length < 2) {
         toast.error('Need at least 2 qualified participants for knockout stage');
         return;
@@ -419,7 +419,7 @@ const RRBracketPage: React.FC = () => {
 
       // Create seeded bracket positions
       const bracketPositions: (Player | Team | null)[] = new Array(bracketSize).fill(null);
-      
+
       // Place qualified participants in bracket positions
       for (let i = 0; i < sortedQualified.length; i++) {
         bracketPositions[i] = sortedQualified[i];
@@ -502,11 +502,11 @@ const RRBracketPage: React.FC = () => {
         if (match.round === knockoutStartRound && match.winner_id) {
           const nextRound = knockoutStartRound + 1;
           const nextPosition = Math.ceil(match.position / 2);
-          
-          const nextMatch = knockoutMatches.find(m => 
+
+          const nextMatch = knockoutMatches.find(m =>
             m.round === nextRound && m.position === nextPosition
           );
-          
+
           if (nextMatch) {
             const isPlayer1Slot = match.position % 2 !== 0;
             if (isPlayer1Slot) {
@@ -533,12 +533,12 @@ const RRBracketPage: React.FC = () => {
         .eq('id', id!);
 
       if (updateError) throw updateError;
-      
+
       toast.success(`Knockout stage generated! ${qualifiedParticipants.length} qualified participants will compete in single elimination.`);
-      
+
       // Navigate to single elimination bracket page
       navigate(`/tournaments/${id}/bracket`);
-      
+
     } catch (error) {
       console.error('Error generating knockout stage:', error);
       toast.error('Failed to generate knockout stage');

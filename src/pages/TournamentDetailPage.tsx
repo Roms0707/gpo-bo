@@ -47,7 +47,7 @@ const TournamentDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { isLoading, updateTournamentRules } = useTournamentStore();
   const { games, fetchGames } = useGameStore();
-  
+
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [fieldValues, setFieldValues] = useState<(TournamentFieldValue & { field: TournamentField })[]>([]);
   const [game, setGame] = useState<Game | null>(null);
@@ -69,23 +69,23 @@ const TournamentDetailPage: React.FC = () => {
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
-    
+
   useEffect(() => {
     const fetchTournamentDetails = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
-        
+
         // Fetch tournament
         const { data: tournamentData, error: tournamentError } = await supabase
           .from('tournaments')
           .select('*')
           .eq('id', id)
           .single();
-          
+
         if (tournamentError) throw tournamentError;
-        
+
         // Fetch field values with field info
         const { data: fieldValueData, error: fieldValueError } = await supabase
           .from('tournament_field_values')
@@ -94,25 +94,25 @@ const TournamentDetailPage: React.FC = () => {
             field:field_id(*)
           `)
           .eq('tournament_id', id);
-          
+
         if (fieldValueError) throw fieldValueError;
-        
+
         // Fetch teams for team tournaments
         if (tournamentData.type === 'team') {
           const { data: teamsData, error: teamsError } = await supabase
             .from('teams')
             .select('id, name')
             .eq('tournament_id', id);
-            
+
           if (teamsError) throw teamsError;
           setTeams(teamsData || []);
         }
-        
+
         // Get game if tournament has game_id
         if (tournamentData.game_id) {
           const gameData = games.find(g => g.id === tournamentData.game_id) || null;
           setGame(gameData);
-          
+
           // Fetch game publisher IDs if game exists
           if (gameData) {
             await fetchGamePublisherIds(gameData.id);
@@ -120,7 +120,7 @@ const TournamentDetailPage: React.FC = () => {
         } else {
           setGame(null);
         }
-        
+
         setTournament(tournamentData);
         setFieldValues(fieldValueData as any || []);
         setLoading(false);
@@ -130,7 +130,7 @@ const TournamentDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     if (id && games.length > 0) {
       fetchTournamentDetails();
     }
@@ -154,17 +154,17 @@ const TournamentDetailPage: React.FC = () => {
   const fetchGamePublisherIds = async (gameId: string) => {
     try {
       setIsLoadingPublisherIds(true);
-      
+
       // Fetch game publisher IDs
       const { data: publisherIdsData, error: publisherIdsError } = await supabase
         .from('game_publisher_ids')
         .select('*')
         .eq('game_id', gameId);
-        
+
       if (publisherIdsError) throw publisherIdsError;
-      
+
       setGamePublisherIds(publisherIdsData || []);
-      
+
       // Fetch user's publisher IDs for this game
       if (publisherIdsData && publisherIdsData.length > 0) {
         const { data: userPublisherIdsData, error: userPublisherIdsError } = await supabase
@@ -177,9 +177,9 @@ const TournamentDetailPage: React.FC = () => {
             )
           `)
           .in('game_publisher_id', publisherIdsData.map(pid => pid.id));
-          
+
         if (userPublisherIdsError) throw userPublisherIdsError;
-        
+
         setUserPublisherIds(userPublisherIdsData as UserGamePublisherId[] || []);
       }
     } catch (error) {
@@ -191,11 +191,11 @@ const TournamentDetailPage: React.FC = () => {
 
   const handleSaveRules = async (rules: string) => {
     if (!id) return;
-    
+
     try {
       setIsSavingRules(true);
       await updateTournamentRules(id, rules);
-      
+
       // Update local tournament state
       if (tournament) {
         setTournament({
@@ -203,7 +203,7 @@ const TournamentDetailPage: React.FC = () => {
           rules
         });
       }
-      
+
       setIsRulesModalOpen(false);
     } catch (error) {
       console.error('Error saving tournament rules:', error);
@@ -214,7 +214,7 @@ const TournamentDetailPage: React.FC = () => {
 
   const handleCopyCode = async () => {
     if (!tournament?.private_server_code) return;
-    
+
     try {
       await navigator.clipboard.writeText(tournament.private_server_code);
       setCopied(true);
@@ -238,7 +238,7 @@ const TournamentDetailPage: React.FC = () => {
         return <Badge className="text-sm">{status}</Badge>;
     }
   };
-  
+
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'solo':
@@ -260,10 +260,10 @@ const TournamentDetailPage: React.FC = () => {
         return <Badge className="text-sm">Online</Badge>;
     }
   };
-  
+
   const getCompatibleDevices = () => {
     if (!tournament?.compatible_devices) return 'Not specified';
-    
+
     return tournament.compatible_devices
       .split(',')
       .map(device => device.trim())
@@ -280,7 +280,7 @@ const TournamentDetailPage: React.FC = () => {
       })
       .join(', ');
   };
-  
+
   const getEligibleCountries = () => {
     if (tournament?.config_id) {
       return null;
@@ -317,7 +317,7 @@ const TournamentDetailPage: React.FC = () => {
 
   const getTournamentFormatLabel = (format: string | null) => {
     if (!format) return 'Not specified';
-    
+
     switch (format) {
       case 'BO1': return 'Best of 1';
       case 'BO3': return 'Best of 3';
@@ -328,8 +328,8 @@ const TournamentDetailPage: React.FC = () => {
   };
 
   const handleEditClick = () => {
-    navigate(`/tournaments/edit/${id}`, { 
-      state: { from: 'tournament-detail' } 
+    navigate(`/tournaments/edit/${id}`, {
+      state: { from: 'tournament-detail' }
     });
   };
 
@@ -365,9 +365,9 @@ const TournamentDetailPage: React.FC = () => {
         >
           Back to Tournaments
         </Button>
-        
+
         <div className="flex space-x-2">
-          <Button 
+          <Button
             onClick={handleEditClick}
             leftIcon={<Edit size={16} />}
           >
@@ -375,13 +375,13 @@ const TournamentDetailPage: React.FC = () => {
           </Button>
         </div>
       </div>
-      
+
       {/* Tournament Header */}
       <div className="relative rounded-lg overflow-hidden h-48 md:h-64 bg-gradient-to-r from-dark-300 to-dark-100">
         {tournament.header_url ? (
-          <img 
-            src={tournament.header_url} 
-            alt={tournament.title} 
+          <img
+            src={tournament.header_url}
+            alt={tournament.title}
             className="w-full h-full object-cover"
           />
         ) : null}
@@ -389,9 +389,9 @@ const TournamentDetailPage: React.FC = () => {
           <div className="p-6 text-white">
             <div className="flex items-center space-x-3 mb-2">
               {tournament.icon_url && (
-                <img 
-                  src={tournament.icon_url} 
-                  alt="" 
+                <img
+                  src={tournament.icon_url}
+                  alt=""
                   className="h-12 w-12 rounded-full object-cover border-2 border-white"
                 />
               )}
@@ -407,7 +407,7 @@ const TournamentDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Info */}
         <div className="md:col-span-2 space-y-6">
@@ -422,9 +422,9 @@ const TournamentDetailPage: React.FC = () => {
               </CardHeader>
               <CardContent className="flex items-center space-x-4">
                 {game.image_url ? (
-                  <img 
-                    src={game.image_url} 
-                    alt={game.name} 
+                  <img
+                    src={game.image_url}
+                    alt={game.name}
                     className="h-24 w-36 object-cover rounded-md"
                   />
                 ) : (
@@ -441,7 +441,7 @@ const TournamentDetailPage: React.FC = () => {
                   )}
                 </div>
               </CardContent>
-              
+
               {/* Game Publisher IDs */}
               {gamePublisherIds.length > 0 && (
                 <div className="px-6 pb-6">
@@ -459,10 +459,10 @@ const TournamentDetailPage: React.FC = () => {
                       </TableHeader>
                       <TableBody>
                         {gamePublisherIds.map(pid => {
-                          const userPid = userPublisherIds.find(upid => 
+                          const userPid = userPublisherIds.find(upid =>
                             upid.game_publisher_id === pid.id
                           );
-                          
+
                           return (
                             <TableRow key={pid.id}>
                               <TableCell>
@@ -498,7 +498,7 @@ const TournamentDetailPage: React.FC = () => {
               )}
             </Card>
           )}
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Tournament Details</CardTitle>
@@ -636,7 +636,7 @@ const TournamentDetailPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Tournament Format</h3>
                   <div className="space-y-2">
@@ -659,7 +659,7 @@ const TournamentDetailPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     {tournament.type === 'team' && (
                       <div className="flex items-start">
                         <Users className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
@@ -671,7 +671,7 @@ const TournamentDetailPage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {tournament.type === 'team' && tournament.max_players_per_team && (
                       <div className="flex items-start">
                         <Users className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
@@ -683,15 +683,15 @@ const TournamentDetailPage: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Location type and name */}
                     <div className="flex items-start">
                       <MapPin className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Location</p>
                         <p className="text-gray-700 dark:text-gray-300">
-                          {tournament.location_type === 'online' 
-                            ? 'Online' 
+                          {tournament.location_type === 'online'
+                            ? 'Online'
                             : `Offline: ${tournament.location_name || 'Venue not specified'}`}
                         </p>
                       </div>
@@ -725,7 +725,7 @@ const TournamentDetailPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Eligibility Information */}
               <div>
                 <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Eligibility Requirements</h3>
@@ -774,7 +774,7 @@ const TournamentDetailPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex items-start">
                     <Users className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
                     <div>
@@ -784,7 +784,7 @@ const TournamentDetailPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   {tournament.required_documents_under_18 && (
                     <div className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
@@ -800,7 +800,7 @@ const TournamentDetailPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              
+
               {fieldValues.length > 0 && (
                 <div>
                   <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-2">Additional Information</h3>
@@ -831,9 +831,9 @@ const TournamentDetailPage: React.FC = () => {
                 <Book className="h-5 w-5 text-accent-500 mr-2" />
                 Tournament Rules
               </CardTitle>
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => setIsRulesModalOpen(true)}
                 leftIcon={<Edit size={16} />}
               >
@@ -842,7 +842,7 @@ const TournamentDetailPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               {tournament.rules ? (
-                <div 
+                <div
                   className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-white prose-p:text-white"
                   dangerouslySetInnerHTML={{ __html: tournament.rules }}
                 />
@@ -850,8 +850,8 @@ const TournamentDetailPage: React.FC = () => {
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
                   <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400" />
                   <p className="mb-2">No rules have been defined for this tournament yet.</p>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => setIsRulesModalOpen(true)}
                     leftIcon={<Edit size={16} />}
                   >
@@ -871,23 +871,23 @@ const TournamentDetailPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PrizeDisplay 
-                tournamentId={id!} 
+              <PrizeDisplay
+                tournamentId={id!}
                 showTitle={false}
                 layout="grid"
               />
             </CardContent>
           </Card>
-          
+
           {/* Battle Royale Leaderboard */}
           {isBattleRoyaleTournament() && (
-            <BattleRoyaleLeaderboard 
+            <BattleRoyaleLeaderboard
               tournamentId={id!}
               showTitle={true}
             />
           )}
         </div>
-        
+
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Private Server Code - Only show if tournament is active and code exists */}
@@ -921,23 +921,23 @@ const TournamentDetailPage: React.FC = () => {
                     </Button>
                   </div>
                   <div className="text-xs text-gray-400 bg-dark-300 p-3 rounded-md">
-                    <strong>Note:</strong> This code is only visible during active tournaments. 
+                    <strong>Note:</strong> This code is only visible during active tournaments.
                     Use it to join the private server or game lobby.
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Connect</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {tournament.twitch_url && (
-                <a 
-                  href={tournament.twitch_url} 
-                  target="_blank" 
+                <a
+                  href={tournament.twitch_url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                 >
@@ -945,11 +945,11 @@ const TournamentDetailPage: React.FC = () => {
                   <span>Watch on Twitch</span>
                 </a>
               )}
-              
+
               {tournament.discord_url && (
-                <a 
-                  href={tournament.discord_url} 
-                  target="_blank" 
+                <a
+                  href={tournament.discord_url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center px-4 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
                 >
@@ -957,8 +957,8 @@ const TournamentDetailPage: React.FC = () => {
                   <span>Join Discord</span>
                 </a>
               )}
-              
-              <a 
+
+              <a
                 href="#share"
                 className="flex items-center px-4 py-3 bg-gray-100 dark:bg-dark-200 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-100 transition-colors"
               >
@@ -967,7 +967,7 @@ const TournamentDetailPage: React.FC = () => {
               </a>
             </CardContent>
           </Card>
-          
+
           {tournament.type === 'team' && (
             <Card>
               <CardHeader>
@@ -977,8 +977,8 @@ const TournamentDetailPage: React.FC = () => {
                 {teams.length > 0 ? (
                   <div className="space-y-2">
                     {teams.map(team => (
-                      <div 
-                        key={team.id} 
+                      <div
+                        key={team.id}
                         className="px-3 py-2 bg-gray-50 dark:bg-dark-200 rounded-md flex justify-between items-center"
                       >
                         <span className="font-medium">{team.name}</span>
@@ -1003,7 +1003,7 @@ const TournamentDetailPage: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       {tournament.announcement_url && (
         <Card>
           <CardHeader>
@@ -1011,9 +1011,9 @@ const TournamentDetailPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="flex justify-center">
-              <img 
-                src={tournament.announcement_url} 
-                alt="Tournament announcement" 
+              <img
+                src={tournament.announcement_url}
+                alt="Tournament announcement"
                 className="max-w-full rounded-lg"
               />
             </div>

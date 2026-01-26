@@ -188,71 +188,71 @@ const StatisticsPage: React.FC = () => {
     const fetchStatistics = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch tournament statistics
         const { data: tournaments, error: tournamentError } = await supabase
           .from('tournaments')
           .select('id, status');
-        
+
         if (tournamentError) throw tournamentError;
-        
+
         const tournamentCounts = {
           total: tournaments.length,
           upcoming: tournaments.filter(t => t.status === 'upcoming').length,
           active: tournaments.filter(t => t.status === 'active').length,
           past: tournaments.filter(t => t.status === 'past').length,
         };
-        
+
         setTournamentStats(tournamentCounts);
-        
+
         // Fetch total users count
         const { count: userCount, error: userError } = await supabase
           .from('users')
           .select('*', { count: 'exact', head: true })
           .eq('type', 'gamer');
-        
+
         if (userError) throw userError;
-        
+
         // Fetch registered player count (unique users who have registered for tournaments)
         const { data: registeredUsers, error: registrationError } = await supabase
           .from('tournament_registrations')
           .select('user_id')
           .limit(1000);
-        
+
         if (registrationError) throw registrationError;
-        
+
         // Get unique user IDs
         const uniqueUserIds = new Set(registeredUsers.map(reg => reg.user_id));
-        
+
         setPlayerStats({
           total: userCount || 0,
           registered: uniqueUserIds.size,
         });
-        
+
         // Fetch tournament registrations to find the most popular tournament
         const { data: tournamentRegs, error: regError } = await supabase
           .from('tournament_registrations')
           .select('tournament_id');
-          
+
         if (regError) throw regError;
-        
+
         // Count registrations per tournament
         const tournamentRegCounts: Record<string, number> = {};
         tournamentRegs.forEach(reg => {
           tournamentRegCounts[reg.tournament_id] = (tournamentRegCounts[reg.tournament_id] || 0) + 1;
         });
-        
+
         // Get the tournament with the most registrations
         let mostPopularTournamentId = '';
         let maxRegCount = 0;
-        
+
         Object.entries(tournamentRegCounts).forEach(([tournamentId, count]) => {
           if (count > maxRegCount) {
             mostPopularTournamentId = tournamentId;
             maxRegCount = count;
           }
         });
-        
+
         if (mostPopularTournamentId && maxRegCount > 0) {
           // Get details of the most popular tournament
           const { data: popularTournamentData, error: popularTournamentError } = await supabase
@@ -260,9 +260,9 @@ const StatisticsPage: React.FC = () => {
             .select('id, title, type, status')
             .eq('id', mostPopularTournamentId)
             .single();
-            
+
           if (popularTournamentError) throw popularTournamentError;
-          
+
           if (popularTournamentData) {
             setPopularTournament({
               id: popularTournamentData.id,
@@ -279,7 +279,7 @@ const StatisticsPage: React.FC = () => {
           .from('tournaments')
           .select('game_id')
           .not('game_id', 'is', null);
-        
+
         if (gamesError) throw gamesError;
 
         // Count tournaments per game
@@ -296,15 +296,15 @@ const StatisticsPage: React.FC = () => {
             .from('games')
             .select('id, name')
             .in('id', Object.keys(gameCountMap));
-          
+
           if (gameDetailsError) throw gameDetailsError;
-          
+
           const topGames = gameDetails.map(game => ({
             id: game.id,
             name: game.name,
             tournamentCount: gameCountMap[game.id] || 0
           })).sort((a, b) => b.tournamentCount - a.tournamentCount).slice(0, 5);
-          
+
           setPopularGames(topGames);
         }
 
@@ -317,9 +317,9 @@ const StatisticsPage: React.FC = () => {
             )
           `)
           .not('tournament.game_id', 'is', null);
-        
+
         if (gameRegError) throw gameRegError;
-        
+
         // Count registrations per game
         const gameRegCounts: Record<string, number> = {};
         gameRegistrations.forEach(reg => {
@@ -327,22 +327,22 @@ const StatisticsPage: React.FC = () => {
             gameRegCounts[reg.tournament.game_id] = (gameRegCounts[reg.tournament.game_id] || 0) + 1;
           }
         });
-        
+
         // Get game details for the most registered games
         if (Object.keys(gameRegCounts).length > 0) {
           const { data: gameRegDetails, error: gameRegDetailsError } = await supabase
             .from('games')
             .select('id, name')
             .in('id', Object.keys(gameRegCounts));
-          
+
           if (gameRegDetailsError) throw gameRegDetailsError;
-          
+
           const topRegisteredGames = gameRegDetails.map(game => ({
             id: game.id,
             name: game.name,
             playerCount: gameRegCounts[game.id] || 0
           })).sort((a, b) => b.playerCount - a.playerCount).slice(0, 5);
-          
+
           setMostRegisteredGames(topRegisteredGames);
         }
 
@@ -350,26 +350,26 @@ const StatisticsPage: React.FC = () => {
         const { data: userRegistrations, error: userRegError } = await supabase
           .from('tournament_registrations')
           .select('user_id');
-        
+
         if (userRegError) throw userRegError;
-        
+
         // Count registrations per user
         const userRegCounts: Record<string, number> = {};
         userRegistrations.forEach(reg => {
           userRegCounts[reg.user_id] = (userRegCounts[reg.user_id] || 0) + 1;
         });
-        
+
         // Calculate statistics
         const userIds = Object.keys(userRegCounts);
         const totalRegisteredUsers = userIds.length;
         const totalRegistrations = userRegistrations.length;
-        const avgTournamentsPerUser = totalRegisteredUsers > 0 
-          ? Math.round((totalRegistrations / totalRegisteredUsers) * 10) / 10 
+        const avgTournamentsPerUser = totalRegisteredUsers > 0
+          ? Math.round((totalRegistrations / totalRegisteredUsers) * 10) / 10
           : 0;
-        const maxTournamentsPerUser = userIds.length > 0 
-          ? Math.max(...Object.values(userRegCounts)) 
+        const maxTournamentsPerUser = userIds.length > 0
+          ? Math.max(...Object.values(userRegCounts))
           : 0;
-        
+
         setUserTournamentStats({
           userCount: totalRegisteredUsers,
           avgTournamentsPerUser,
@@ -387,9 +387,9 @@ const StatisticsPage: React.FC = () => {
             )
           `)
           .not('tournament.game_id', 'is', null);
-        
+
         if (tournamentTypesError) throw tournamentTypesError;
-        
+
         // Count solo vs team registrations per game
         const gameTypeMap: Record<string, { solo: number; team: number }> = {};
         tournamentTypes.forEach(reg => {
@@ -398,7 +398,7 @@ const StatisticsPage: React.FC = () => {
             if (!gameTypeMap[gameId]) {
               gameTypeMap[gameId] = { solo: 0, team: 0 };
             }
-            
+
             if (reg.tournament.type === 'solo') {
               gameTypeMap[gameId].solo++;
             } else {
@@ -406,26 +406,26 @@ const StatisticsPage: React.FC = () => {
             }
           }
         });
-        
+
         // Get game details for the type statistics
         if (Object.keys(gameTypeMap).length > 0) {
           const { data: gameTypeDetails, error: gameTypeDetailsError } = await supabase
             .from('games')
             .select('id, name')
             .in('id', Object.keys(gameTypeMap));
-          
+
           if (gameTypeDetailsError) throw gameTypeDetailsError;
-          
+
           const gameTypeStats = gameTypeDetails.map(game => ({
             gameId: game.id,
             gameName: game.name,
             soloCount: gameTypeMap[game.id].solo,
             teamCount: gameTypeMap[game.id].team
           })).sort((a, b) => (b.soloCount + b.teamCount) - (a.soloCount + a.teamCount)).slice(0, 5);
-          
+
           setUserTypeStats(gameTypeStats);
         }
-        
+
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching statistics:', err);
@@ -433,7 +433,7 @@ const StatisticsPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchStatistics();
   }, []);
 
@@ -547,7 +547,7 @@ const StatisticsPage: React.FC = () => {
       />
 
       <RegistrationKPIs stats={registrationStats} isLoading={isLoadingRegistrations} />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Tournament Status Distribution */}
         <Card className="bg-gradient-to-br from-secondary-600 to-secondary-800 text-white">
@@ -566,23 +566,23 @@ const StatisticsPage: React.FC = () => {
             <div className="mt-4">
               <div className="w-full bg-white/20 h-2 rounded-full">
                 <div className="flex h-2 rounded-full">
-                  <div 
-                    className="bg-success-300 h-2 rounded-l-full" 
-                    style={{ 
+                  <div
+                    className="bg-success-300 h-2 rounded-l-full"
+                    style={{
                       width: `${tournamentStats.active / tournamentStats.total * 100}%`,
                       display: tournamentStats.active ? 'block' : 'none'
                     }}
                   ></div>
-                  <div 
-                    className="bg-primary-300 h-2" 
-                    style={{ 
+                  <div
+                    className="bg-primary-300 h-2"
+                    style={{
                       width: `${tournamentStats.upcoming / tournamentStats.total * 100}%`,
                       display: tournamentStats.upcoming ? 'block' : 'none'
                     }}
                   ></div>
-                  <div 
-                    className="bg-gray-300 h-2 rounded-r-full" 
-                    style={{ 
+                  <div
+                    className="bg-gray-300 h-2 rounded-r-full"
+                    style={{
                       width: `${tournamentStats.past / tournamentStats.total * 100}%`,
                       display: tournamentStats.past ? 'block' : 'none'
                     }}
@@ -607,10 +607,10 @@ const StatisticsPage: React.FC = () => {
             </div>
             <div className="mt-4">
               <div className="w-full bg-white/20 h-1 rounded-full">
-                <div 
-                  className="bg-white h-1 rounded-full" 
-                  style={{ 
-                    width: `${(playerStats.registered / playerStats.total) * 100 || 0}%` 
+                <div
+                  className="bg-white h-1 rounded-full"
+                  style={{
+                    width: `${(playerStats.registered / playerStats.total) * 100 || 0}%`
                   }}
                 ></div>
               </div>
@@ -667,7 +667,7 @@ const StatisticsPage: React.FC = () => {
                     <Badge variant={popularTournament.type === 'solo' ? 'accent' : 'secondary'}>
                       {popularTournament.type === 'solo' ? 'Solo' : 'Team'}
                     </Badge>
-                    <Badge 
+                    <Badge
                       variant={
                         popularTournament.status === 'upcoming' ? 'primary' :
                         popularTournament.status === 'active' ? 'success' : 'secondary'
@@ -677,7 +677,7 @@ const StatisticsPage: React.FC = () => {
                     </Badge>
                   </div>
                 </div>
-                
+
                 <div className="bg-gray-50 dark:bg-dark-200 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -695,7 +695,7 @@ const StatisticsPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
-        
+
         {/* Tournament Status Timeline */}
         <Card>
           <CardHeader>
@@ -715,8 +715,8 @@ const StatisticsPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <span className="text-xs font-semibold inline-block text-primary-300">
-                      {tournamentStats.total > 0 
-                        ? Math.round((tournamentStats.past / tournamentStats.total) * 100) 
+                      {tournamentStats.total > 0
+                        ? Math.round((tournamentStats.past / tournamentStats.total) * 100)
                         : 0}%
                     </span>
                   </div>
@@ -728,20 +728,20 @@ const StatisticsPage: React.FC = () => {
                   ></div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col items-center p-3 bg-primary-50 dark:bg-dark-200 rounded-lg">
                   <Clock className="h-6 w-6 text-primary-500 mb-2" />
                   <span className="text-2xl font-bold text-white">{tournamentStats.upcoming}</span>
                   <span className="text-xs text-gray-400">Upcoming</span>
                 </div>
-                
+
                 <div className="flex flex-col items-center p-3 bg-success-50 dark:bg-success-900/10 rounded-lg">
                   <Activity className="h-6 w-6 text-success-500 mb-2" />
                   <span className="text-2xl font-bold text-white">{tournamentStats.active}</span>
                   <span className="text-xs text-gray-400">Active</span>
                 </div>
-                
+
                 <div className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-900/10 rounded-lg">
                   <Trophy className="h-6 w-6 text-gray-500 mb-2" />
                   <span className="text-2xl font-bold text-white">{tournamentStats.past}</span>
@@ -771,7 +771,7 @@ const StatisticsPage: React.FC = () => {
               <p className="text-2xl font-bold text-white">{userTournamentStats.userCount}</p>
               <p className="text-xs text-gray-500 mt-1">Users who registered for at least one tournament</p>
             </div>
-            
+
             <div className="bg-dark-200 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-400">Avg. Tournaments per User</h3>
@@ -780,7 +780,7 @@ const StatisticsPage: React.FC = () => {
               <p className="text-2xl font-bold text-white">{userTournamentStats.avgTournamentsPerUser}</p>
               <p className="text-xs text-gray-500 mt-1">Average number of tournaments per registered user</p>
             </div>
-            
+
             <div className="bg-dark-200 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-400">Max Tournaments per User</h3>
@@ -792,7 +792,7 @@ const StatisticsPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* NEW KPI: Games with Most Registered Players */}
       <Card>
         <CardHeader>
@@ -817,10 +817,10 @@ const StatisticsPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-dark-200 h-2 rounded-full mt-1">
-                      <div 
-                        className="bg-success-500 h-2 rounded-full" 
-                        style={{ 
-                          width: `${(game.playerCount / (mostRegisteredGames[0]?.playerCount || 1)) * 100}%` 
+                      <div
+                        className="bg-success-500 h-2 rounded-full"
+                        style={{
+                          width: `${(game.playerCount / (mostRegisteredGames[0]?.playerCount || 1)) * 100}%`
                         }}
                       ></div>
                     </div>
@@ -835,7 +835,7 @@ const StatisticsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-      
+
       {/* NEW KPI: User Type of Games Registrations (Solo vs Team) */}
       <Card>
         <CardHeader>
@@ -857,9 +857,9 @@ const StatisticsPage: React.FC = () => {
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-dark-200 h-4 rounded-full overflow-hidden">
                     <div className="flex h-full">
-                      <div 
+                      <div
                         className="bg-accent-500 h-full flex items-center justify-center text-xs text-white"
-                        style={{ 
+                        style={{
                           width: `${(game.soloCount / (game.soloCount + game.teamCount)) * 100}%`,
                           minWidth: game.soloCount > 0 ? '40px' : '0'
                         }}
@@ -868,9 +868,9 @@ const StatisticsPage: React.FC = () => {
                           <span className="px-2 truncate">Solo</span>
                         )}
                       </div>
-                      <div 
+                      <div
                         className="bg-secondary-500 h-full flex items-center justify-center text-xs text-white"
-                        style={{ 
+                        style={{
                           width: `${(game.teamCount / (game.soloCount + game.teamCount)) * 100}%`,
                           minWidth: game.teamCount > 0 ? '40px' : '0'
                         }}
@@ -895,7 +895,7 @@ const StatisticsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-      
+
       <TournamentComparisonTable
         tournaments={tournamentDetails}
         isLoading={isLoadingRegistrations}
@@ -933,10 +933,10 @@ const StatisticsPage: React.FC = () => {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-dark-200 h-2 rounded-full mt-1">
-                      <div 
-                        className="bg-accent-500 h-2 rounded-full" 
-                        style={{ 
-                          width: `${(game.tournamentCount / (popularGames[0]?.tournamentCount || 1)) * 100}%` 
+                      <div
+                        className="bg-accent-500 h-2 rounded-full"
+                        style={{
+                          width: `${(game.tournamentCount / (popularGames[0]?.tournamentCount || 1)) * 100}%`
                         }}
                       ></div>
                     </div>

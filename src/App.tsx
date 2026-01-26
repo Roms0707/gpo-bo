@@ -116,35 +116,35 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route 
+            <Route
               key="tournaments-index"
-              index 
-              element={<TournamentsPage />} 
+              index
+              element={<TournamentsPage />}
             />
-            <Route 
+            <Route
               key="tournaments-new"
-              path="tournaments/new" 
-              element={<CreateTournamentPage />} 
+              path="tournaments/new"
+              element={<CreateTournamentPage />}
             />
-            <Route 
+            <Route
               key="tournament-detail"
-              path="tournaments/:id" 
-              element={<TournamentDetailPage />} 
+              path="tournaments/:id"
+              element={<TournamentDetailPage />}
             />
-            <Route 
+            <Route
               key="tournament-edit"
-              path="tournaments/edit/:id" 
-              element={<EditTournamentPage />} 
+              path="tournaments/edit/:id"
+              element={<EditTournamentPage />}
             />
-            <Route 
+            <Route
               key="registrations-page"
-              path="registrations" 
-              element={<RegistrationsPage />} 
+              path="registrations"
+              element={<RegistrationsPage />}
             />
-            <Route 
+            <Route
               key="brackets-page"
-              path="brackets" 
-              element={<BracketsPage />} 
+              path="brackets"
+              element={<BracketsPage />}
             />
             <Route
               key="single-elimination-bracket"
@@ -161,15 +161,15 @@ function App() {
               path="tournaments/:id/swiss-bracket"
               element={<SwissBracketPage />}
             />
-            <Route 
+            <Route
               key="round-robin-bracket"
-              path="tournaments/:id/rr-bracket" 
-              element={<RRBracketPage />} 
+              path="tournaments/:id/rr-bracket"
+              element={<RRBracketPage />}
             />
-            <Route 
+            <Route
               key="battle-royale-entry"
-              path="tournaments/:id/br-entry" 
-              element={<BattleRoyaleMatchEntryPage />} 
+              path="tournaments/:id/br-entry"
+              element={<BattleRoyaleMatchEntryPage />}
             />
             <Route
               key="statistics-page"
@@ -186,10 +186,10 @@ function App() {
               path="games"
               element={<GamesPage />}
             />
-            <Route 
+            <Route
               key="fields-page"
-              path="fields" 
-              element={<FieldsPage />} 
+              path="fields"
+              element={<FieldsPage />}
             />
             <Route
               key="admin-page"
@@ -221,15 +221,15 @@ function App() {
               path="support-tickets"
               element={<SupportTicketsPage />}
             />
-            <Route 
+            <Route
               key="leaderboards-index"
-              path="leaderboards" 
-              element={<LeaderboardsPage />} 
+              path="leaderboards"
+              element={<LeaderboardsPage />}
             />
-            <Route 
+            <Route
               key="game-leaderboard"
-              path="leaderboards/:gameId" 
-              element={<GameLeaderboardPage />} 
+              path="leaderboards/:gameId"
+              element={<GameLeaderboardPage />}
             />
             <Route
               key="contents-page"

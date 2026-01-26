@@ -228,7 +228,7 @@ export const fetchCampaignRubrics = async (
     }
 
     rubrics = rubrics.map((apiRubric: any) => ({
-      id: apiRubric.rubric_id || apiRubric.id || '',
+      id: String(apiRubric.rubric_id || apiRubric.id || ''),
       name: apiRubric.rubric_label || apiRubric.name || '',
       description: apiRubric.description || apiRubric.rubric_description || '',
     }));

@@ -69,7 +69,7 @@ const ContentsPage: React.FC = () => {
       ['clean']
     ],
   };
-  
+
   const quillFormats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
@@ -91,7 +91,7 @@ const ContentsPage: React.FC = () => {
       setContentType(selectedContent.content_type);
       setSelectedGameId(selectedContent.game_id);
       setTitle(selectedContent.title);
-      
+
       if (selectedContent.content_type === 'news') {
         // For news articles, the content is stored in the description field
         setArticleText(selectedContent.description);
@@ -103,7 +103,7 @@ const ContentsPage: React.FC = () => {
         setDescription(selectedContent.description);
         setArticleText(''); // Clear article text for non-news
       }
-      
+
       if (selectedContent.content_type === 'video') {
         setVideoUrl(selectedContent.content_url);
       } else if (selectedContent.content_type === 'playlist') {
@@ -144,7 +144,7 @@ const ContentsPage: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFile(file);
-      
+
       // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -160,33 +160,33 @@ const ContentsPage: React.FC = () => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${file.name}`;
     const filePath = `game-contents/${fileName}`;
-    
+
     const { error: uploadError } = await supabase.storage
       .from('gaming-image-bucket')
       .upload(filePath, file);
-      
+
     if (uploadError) {
       throw uploadError;
     }
-    
+
     const { data } = supabase.storage
       .from('gaming-image-bucket')
       .getPublicUrl(filePath);
-      
+
     return data.publicUrl;
   };
 
   const handleCreateContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setIsLoading(true);
-      
+
       let contentUrl = '';
       let playlistImageUrl = null;
       let articleImageUrl = null;
       let finalDescription = description;
-      
+
       if (contentType === 'image' && contentFile) {
         contentUrl = await uploadContent(contentFile);
       } else if (contentType === 'video') {
@@ -199,13 +199,13 @@ const ContentsPage: React.FC = () => {
       } else if (contentType === 'news') {
         contentUrl = ''; // No URL needed for news
         finalDescription = articleText; // Store article content in description field
-        
+
         // Upload article image if provided
         if (articleImageFile) {
           articleImageUrl = await uploadContent(articleImageFile);
         }
       }
-      
+
       const { error } = await supabase
         .from('game_contents')
         .insert([{
@@ -219,7 +219,7 @@ const ContentsPage: React.FC = () => {
         }]);
 
       if (error) throw error;
-      
+
       toast.success('Content created successfully');
       resetForm();
       setIsCreateModalOpen(false);
@@ -234,21 +234,21 @@ const ContentsPage: React.FC = () => {
 
   const handleEditContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedContent) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       let contentUrl = selectedContent.content_url;
       let playlistImageUrl = selectedContent.playlist_image_url;
       let articleImageUrl = selectedContent.article_image_url;
       let finalDescription = description;
-      
+
       // If a new image file is uploaded
       if (contentType === 'image' && contentFile) {
         contentUrl = await uploadContent(contentFile);
-        
+
         // Delete old image if it exists
         if (selectedContent.content_type === 'image') {
           const oldFileName = selectedContent.content_url.split('/').pop();
@@ -262,11 +262,11 @@ const ContentsPage: React.FC = () => {
         contentUrl = videoUrl;
       } else if (contentType === 'playlist') {
         contentUrl = playlistUrl;
-        
+
         // If a new playlist image is uploaded
         if (playlistImageFile) {
           playlistImageUrl = await uploadContent(playlistImageFile);
-          
+
           // Delete old playlist image if it exists
           if (selectedContent.playlist_image_url) {
             const oldFileName = selectedContent.playlist_image_url.split('/').pop();
@@ -281,11 +281,11 @@ const ContentsPage: React.FC = () => {
         // For news, we keep the content_url empty and store content in description
         contentUrl = '';
         finalDescription = articleText;
-        
+
         // If a new article image is uploaded
         if (articleImageFile) {
           articleImageUrl = await uploadContent(articleImageFile);
-          
+
           // Delete old article image if it exists
           if (selectedContent.article_image_url) {
             const oldFileName = selectedContent.article_image_url.split('/').pop();
@@ -297,7 +297,7 @@ const ContentsPage: React.FC = () => {
           }
         }
       }
-      
+
       const { error } = await supabase
         .from('game_contents')
         .update({
@@ -312,7 +312,7 @@ const ContentsPage: React.FC = () => {
         .eq('id', selectedContent.id);
 
       if (error) throw error;
-      
+
       toast.success('Content updated successfully');
       resetForm();
       setIsEditModalOpen(false);
@@ -327,10 +327,10 @@ const ContentsPage: React.FC = () => {
 
   const handleDeleteContent = async () => {
     if (!selectedContent) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       // If it's an image, delete from storage
       if (selectedContent.content_type === 'image') {
         const fileName = selectedContent.content_url.split('/').pop();
@@ -340,7 +340,7 @@ const ContentsPage: React.FC = () => {
             .remove([`game-contents/${fileName}`]);
         }
       }
-      
+
       // If it has a playlist image, delete that too
       if (selectedContent.playlist_image_url) {
         const fileName = selectedContent.playlist_image_url.split('/').pop();
@@ -350,7 +350,7 @@ const ContentsPage: React.FC = () => {
             .remove([`game-contents/${fileName}`]);
         }
       }
-      
+
       // If it has an article image, delete that too
       if (selectedContent.article_image_url) {
         const fileName = selectedContent.article_image_url.split('/').pop();
@@ -360,14 +360,14 @@ const ContentsPage: React.FC = () => {
             .remove([`game-contents/${fileName}`]);
         }
       }
-      
+
       const { error } = await supabase
         .from('game_contents')
         .delete()
         .eq('id', selectedContent.id);
 
       if (error) throw error;
-      
+
       toast.success('Content deleted successfully');
       setIsDeleteModalOpen(false);
       fetchContents();
@@ -437,9 +437,9 @@ const ContentsPage: React.FC = () => {
     switch (content.content_type) {
       case 'image':
         return (
-          <img 
-            src={content.content_url} 
-            alt={content.title} 
+          <img
+            src={content.content_url}
+            alt={content.title}
             className="h-16 w-24 object-cover rounded-md"
           />
         );
@@ -452,9 +452,9 @@ const ContentsPage: React.FC = () => {
       case 'playlist':
         return content.playlist_image_url ? (
           <div className="relative h-16 w-24">
-            <img 
-              src={content.playlist_image_url} 
-              alt={content.title} 
+            <img
+              src={content.playlist_image_url}
+              alt={content.title}
               className="h-16 w-24 object-cover rounded-md"
             />
             <div className="absolute bottom-1 right-1 bg-green-500 rounded-full p-1">
@@ -469,9 +469,9 @@ const ContentsPage: React.FC = () => {
       case 'news':
         return content.article_image_url ? (
           <div className="relative h-16 w-24">
-            <img 
-              src={content.article_image_url} 
-              alt={content.title} 
+            <img
+              src={content.article_image_url}
+              alt={content.title}
               className="h-16 w-24 object-cover rounded-md"
             />
             <div className="absolute bottom-1 right-1 bg-purple-500 rounded-full p-1">
@@ -510,7 +510,7 @@ const ContentsPage: React.FC = () => {
               leftIcon={<Filter className="h-5 w-5 text-gray-400" />}
             />
           </div>
-          
+
           <div className="flex-1">
             <Input
               placeholder="Search contents..."
@@ -520,9 +520,9 @@ const ContentsPage: React.FC = () => {
             />
           </div>
         </div>
-        
+
         <div>
-          <Button 
+          <Button
             leftIcon={<Plus size={16} />}
             onClick={() => setIsCreateModalOpen(true)}
           >
@@ -535,7 +535,7 @@ const ContentsPage: React.FC = () => {
         <CardHeader>
           <CardTitle>Game Contents</CardTitle>
         </CardHeader>
-        
+
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
@@ -574,8 +574,8 @@ const ContentsPage: React.FC = () => {
                     <TableCell>{formatDate(content.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           title="Edit"
                           onClick={() => {
@@ -585,8 +585,8 @@ const ContentsPage: React.FC = () => {
                         >
                           <Edit size={16} />
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="ghost"
                           title="Delete"
                           onClick={() => {
@@ -617,8 +617,8 @@ const ContentsPage: React.FC = () => {
         size="lg"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 resetForm();
                 setIsCreateModalOpen(false);
@@ -626,9 +626,9 @@ const ContentsPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              form="create-content-form" 
+            <Button
+              type="submit"
+              form="create-content-form"
               isLoading={isLoading}
             >
               Create Content
@@ -698,9 +698,9 @@ const ContentsPage: React.FC = () => {
               <div className="mt-1 flex items-center space-x-4">
                 {contentPreview ? (
                   <div className="relative">
-                    <img 
-                      src={contentPreview} 
-                      alt="Content preview" 
+                    <img
+                      src={contentPreview}
+                      alt="Content preview"
                       className="h-32 w-48 object-cover rounded-md"
                     />
                     <button
@@ -752,7 +752,7 @@ const ContentsPage: React.FC = () => {
                 placeholder="Enter YouTube Playlist URL"
                 required={contentType === 'playlist'}
               />
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Playlist Cover Image
@@ -760,9 +760,9 @@ const ContentsPage: React.FC = () => {
                 <div className="mt-1 flex items-center space-x-4">
                   {playlistImagePreview ? (
                     <div className="relative">
-                      <img 
-                        src={playlistImagePreview} 
-                        alt="Playlist cover" 
+                      <img
+                        src={playlistImagePreview}
+                        alt="Playlist cover"
                         className="h-32 w-48 object-cover rounded-md"
                       />
                       <button
@@ -802,9 +802,9 @@ const ContentsPage: React.FC = () => {
                 <div className="mt-1 flex items-center space-x-4">
                   {articleImagePreview ? (
                     <div className="relative">
-                      <img 
-                        src={articleImagePreview} 
-                        alt="Article cover" 
+                      <img
+                        src={articleImagePreview}
+                        alt="Article cover"
                         className="h-32 w-48 object-cover rounded-md"
                       />
                       <button
@@ -832,13 +832,13 @@ const ContentsPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Article Content
                 </label>
                 <div className="mt-1 bg-white rounded-md">
-                  <ReactQuill 
+                  <ReactQuill
                     theme="snow"
                     value={articleText}
                     onChange={setArticleText}
@@ -864,8 +864,8 @@ const ContentsPage: React.FC = () => {
         size="lg"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 resetForm();
                 setIsEditModalOpen(false);
@@ -873,9 +873,9 @@ const ContentsPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              form="edit-content-form" 
+            <Button
+              type="submit"
+              form="edit-content-form"
               isLoading={isLoading}
             >
               Update Content
@@ -945,9 +945,9 @@ const ContentsPage: React.FC = () => {
               <div className="mt-1 flex items-center space-x-4">
                 {contentPreview ? (
                   <div className="relative">
-                    <img 
-                      src={contentPreview} 
-                      alt="Content preview" 
+                    <img
+                      src={contentPreview}
+                      alt="Content preview"
                       className="h-32 w-48 object-cover rounded-md"
                     />
                     <button
@@ -998,7 +998,7 @@ const ContentsPage: React.FC = () => {
                 placeholder="Enter YouTube Playlist URL"
                 required={contentType === 'playlist'}
               />
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Playlist Cover Image
@@ -1006,9 +1006,9 @@ const ContentsPage: React.FC = () => {
                 <div className="mt-1 flex items-center space-x-4">
                   {playlistImagePreview ? (
                     <div className="relative">
-                      <img 
-                        src={playlistImagePreview} 
-                        alt="Playlist cover" 
+                      <img
+                        src={playlistImagePreview}
+                        alt="Playlist cover"
                         className="h-32 w-48 object-cover rounded-md"
                       />
                       <button
@@ -1048,9 +1048,9 @@ const ContentsPage: React.FC = () => {
                 <div className="mt-1 flex items-center space-x-4">
                   {articleImagePreview ? (
                     <div className="relative">
-                      <img 
-                        src={articleImagePreview} 
-                        alt="Article cover" 
+                      <img
+                        src={articleImagePreview}
+                        alt="Article cover"
                         className="h-32 w-48 object-cover rounded-md"
                       />
                       <button
@@ -1078,13 +1078,13 @@ const ContentsPage: React.FC = () => {
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Article Content
                 </label>
                 <div className="mt-1 bg-white rounded-md">
-                  <ReactQuill 
+                  <ReactQuill
                     theme="snow"
                     value={articleText}
                     onChange={setArticleText}

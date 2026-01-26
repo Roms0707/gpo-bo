@@ -181,11 +181,11 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       }
 
       if (authMethod === 'kliento' && !productId.trim()) {
-        newErrors.authMethod = 'Kliento authentication requires a Product ID (configure in Integration step)';
+        newErrors.productId = 'Kliento authentication requires a Product ID';
       }
 
       if (authMethod === 'kliento' && !serviceId.trim()) {
-        newErrors.serviceId = 'Kliento authentication requires a Service ID (configure in Integration step)';
+        newErrors.serviceId = 'Kliento authentication requires a Service ID';
       }
 
       if (authMethod === 'kliento' && klientoAuthType === 'otp') {
@@ -551,11 +551,28 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
               )}
               {authMethod === 'kliento' && (
                 <>
-                  <div className="flex items-start gap-2 p-3 mt-3 bg-warning-500/10 border border-warning-500/30 rounded-lg">
-                    <AlertTriangle className="w-4 h-4 text-warning-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-xs text-warning-400">
-                      Kliento authentication requires a Product ID. Make sure to configure it in the Integration step (Step 4).
-                    </p>
+                  <div className="mt-4 p-4 bg-dark-200 border border-dark-100 rounded-lg">
+                    <h4 className="text-sm font-medium text-white mb-3">Kliento Configuration</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Input
+                        label="Product ID"
+                        value={productId}
+                        onChange={(e) => setProductId(e.target.value)}
+                        placeholder="product-123"
+                        helperText="Required for Kliento authentication"
+                        required
+                        error={errors.productId}
+                      />
+                      <Input
+                        label="Service ID"
+                        value={serviceId}
+                        onChange={(e) => setServiceId(e.target.value)}
+                        placeholder="service-123"
+                        helperText="Required for Kliento authentication"
+                        required
+                        error={errors.serviceId}
+                      />
+                    </div>
                   </div>
 
                   <div className="mt-4">
@@ -895,34 +912,33 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
               <div className="flex items-start gap-2 p-3 bg-primary-500/10 border border-primary-500/30 rounded-lg">
                 <Info className="w-4 h-4 text-primary-500 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-primary-400">
-                  You selected Kliento authentication. A Product ID is required for this authentication method.
+                  Kliento Product ID and Service ID are configured in the Basic Setup step.
                 </p>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <Input
-                label="Product ID"
-                value={productId}
-                onChange={(e) => setProductId(e.target.value)}
-                placeholder="product-123"
-                helperText={authMethod === 'kliento' ? 'Required for Kliento authentication' : 'External product identifier'}
-                required={authMethod === 'kliento'}
-                error={authMethod === 'kliento' && !productId.trim() ? 'Required for Kliento authentication' : undefined}
-              />
-
-              <Input
-                label="Campaign ID"
-                value={campaignId}
-                onChange={(e) => setCampaignId(e.target.value)}
-                placeholder="campaign-456"
-                helperText="External campaign identifier"
-              />
-            </div>
+            {authMethod !== 'kliento' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                <Input
+                  label="Product ID"
+                  value={productId}
+                  onChange={(e) => setProductId(e.target.value)}
+                  placeholder="product-123"
+                  helperText="External product identifier"
+                />
+                <Input
+                  label="Campaign ID"
+                  value={campaignId}
+                  onChange={(e) => setCampaignId(e.target.value)}
+                  placeholder="campaign-456"
+                  helperText="External campaign identifier"
+                />
+              </div>
+            )}
 
             {authMethod === 'kliento' && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   <Input
                     label="Template ID"
                     value={templateId}
@@ -931,29 +947,27 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
                     helperText="Kliento template identifier (optional)"
                   />
                   <Input
-                    label="Package ID"
-                    value={packageId}
-                    onChange={(e) => setPackageId(e.target.value)}
-                    placeholder="package-456"
-                    helperText="Kliento package identifier (optional)"
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-3 md:mt-4">
-                  <Input
                     label="LP Redirection If No Account"
                     value={lpRedirectNoAccount}
                     onChange={(e) => setLpRedirectNoAccount(e.target.value)}
                     placeholder="https://example.com/signup"
                     helperText="Redirect URL for users without an existing account (optional)"
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   <Input
-                    label="Service ID"
-                    value={serviceId}
-                    onChange={(e) => setServiceId(e.target.value)}
-                    placeholder="service-123"
-                    helperText="Kliento service identifier (required)"
-                    required
-                    error={authMethod === 'kliento' && !serviceId.trim() ? 'Required for Kliento authentication' : undefined}
+                    label="Campaign ID"
+                    value={campaignId}
+                    onChange={(e) => setCampaignId(e.target.value)}
+                    placeholder="campaign-456"
+                    helperText="External campaign identifier"
+                  />
+                  <Input
+                    label="Package ID"
+                    value={packageId}
+                    onChange={(e) => setPackageId(e.target.value)}
+                    placeholder="package-456"
+                    helperText="Kliento package identifier (optional)"
                   />
                 </div>
               </>
@@ -1141,6 +1155,7 @@ const EditProjectConfigModal: React.FC<EditProjectConfigModalProps> = ({
       onClose={onClose}
       title="Edit Project Configuration"
       size="4xl"
+      mobileSize="full"
       footer={
         <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-2 sm:gap-0">
           <div>

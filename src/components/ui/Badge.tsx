@@ -6,13 +6,13 @@ interface BadgeProps {
   className?: string;
 }
 
-const Badge: React.FC<BadgeProps> = ({ 
-  children, 
+const Badge: React.FC<BadgeProps> = ({
+  children,
   variant = 'default',
   className = '',
 }) => {
   const baseStyles = 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium';
-  
+
   const variants = {
     default: 'bg-gray-100 dark:bg-dark-200 text-gray-800 dark:text-gray-300',
     primary: 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300',

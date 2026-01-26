@@ -21,7 +21,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         <div className="relative">
           <select
             className={`
-              block w-full rounded-md border border-gray-300 dark:border-gray-600 
+              block w-full rounded-md border border-gray-300 dark:border-gray-600
               bg-white dark:bg-dark-200 px-3 py-2 text-gray-900 dark:text-white
               focus:border-primary-500 dark:focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500
               disabled:cursor-not-allowed disabled:opacity-50

@@ -2,13 +2,16 @@ import React, { Fragment } from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'large' | 'full';
+
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | 'large';
+  size?: ModalSize;
+  mobileSize?: ModalSize;
   maxWidth?: string;
   fullscreen?: boolean;
   backdropBlur?: boolean;
@@ -21,13 +24,14 @@ const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   size = 'md',
+  mobileSize,
   maxWidth,
   fullscreen = false,
   backdropBlur = false,
 }) => {
   if (!isOpen) return null;
 
-  const sizeClasses = {
+  const sizeClasses: Record<ModalSize, string> = {
     sm: 'max-w-sm',
     md: 'max-w-md',
     lg: 'max-w-lg',
@@ -37,6 +41,15 @@ const Modal: React.FC<ModalProps> = ({
     '4xl': 'max-w-4xl',
     '5xl': 'max-w-5xl',
     'large': 'max-w-4xl',
+    'full': 'max-w-[calc(100vw-1rem)]',
+  };
+
+  const getResponsiveSizeClass = () => {
+    if (maxWidth) return maxWidth;
+    if (mobileSize) {
+      return `${sizeClasses[mobileSize]} sm:${sizeClasses[size]}`;
+    }
+    return sizeClasses[size];
   };
 
   return (
@@ -55,34 +68,35 @@ const Modal: React.FC<ModalProps> = ({
       }`}>
         <div className="flex min-h-full items-center justify-center p-2 sm:p-4 text-center">
           <div
-            className={`w-full ${maxWidth || sizeClasses[size]} transform overflow-hidden rounded-lg bg-white dark:bg-dark-300 text-left align-middle shadow-xl transition-all ${
+            className={`w-full ${getResponsiveSizeClass()} transform overflow-hidden rounded-lg bg-white dark:bg-dark-300 text-left align-middle shadow-xl transition-all ${
               fullscreen ? 'animate-in fade-in zoom-in-95 duration-200' : ''
             }`}
+            style={{ maxHeight: 'calc(100vh - 1rem)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-gray-200 dark:border-dark-200 px-4 md:px-6 py-3 md:py-4">
-              <h3 className="text-base md:text-lg font-medium leading-6 text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between border-b border-gray-200 dark:border-dark-200 px-3 sm:px-4 md:px-6 py-3 md:py-4">
+              <h3 className="text-sm sm:text-base md:text-lg font-medium leading-6 text-gray-900 dark:text-white truncate pr-2">
                 {title}
               </h3>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClose}
-                className="p-1 rounded-full"
+                className="p-1 rounded-full flex-shrink-0"
               >
                 <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
               </Button>
             </div>
 
             {/* Content */}
-            <div className="px-4 md:px-6 py-3 md:py-4 max-h-[calc(100vh-200px)] overflow-y-auto text-gray-900 dark:text-white">
+            <div className="px-3 sm:px-4 md:px-6 py-3 md:py-4 max-h-[calc(100vh-10rem)] sm:max-h-[calc(100vh-200px)] overflow-y-auto text-gray-900 dark:text-white">
               {children}
             </div>
 
             {/* Footer */}
             {footer && (
-              <div className="border-t border-gray-200 dark:border-dark-200 px-4 md:px-6 py-3 md:py-4 bg-white dark:bg-dark-300 sticky bottom-0">
+              <div className="border-t border-gray-200 dark:border-dark-200 px-3 sm:px-4 md:px-6 py-3 md:py-4 bg-white dark:bg-dark-300 sticky bottom-0">
                 {footer}
               </div>
             )}
