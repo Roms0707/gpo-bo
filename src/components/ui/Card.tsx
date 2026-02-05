@@ -29,9 +29,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({
 
 Card.displayName = 'Card';
 
-export const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const CardHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
@@ -40,9 +40,9 @@ export const CardHeader: React.FC<{ children: React.ReactNode; className?: strin
   );
 };
 
-export const CardTitle: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const CardTitle: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <h3 className={`font-semibold text-lg text-gray-900 dark:text-white ${className}`}>
@@ -51,9 +51,9 @@ export const CardTitle: React.FC<{ children: React.ReactNode; className?: string
   );
 };
 
-export const CardDescription: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const CardDescription: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <p className={`text-sm text-gray-500 dark:text-gray-400 ${className}`}>
@@ -62,9 +62,9 @@ export const CardDescription: React.FC<{ children: React.ReactNode; className?: 
   );
 };
 
-export const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const CardContent: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <div className={`p-6 pt-0 ${className}`}>
@@ -73,9 +73,9 @@ export const CardContent: React.FC<{ children: React.ReactNode; className?: stri
   );
 };
 
-export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const CardFooter: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <div className={`flex items-center p-6 pt-0 ${className}`}>

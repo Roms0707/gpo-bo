@@ -38,7 +38,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
   const fetchPrizes = async () => {
     try {
       setIsLoading(true);
-
+      
       let query = supabase
         .from('tournament_prizes')
         .select('*')
@@ -52,7 +52,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
       const { data, error } = await query;
 
       if (error) throw error;
-
+      
       // Map the database fields to our display format
       const formattedPrizes = (data || []).map(prize => ({
         id: prize.id,
@@ -65,7 +65,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
         currency: prize.currency,
         redemption_code: prize.redemption_code
       }));
-
+      
       setPrizes(formattedPrizes);
     } catch (error) {
       console.error('Error fetching prizes:', error);
@@ -315,7 +315,7 @@ const PrizeDisplay: React.FC<PrizeDisplayProps> = ({
           </h3>
         </div>
       )}
-
+      
       {layout === 'compact' && renderCompactLayout()}
       {layout === 'list' && renderListLayout()}
       {layout === 'grid' && renderGridLayout()}

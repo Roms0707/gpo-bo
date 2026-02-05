@@ -61,7 +61,7 @@ const SwissOverview: React.FC<SwissOverviewProps> = ({
               <div className="text-gray-400">Completed Matches</div>
             </div>
           </div>
-
+          
           {/* Progress bars */}
           <div className="mt-4 space-y-3">
             <div>
@@ -70,31 +70,31 @@ const SwissOverview: React.FC<SwissOverviewProps> = ({
                 <span className="text-xs text-white">{completedMatches}/{totalMatches} matches</span>
               </div>
               <div className="w-full bg-dark-200 h-2 rounded-full">
-                <div
-                  className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                <div 
+                  className="bg-primary-500 h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${completionPercentage}%` }}
                 ></div>
               </div>
             </div>
-
+            
             <div>
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-gray-400">Tournament Progress</span>
                 <span className="text-xs text-white">Round {currentRound}/{maxRounds}</span>
               </div>
               <div className="w-full bg-dark-200 h-2 rounded-full">
-                <div
-                  className="bg-success-500 h-2 rounded-full transition-all duration-300"
+                <div 
+                  className="bg-success-500 h-2 rounded-full transition-all duration-300" 
                   style={{ width: `${tournamentCompletionPercentage}%` }}
                 ></div>
               </div>
             </div>
           </div>
-
+          
           {waitingListParticipants.length > 0 && (
             <div className="mt-4 p-3 bg-warning-900/20 border border-warning-500/30 rounded-lg">
               <p className="text-warning-300 text-sm">
-                <strong>Swiss Tournament Limit:</strong> Maximum {maxAllowed} {tournament.type === 'team' ? 'teams' : 'players'} can participate.
+                <strong>Swiss Tournament Limit:</strong> Maximum {maxAllowed} {tournament.type === 'team' ? 'teams' : 'players'} can participate. 
                 {waitingListParticipants.length} {tournament.type === 'team' ? 'teams' : 'players'} are on the waiting list.
               </p>
             </div>

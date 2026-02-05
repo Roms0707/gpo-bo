@@ -221,15 +221,15 @@ const SwissBracketPage: React.FC = () => {
         .eq('tournament_id', id)
         .order('round', { ascending: true })
         .order('position', { ascending: true });
-
+        
       if (existingMatchesError) {
         console.error('Error fetching existing matches:', existingMatchesError);
         throw existingMatchesError;
       }
-
+      
       // Fetch all participants - this will also validate and update the userIdSet
       let allParticipants: Player[] | Team[] = [];
-
+      
       if (tournamentData.type === 'solo') {
         allParticipants = await fetchSoloPlayers(tournamentData, userIdSet, id, setSqlQuery);
       } else {
@@ -238,10 +238,10 @@ const SwissBracketPage: React.FC = () => {
 
       // Apply Swiss tournament limits and create waiting list
       // Use max_nb_players if available, otherwise calculate from participant count
-      const maxAllowed = tournamentData.max_nb_players
+      const maxAllowed = tournamentData.max_nb_players 
         ? Math.min(tournamentData.max_nb_players, getMaxAllowedParticipants(allParticipants.length))
         : getMaxAllowedParticipants(allParticipants.length);
-
+        
       const activeParticipants = allParticipants.slice(0, maxAllowed);
       const waitingList = allParticipants.slice(maxAllowed);
 
@@ -258,11 +258,11 @@ const SwissBracketPage: React.FC = () => {
 
       if (existingMatches && existingMatches.length > 0) {
         setMatches(existingMatches);
-
+        
         // Calculate current round
         const maxRound = Math.max(...existingMatches.map(m => m.round));
         setCurrentRound(maxRound);
-
+        
         // Update participant standings
         const updatedParticipants = updateParticipantStandings(activeParticipants, existingMatches, tournamentData.type);
         if (tournamentData.type === 'solo') {
@@ -274,13 +274,13 @@ const SwissBracketPage: React.FC = () => {
         // Generate first round if no matches exist
         setIsGeneratingRound(true);
         const generatedMatches = await generateFirstRound(
-          activeParticipants,
-          tournamentData,
+          activeParticipants, 
+          tournamentData, 
           id,
           userIdSet
         );
         setIsGeneratingRound(false);
-
+        
         if (generatedMatches && generatedMatches.length > 0) {
           setMatches(generatedMatches);
           setCurrentRound(1);
@@ -306,10 +306,10 @@ const SwissBracketPage: React.FC = () => {
   const handleWinnerSelected = async (matchId: string, winnerId: string) => {
     const participants = tournament?.type === 'team' ? teams : players;
     const updatedMatches = await handleWinnerUpdate(
-      matchId,
-      winnerId,
-      matches,
-      tournament!,
+      matchId, 
+      winnerId, 
+      matches, 
+      tournament!, 
       setMatches,
       tournament?.type === 'team' ? setTeams : setPlayers,
       participants
@@ -318,7 +318,7 @@ const SwissBracketPage: React.FC = () => {
 
   const getParticipantName = (participantId: string | null) => {
     if (!participantId) return 'TBD';
-
+    
     if (tournament?.type === 'team') {
       const team = teams.find(t => t.captain_id === participantId);
       return team ? team.name : 'Unknown Team';
@@ -331,35 +331,35 @@ const SwissBracketPage: React.FC = () => {
   const canGenerateNextRound = () => {
     // Check if all matches in the current round are completed
     const currentRoundMatches = matches.filter(m => m.round === currentRound);
-    const allMatchesCompleted = currentRoundMatches.length > 0 &&
+    const allMatchesCompleted = currentRoundMatches.length > 0 && 
                                currentRoundMatches.every(m => m.winner_id !== null);
-
+    
     // Check if we've reached the maximum number of rounds
     const reachedMaxRounds = currentRound >= maxRounds;
-
+    
     // Check if 50% of participants are qualified
     const participants = tournament?.type === 'team' ? teams : players;
     const qualifiedCount = participants.filter(p => p.wins >= 3 || p.isQualified).length;
     const fiftyPercentReached = qualifiedCount >= Math.ceil(participants.length / 2);
-
+    
     // Check if there are any active participants (not qualified or eliminated)
     const activeParticipants = participants.filter(p => p.wins < 3 && p.losses < 3 && !p.isQualified && !p.isEliminated);
     const hasActiveParticipants = activeParticipants.length >= 2;
-
+    
     return allMatchesCompleted && !reachedMaxRounds && !fiftyPercentReached && hasActiveParticipants;
   };
 
   const canTransitionToKnockout = () => {
     // Check if all matches in the current round are completed
     const currentRoundMatches = matches.filter(m => m.round === currentRound);
-    const allMatchesCompleted = currentRoundMatches.length > 0 &&
+    const allMatchesCompleted = currentRoundMatches.length > 0 && 
                                currentRoundMatches.every(m => m.winner_id !== null);
-
+    
     // Check if we've reached the maximum number of rounds OR 50% of participants are qualified
     const participants = tournament?.type === 'team' ? teams : players;
     const qualifiedCount = participants.filter(p => p.wins >= 3 || p.isQualified).length;
     const fiftyPercentReached = qualifiedCount >= Math.ceil(participants.length / 2);
-
+    
     return allMatchesCompleted && (currentRound >= maxRounds || fiftyPercentReached);
   };
 
@@ -368,20 +368,20 @@ const SwissBracketPage: React.FC = () => {
       toast.error('Tournament data not available');
       return;
     }
-
+    
     setIsGeneratingRound(true);
     const participants = tournament.type === 'team' ? teams : players;
-
+    
     try {
       const newMatches = await generateNextRound(
-        participants,
-        matches,
-        tournament,
+        participants, 
+        matches, 
+        tournament, 
         id,
         currentRound,
         validUserIds
       );
-
+      
       if (newMatches && newMatches.length > 0) {
         setMatches([...matches, ...newMatches]);
         setCurrentRound(currentRound + 1);
@@ -647,12 +647,12 @@ const SwissBracketPage: React.FC = () => {
   const sortedParticipants = [...participants].sort((a, b) => {
     // First sort by wins
     if (a.wins !== b.wins) return b.wins - a.wins;
-
+    
     // Then by points
     const pointsA = a.points || 0;
     const pointsB = b.points || 0;
     if (pointsA !== pointsB) return pointsB - pointsA;
-
+    
     // Finally by ELO
     return (b.elo || 1000) - (a.elo || 1000);
   });
@@ -687,13 +687,13 @@ const SwissBracketPage: React.FC = () => {
   }
 
   const totalParticipants = participants.length + waitingListParticipants.length;
-  const maxAllowed = tournament.max_nb_players
+  const maxAllowed = tournament.max_nb_players 
     ? Math.min(tournament.max_nb_players, getMaxAllowedParticipants(totalParticipants))
     : getMaxAllowedParticipants(totalParticipants);
-
+  
   // Get qualified participants for knockout stage
   const qualifiedParticipants = sortedParticipants.filter(p => p.wins >= 3 || p.isQualified);
-
+  
   // If not enough qualified, take top performers up to half of initial participants
   let finalQualifiedParticipants = qualifiedParticipants;
   if (qualifiedParticipants.length < 2) {

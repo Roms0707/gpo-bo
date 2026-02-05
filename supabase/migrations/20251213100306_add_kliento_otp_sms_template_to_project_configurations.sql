@@ -22,7 +22,7 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'project_configurations' AND column_name = 'kliento_otp_sms_template'
   ) THEN
-    ALTER TABLE project_configurations
+    ALTER TABLE project_configurations 
     ADD COLUMN kliento_otp_sms_template text DEFAULT 'Your OTP is {{OTP_CODE}}';
   END IF;
 END $$;

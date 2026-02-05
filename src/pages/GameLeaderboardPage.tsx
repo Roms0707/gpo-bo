@@ -5,11 +5,11 @@ import { useGameStore } from '../store/gameStore';
 import Card, { CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
-import {
-  TowerControl as GameController,
-  User,
-  Users,
-  ArrowLeft,
+import { 
+  TowerControl as GameController, 
+  User, 
+  Users, 
+  ArrowLeft, 
   Search,
   Filter
 } from 'lucide-react';
@@ -54,7 +54,7 @@ const GameLeaderboardPage: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const navigate = useNavigate();
   const { games, fetchGames } = useGameStore();
-
+  
   const [playerRankings, setPlayerRankings] = useState<PlayerRanking[]>([]);
   const [teamRankings, setTeamRankings] = useState<TeamRanking[]>([]);
   const [viewMode, setViewMode] = useState<'players' | 'teams'>('players');
@@ -63,28 +63,28 @@ const GameLeaderboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [game, setGame] = useState<any | null>(null);
-
+  
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
-
+  
   useEffect(() => {
     if (!gameId || !games.length) return;
-
+    
     const currentGame = games.find(g => g.id === gameId);
     setGame(currentGame);
-
+    
     const fetchLeaderboardData = async () => {
       setIsLoading(true);
       setError(null);
-
+      
       try {
         // Fetch player rankings for this game
         const { data: playerData, error: playerError } = await supabase
           .from('player_rankings')
           .select(`
             *,
-
+            
             user:user_id(
               email,
               username,
@@ -93,19 +93,19 @@ const GameLeaderboardPage: React.FC = () => {
           `)
           .eq('game_id', gameId)
           .order('elo_rating', { ascending: false });
-
+        
         if (playerError) throw playerError;
-
+        
         // Calculate win rates and format data
         const formattedPlayerData = playerData.map(player => ({
           ...player,
-          winRate: player.wins + player.losses > 0
-            ? Math.round((player.wins / (player.wins + player.losses)) * 100)
+          winRate: player.wins + player.losses > 0 
+            ? Math.round((player.wins / (player.wins + player.losses)) * 100) 
             : 0
         }));
-
+        
         setPlayerRankings(formattedPlayerData);
-
+        
         // Fetch team rankings for this game
         const { data: teamData, error: teamError } = await supabase
           .from('team_rankings')
@@ -117,17 +117,17 @@ const GameLeaderboardPage: React.FC = () => {
           `)
           .eq('game_id', gameId)
           .order('elo_rating', { ascending: false });
-
+        
         if (teamError) throw teamError;
-
+        
         // Calculate win rates and format data
         const formattedTeamData = teamData.map(team => ({
           ...team,
-          winRate: team.wins + team.losses > 0
-            ? Math.round((team.wins / (team.wins + team.losses)) * 100)
+          winRate: team.wins + team.losses > 0 
+            ? Math.round((team.wins / (team.wins + team.losses)) * 100) 
             : 0
         }));
-
+        
         setTeamRankings(formattedTeamData);
         setIsLoading(false);
       } catch (err) {
@@ -136,10 +136,10 @@ const GameLeaderboardPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-
+    
     fetchLeaderboardData();
   }, [gameId, games]);
-
+  
   // Apply filters to player rankings
   const filteredPlayerRankings = playerRankings.filter(player => {
     const playerName = player.user?.username || player.user?.email || '';
@@ -147,7 +147,7 @@ const GameLeaderboardPage: React.FC = () => {
     const matchesRank = !rankFilter || player.rank_tier.includes(rankFilter);
     return matchesSearch && matchesRank;
   });
-
+  
   // Apply filters to team rankings
   const filteredTeamRankings = teamRankings.filter(team => {
     const teamName = team.team?.name || '';
@@ -155,11 +155,11 @@ const GameLeaderboardPage: React.FC = () => {
     const matchesRank = !rankFilter || team.rank_tier.includes(rankFilter);
     return matchesSearch && matchesRank;
   });
-
+  
   // Get unique rank tiers for filtering
   const getUniqueTiers = () => {
     const tiers = new Set<string>();
-
+    
     if (viewMode === 'players') {
       playerRankings.forEach(player => {
         if (player.rank_tier) {
@@ -175,10 +175,10 @@ const GameLeaderboardPage: React.FC = () => {
         }
       });
     }
-
+    
     return Array.from(tiers).sort();
   };
-
+  
   // Get the appropriate badge color for a rank
   const getRankBadgeColor = (rank: string) => {
     const rankLower = rank.toLowerCase();
@@ -194,7 +194,7 @@ const GameLeaderboardPage: React.FC = () => {
     if (rankLower.includes('challenger') || rankLower.includes('radiant')) return 'bg-red-500 text-white';
     return 'bg-gray-500 text-white';
   };
-
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -202,7 +202,7 @@ const GameLeaderboardPage: React.FC = () => {
       </div>
     );
   }
-
+  
   if (!game) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
@@ -215,7 +215,7 @@ const GameLeaderboardPage: React.FC = () => {
       </div>
     );
   }
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2 mb-6">
@@ -228,7 +228,7 @@ const GameLeaderboardPage: React.FC = () => {
         </Button>
         <h1 className="text-2xl font-bold text-white">{game.name} Leaderboard</h1>
       </div>
-
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex space-x-3">
           <Button
@@ -248,7 +248,7 @@ const GameLeaderboardPage: React.FC = () => {
             Team Rankings
           </Button>
         </div>
-
+        
         <div className="flex flex-col md:flex-row gap-3">
           <div className="w-full md:w-48">
             <Input
@@ -258,7 +258,7 @@ const GameLeaderboardPage: React.FC = () => {
               leftIcon={<Search className="h-5 w-5 text-gray-400" />}
             />
           </div>
-
+          
           <div className="w-full md:w-40">
             <Select
               value={rankFilter}
@@ -275,7 +275,7 @@ const GameLeaderboardPage: React.FC = () => {
           </div>
         </div>
       </div>
-
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-white">
@@ -349,8 +349,8 @@ const GameLeaderboardPage: React.FC = () => {
                       <TableCell className="text-center">
                         <div className="inline-flex items-center">
                           <span className={
-                            player.winRate >= 60 ? 'text-success-400' :
-                            player.winRate >= 45 ? 'text-gray-300' :
+                            player.winRate >= 60 ? 'text-success-400' : 
+                            player.winRate >= 45 ? 'text-gray-300' : 
                             'text-error-400'
                           }>
                             {player.winRate}%
@@ -412,8 +412,8 @@ const GameLeaderboardPage: React.FC = () => {
                       <TableCell className="text-center">
                         <div className="inline-flex items-center">
                           <span className={
-                            team.winRate >= 60 ? 'text-success-400' :
-                            team.winRate >= 45 ? 'text-gray-300' :
+                            team.winRate >= 60 ? 'text-success-400' : 
+                            team.winRate >= 45 ? 'text-gray-300' : 
                             'text-error-400'
                           }>
                             {team.winRate}%

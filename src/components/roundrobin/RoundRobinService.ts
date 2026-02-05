@@ -5,29 +5,29 @@ import toast from 'react-hot-toast';
 import { updatePlayerRankings, updateTeamRankings } from '../../utils/eloUtils';
 
 export const fetchSoloPlayers = async (
-  tournamentData: Tournament,
+  tournamentData: Tournament, 
   userIdSet: Set<string>,
   tournamentId: string,
   setSqlQuery: (query: string) => void,
   setRegistrationsCount: (count: number) => void
 ): Promise<Player[]> => {
   console.log(`🔍 DEBUG: Fetching solo players for tournament ${tournamentId}`);
-
+  
   const sqlQuery = `
-SELECT
+SELECT 
   tr.user_id,
   u.id,
   u.email,
   u.username
-FROM
+FROM 
   tournament_registrations tr
-JOIN
+JOIN 
   users u ON tr.user_id = u.id
-WHERE
+WHERE 
   tr.tournament_id = '${tournamentId}'
   AND tr.status = 'approved'
   `;
-
+  
   setSqlQuery(sqlQuery);
 
   const { data: registrations, error: registrationsError } = await supabase
@@ -69,7 +69,7 @@ WHERE
   // Fetch player rankings if tournament has a game
   if (tournamentData.game_id && formattedPlayers.length > 0) {
     const approvedPlayerIds = formattedPlayers.map(p => p.id);
-
+    
     const { data: rankingsData, error: rankingsError } = await supabase
       .from('player_rankings')
       .select('user_id, elo_rating, game_id')
@@ -96,82 +96,82 @@ WHERE
 
   console.log(`🔍 DEBUG: Final formatted players: ${formattedPlayers.length}`);
   console.log(`🔍 DEBUG: Player IDs:`, formattedPlayers.map(p => `${p.name} (${p.id})`));
-
+  
   return formattedPlayers;
 };
 
 export const fetchTeams = async (
-  tournamentData: Tournament,
+  tournamentData: Tournament, 
   userIdSet: Set<string>,
   tournamentId: string
 ): Promise<Team[]> => {
   console.log(`🔍 DEBUG: Fetching teams for tournament ${tournamentId}`);
-
+  
   // SQL query for debugging
   const sqlQuery = `
 WITH approved_registrations AS (
-  SELECT
+  SELECT 
     tr.user_id,
     tr.team_id,
     tr.status
-  FROM
+  FROM 
     tournament_registrations tr
-  WHERE
+  WHERE 
     tr.tournament_id = '${tournamentId}'
     AND tr.status = 'approved'
 ),
 team_captains AS (
-  SELECT
+  SELECT 
     tm.team_id,
     tm.user_id AS captain_id
-  FROM
+  FROM 
     team_members tm
-  WHERE
+  WHERE 
     tm.role = 'captain'
     AND tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
 ),
 team_member_counts AS (
-  SELECT
+  SELECT 
     tm.team_id,
     COUNT(tm.user_id) AS member_count
-  FROM
+  FROM 
     team_members tm
-  WHERE
+  WHERE 
     tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
-  GROUP BY
+  GROUP BY 
     tm.team_id
 )
-SELECT
+SELECT 
   t.id,
   t.name,
   tc.captain_id,
   tmc.member_count,
-  CASE
+  CASE 
     WHEN EXISTS (
-      SELECT 1 FROM approved_registrations ar
+      SELECT 1 FROM approved_registrations ar 
       WHERE ar.user_id = tc.captain_id AND ar.team_id = t.id
     ) THEN true
     ELSE false
   END AS captain_approved,
-  CASE
+  CASE 
     WHEN tmc.member_count >= ${tournamentData.max_players_per_team || 5} THEN true
     ELSE false
   END AS has_enough_members,
   ${tournamentData.max_players_per_team || 5} AS required_members
-FROM
+FROM 
   teams t
-LEFT JOIN
+LEFT JOIN 
   team_captains tc ON t.id = tc.team_id
-LEFT JOIN
+LEFT JOIN 
   team_member_counts tmc ON t.id = tmc.team_id
-WHERE
+WHERE 
   t.tournament_id = '${tournamentId}'
-ORDER BY
+ORDER BY 
   tmc.member_count DESC, t.name ASC
   `;
-
+  
   console.log(`🔍 DEBUG: SQL Query for teams:`, sqlQuery);
-
+  
   // Fetch teams for this tournament
   const { data: teamsData, error: teamsError } = await supabase
     .from('teams')
@@ -181,7 +181,7 @@ ORDER BY
       captain_id
     `)
     .eq('tournament_id', tournamentId);
-
+    
   if (teamsError) {
     console.error('Error fetching teams:', teamsError);
     throw teamsError;
@@ -198,7 +198,7 @@ ORDER BY
       role
     `)
     .in('team_id', teamsData.map(t => t.id));
-
+    
   if (teamMembersError) {
     console.error('Error fetching team members:', teamMembersError);
     throw teamMembersError;
@@ -216,38 +216,38 @@ ORDER BY
     `)
     .eq('tournament_id', tournamentId)
     .eq('status', 'approved');
-
+    
   if (registrationsError) {
     console.error('Error fetching approved registrations:', registrationsError);
     throw registrationsError;
   }
 
   console.log(`🔍 DEBUG: Found ${approvedRegistrations.length} approved registrations`);
-
+  
   // Create a set of approved user IDs
   const approvedUserIds = new Set(approvedRegistrations.map(reg => reg.user_id));
-
+  
   // Process teams and check approvals
   const processedTeams = teamsData.map((team, index) => {
     // Find the captain
     const captain = teamMembers.find(tm => tm.team_id === team.id && tm.role === 'captain');
     const captainId = captain?.user_id || team.captain_id;
-
+    
     // Count team members
     const memberCount = teamMembers.filter(tm => tm.team_id === team.id).length;
-
+    
     // Check if captain is approved
     const captainApproved = captainId ? approvedUserIds.has(captainId) && userIdSet.has(captainId) : false;
-
+    
     // Check if team has enough members
     const requiredMembers = tournamentData.max_players_per_team || 5;
     const hasEnoughMembers = memberCount >= requiredMembers;
-
+    
     // Team is approved if captain is approved AND it has enough members
     const isApproved = captainApproved && hasEnoughMembers;
-
+    
     console.log(`🔍 DEBUG: Team ${team.name} - Captain: ${captainId}, Members: ${memberCount}/${requiredMembers}, Captain approved: ${captainApproved}, Enough members: ${hasEnoughMembers}, Final approved: ${isApproved}`);
-
+    
     return {
       id: team.id,
       name: team.name,
@@ -262,20 +262,20 @@ ORDER BY
       losses: 0
     };
   });
-
+  
   // Filter to only approved teams
   const approvedTeams = processedTeams.filter(team => team.isApproved);
-
+  
   // Sort approved teams by member count (highest first) and assign seeds
   approvedTeams.sort((a, b) => b.memberCount - a.memberCount);
   const seededTeams = approvedTeams.map((team, index) => ({
     ...team,
     seed: index + 1
   }));
-
+  
   console.log(`🔍 DEBUG: Final approved teams: ${seededTeams.length}`);
   console.log(`🔍 DEBUG: Team captain IDs:`, seededTeams.map(t => `${t.name} (captain: ${t.captain_id})`));
-
+  
   return seededTeams;
 };
 
@@ -431,19 +431,19 @@ export const generateRoundRobinMatches = async (
 };
 
 export const calculateParticipantStandings = (
-  participants: Player[] | Team[],
-  matches: any[],
+  participants: Player[] | Team[], 
+  matches: any[], 
   tournamentData: Tournament
 ): (Player | Team)[] => {
   // Create a map to track wins/losses for each participant
   const standingsMap = new Map();
-
+  
   // Initialize all participants with 0 wins/losses
   participants.forEach(participant => {
-    const participantId = tournamentData.type === 'team'
-      ? (participant as Team).captain_id
+    const participantId = tournamentData.type === 'team' 
+      ? (participant as Team).captain_id 
       : participant.id;
-
+    
     if (participantId) {
       standingsMap.set(participantId, {
         ...participant,
@@ -503,10 +503,10 @@ export const calculateParticipantStandings = (
       // Top 50% of each group qualify (minimum 1 per group)
       const qualifyingSpots = Math.max(1, Math.floor(groupParticipants.length / 2));
       participant.isQualified = index < qualifyingSpots;
-
+      
       // Update in the main standings map
-      const participantId = tournamentData.type === 'team'
-        ? participant.captain_id
+      const participantId = tournamentData.type === 'team' 
+        ? participant.captain_id 
         : participant.id;
       standingsMap.set(participantId, participant);
     });

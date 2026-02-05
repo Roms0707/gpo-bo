@@ -39,8 +39,8 @@ CREATE POLICY "Administrators can manage admin settings"
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = auth.uid()
+      SELECT 1 FROM users 
+      WHERE users.id = auth.uid() 
       AND users.type = 'admin'
     )
   );

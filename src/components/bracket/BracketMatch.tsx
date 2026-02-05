@@ -93,7 +93,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
       const status = getSlotStatus(participantId, slotPosition);
       return getSlotLabel(status);
     }
-
+    
     if (tournament?.type === 'team') {
       // For team tournaments, find team by captain_id
       const team = teams.find(t => t.captain_id === participantId);
@@ -106,7 +106,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
 
   const getParticipantElo = (participantId: string | null) => {
     if (!participantId) return null;
-
+    
     if (tournament?.type === 'team') {
       return null; // Teams don't have ELO in this implementation
     } else {
@@ -117,7 +117,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
 
   const getParticipantSeed = (participantId: string | null) => {
     if (!participantId) return null;
-
+    
     if (tournament?.type === 'team') {
       // For team tournaments, find team by captain_id
       const team = teams.find(t => t.captain_id === participantId);
@@ -130,7 +130,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
 
   const getParticipantMemberCount = (participantId: string | null) => {
     if (!participantId || tournament?.type !== 'team') return null;
-
+    
     // For team tournaments, find team by captain_id
     const team = teams.find(t => t.captain_id === participantId);
     return team ? team.memberCount : null;
@@ -398,7 +398,7 @@ const BracketMatch = forwardRef<HTMLDivElement, BracketMatchProps>(({
             )}
           </div>
           )}
-
+        
         <div className="w-full border-t border-gray-600"></div>
 
         {/* Participant 2 */}

@@ -77,7 +77,7 @@ const FireworksCanvas: React.FC<FireworksCanvasProps> = ({
 
     const drawFireworks = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+      
       fireworks.forEach(firework => {
         firework.particles.forEach(particle => {
           ctx.save();
@@ -108,7 +108,7 @@ const FireworksCanvas: React.FC<FireworksCanvasProps> = ({
 
     // Create fireworks at intervals
     const fireworkInterval = setInterval(createRandomFirework, 300);
-
+    
     // Start animation
     animate();
 

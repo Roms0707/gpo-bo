@@ -15,9 +15,9 @@ const Table: React.FC<TableProps> = ({ children, className = '' }) => {
   );
 };
 
-export const TableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const TableHeader: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <thead className={`bg-gray-50 dark:bg-dark-200 ${className}`}>
@@ -26,9 +26,9 @@ export const TableHeader: React.FC<{ children: React.ReactNode; className?: stri
   );
 };
 
-export const TableBody: React.FC<{ children: React.ReactNode; className?: string }> = ({
-  children,
-  className = ''
+export const TableBody: React.FC<{ children: React.ReactNode; className?: string }> = ({ 
+  children, 
+  className = '' 
 }) => {
   return (
     <tbody className={`divide-y divide-gray-200 dark:divide-dark-300 bg-white dark:bg-dark-300 ${className}`}>
@@ -37,12 +37,12 @@ export const TableBody: React.FC<{ children: React.ReactNode; className?: string
   );
 };
 
-export const TableRow: React.FC<{
-  children: React.ReactNode;
+export const TableRow: React.FC<{ 
+  children: React.ReactNode; 
   className?: string;
   isHighlighted?: boolean;
-}> = ({
-  children,
+}> = ({ 
+  children, 
   className = '',
   isHighlighted = false,
 }) => {

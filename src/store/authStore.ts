@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email: string, password: string) => {
     try {
       set({ isLoading: true, error: null });
-
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -80,9 +80,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       await supabase.auth.signOut();
       set({ user: null, isLoading: false });
     } catch (error) {
-      set({
+      set({ 
         error: error instanceof Error ? error.message : 'An error occurred during logout',
-        isLoading: false
+        isLoading: false 
       });
     }
   },
@@ -90,9 +90,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkSession: async () => {
     try {
       set({ isLoading: true });
-
+      
       const { data: { session } } = await supabase.auth.getSession();
-
+      
       if (!session) {
         set({ user: null, isLoading: false });
         return;
@@ -133,20 +133,20 @@ export const useAuthStore = create<AuthState>((set) => ({
         // Clear any stale session data from localStorage
         localStorage.removeItem('supabase.auth.token');
         localStorage.removeItem('sb-' + supabase.supabaseUrl.split('//')[1].split('.')[0] + '-auth-token');
-
+        
         // Sign out to ensure clean state
         await supabase.auth.signOut();
-
-        set({
-          user: null,
+        
+        set({ 
+          user: null, 
           isLoading: false,
           error: null // Don't show error for invalid refresh tokens
         });
       } else {
-        set({
+        set({ 
           error: error instanceof Error ? error.message : 'An error occurred checking session',
-          user: null,
-          isLoading: false
+          user: null, 
+          isLoading: false 
         });
       }
     }

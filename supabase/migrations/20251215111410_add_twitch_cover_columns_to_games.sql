@@ -1,16 +1,16 @@
 /*
   # Add Twitch Cover Metadata to Games Table
-
+  
   1. Schema Changes
     - Add `twitch_cover_url` column to store high-resolution game covers from Twitch API
     - Add `twitch_game_id` column to store the Twitch game ID for future API calls
     - Add `cover_last_updated` timestamp for cache invalidation (refresh every 7 days)
-
+  
   2. Purpose
     - Enable automatic game cover fetching from Twitch Helix API
     - Cache covers locally to avoid repeated API calls
     - Support the Game Hub carousel with high-quality game artwork
-
+  
   3. Notes
     - twitch_cover_url provides 600x800 resolution covers by default
     - cover_last_updated is used to determine when to refresh the cache

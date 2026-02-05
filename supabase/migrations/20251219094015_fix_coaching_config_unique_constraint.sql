@@ -11,5 +11,5 @@
     - Topics can be drag-and-drop reordered using display_order
 */
 
-ALTER TABLE coaching_ai_config
+ALTER TABLE coaching_ai_config 
 DROP CONSTRAINT IF EXISTS coaching_ai_config_game_id_config_key_key;

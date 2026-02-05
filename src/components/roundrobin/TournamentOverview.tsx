@@ -57,7 +57,7 @@ const TournamentOverview: React.FC<TournamentOverviewProps> = ({
             <div className="text-gray-400">Waiting List</div>
           </div>
         </div>
-
+        
         {/* Progress Bar */}
         <div className="mt-4">
           <div className="flex justify-between items-center mb-2">
@@ -65,8 +65,8 @@ const TournamentOverview: React.FC<TournamentOverviewProps> = ({
             <span className="text-sm text-white">{completedMatches}/{totalMatches} matches</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-dark-200 h-2 rounded-full">
-            <div
-              className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+            <div 
+              className="bg-primary-500 h-2 rounded-full transition-all duration-300" 
               style={{ width: `${completionPercentage}%` }}
             ></div>
           </div>

@@ -1,121 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
-
-interface MembershipRequest {
-  user_id: string;
-  discord_server_id: string;
-}
-
-interface DiscordMember {
-  user: {
-    id: string;
-    username: string;
-    discriminator: string;
-    avatar: string | null;
-    global_name: string | null;
-  };
-  nick: string | null;
-  roles: string[];
-  joined_at: string;
-  premium_since: string | null;
-  deaf: boolean;
-  mute: boolean;
-}
-
-interface MembershipResponse {
-  success: boolean;
-  is_member: boolean;
-  message: string;
-  errorCode?: string;
-  member?: {
-    discord_user_id: string;
-    username: string;
-    nickname: string | null;
-    roles: string[];
-    joined_at: string;
-  };
-}
-
-interface DiscordCredentials {
-  bot_token: string;
-  client_id?: string;
-  client_secret?: string;
-  redirect_uri?: string;
-  scopes?: string[];
-}
-
-async function getDiscordBotToken(supabase: ReturnType<typeof createClient>): Promise<{ token: string | null; error: string | null; errorCode: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from("platform_api_integrations")
-      .select("api_key, is_active")
-      .eq("api_name", "Discord API")
-      .maybeSingle();
-
-    if (error) {
-      console.error("Database error fetching Discord credentials:", error);
-      return { token: null, error: "Failed to fetch Discord configuration from database", errorCode: "DATABASE_ERROR" };
-    }
-
-    if (!data) {
-      return { token: null, error: "Discord API integration not found. Please configure Discord credentials in the admin panel.", errorCode: "DISCORD_NOT_CONFIGURED" };
-    }
-
-    if (!data.is_active) {
-      return { token: null, error: "Discord API integration is disabled", errorCode: "DISCORD_INTEGRATION_DISABLED" };
-    }
-
-    let credentials: DiscordCredentials;
-    try {
-      credentials = typeof data.api_key === "string" ? JSON.parse(data.api_key) : data.api_key;
-    } catch {
-      return { token: null, error: "Invalid Discord credentials format in database", errorCode: "INVALID_CREDENTIALS_FORMAT" };
-    }
-
-    if (!credentials.bot_token) {
-      return { token: null, error: "Discord bot token not found in credentials", errorCode: "BOT_TOKEN_MISSING" };
-    }
-
-    return { token: credentials.bot_token, error: null, errorCode: null };
-  } catch (err) {
-    console.error("Unexpected error fetching Discord bot token:", err);
-    return { token: null, error: "Unexpected error fetching Discord configuration", errorCode: "UNEXPECTED_ERROR" };
-  }
-}
-
-async function getUserDiscordId(supabase: ReturnType<typeof createClient>, userId: string): Promise<{ discordUserId: string | null; error: string | null; errorCode: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from("users")
-      .select("discord_user_id")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Database error fetching user:", error);
-      return { discordUserId: null, error: "Failed to fetch user from database", errorCode: "DATABASE_ERROR" };
-    }
-
-    if (!data) {
-      return { discordUserId: null, error: "User not found", errorCode: "USER_NOT_FOUND" };
-    }
-
-    if (!data.discord_user_id) {
-      return { discordUserId: null, error: "User does not have a Discord account linked", errorCode: "DISCORD_NOT_LINKED" };
-    }
-
-    return { discordUserId: data.discord_user_id, error: null, errorCode: null };
-  } catch (err) {
-    console.error("Unexpected error fetching user Discord ID:", err);
-    return { discordUserId: null, error: "Unexpected error fetching user data", errorCode: "UNEXPECTED_ERROR" };
-  }
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -126,164 +16,64 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "Method not allowed",
-          errorCode: "METHOD_NOT_ALLOWED",
-        } as MembershipResponse),
-        {
-          status: 405,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: {
+            Authorization: req.headers.get("Authorization") ?? "",
+          },
+        },
+      }
+    );
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "Supabase configuration missing",
-          errorCode: "SUPABASE_CONFIG_MISSING",
-        } as MembershipResponse),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const body: MembershipRequest = await req.json();
-    const { user_id, discord_server_id } = body;
-
-    if (!user_id) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "User ID is required",
-          errorCode: "MISSING_USER_ID",
-        } as MembershipResponse),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!discord_server_id) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "Discord Server ID is required",
-          errorCode: "MISSING_SERVER_ID",
-        } as MembershipResponse),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!/^\d{17,20}$/.test(discord_server_id)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "Invalid Discord Server ID format. It should be a 17-20 digit number.",
-          errorCode: "INVALID_SERVER_ID_FORMAT",
-        } as MembershipResponse),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { discordUserId, error: userError, errorCode: userErrorCode } = await getUserDiscordId(supabase, user_id);
-
-    if (!discordUserId) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: userError || "Failed to get user's Discord ID",
-          errorCode: userErrorCode || "USER_LOOKUP_FAILED",
-        } as MembershipResponse),
-        {
-          status: userErrorCode === "USER_NOT_FOUND" ? 404 : 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    if (!/^\d{17,20}$/.test(discordUserId)) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: "Invalid Discord User ID format stored in database",
-          errorCode: "INVALID_DISCORD_USER_ID",
-        } as MembershipResponse),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const { token: botToken, error: tokenError, errorCode: tokenErrorCode } = await getDiscordBotToken(supabase);
-
-    if (!botToken) {
-      console.error("Discord bot token retrieval failed:", tokenError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          is_member: false,
-          message: tokenError || "Discord bot token is not configured",
-          errorCode: tokenErrorCode || "BOT_TOKEN_NOT_CONFIGURED",
-        } as MembershipResponse),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    const discordApiUrl = `https://discord.com/api/v10/guilds/${discord_server_id}/members/${discordUserId}`;
-
-    const discordResponse = await fetch(discordApiUrl, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bot ${botToken}`,
-        "Content-Type": "application/json",
-      },
+    const { user_id, tournament_id } = await req.json();
+    console.log("[verify-discord-membership] Request received:", {
+      user_id,
+      tournament_id,
     });
 
-    if (discordResponse.ok) {
-      const member: DiscordMember = await discordResponse.json();
+    if (!user_id || !tournament_id) {
       return new Response(
         JSON.stringify({
-          success: true,
-          is_member: true,
-          message: "User is a member of the Discord server",
-          member: {
-            discord_user_id: member.user.id,
-            username: member.user.global_name || member.user.username,
-            nickname: member.nick,
-            roles: member.roles,
-            joined_at: member.joined_at,
-          },
-        } as MembershipResponse),
+          success: false,
+          error: "user_id and tournament_id are required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { data: userData, error: userError } = await supabaseClient
+      .from("users")
+      .select("discord_user_id")
+      .eq("id", user_id)
+      .single();
+
+    if (userError || !userData) {
+      console.error("[verify-discord-membership] User not found:", userError);
+      return new Response(
+        JSON.stringify({ success: false, error: "User not found" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const discord_user_id = userData.discord_user_id;
+    if (!discord_user_id) {
+      console.error("[verify-discord-membership] User has no Discord ID");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "User has not connected their Discord account",
+          status: "failed",
+          is_verified: false,
+        }),
         {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -291,55 +81,185 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const errorStatus = discordResponse.status;
-    let errorMessage: string;
-    let errorCode: string;
-    let isMember = false;
+    const { data: tournamentData, error: tournamentError } = await supabaseClient
+      .from("tournaments")
+      .select("discord_server_id")
+      .eq("id", tournament_id)
+      .single();
 
-    switch (errorStatus) {
-      case 401:
-        errorMessage = "Invalid bot token. Please check your Discord credentials.";
-        errorCode = "INVALID_BOT_TOKEN";
-        break;
-      case 403:
-        errorMessage = "Bot lacks permissions to check server membership. The bot needs the 'Server Members Intent' enabled.";
-        errorCode = "INSUFFICIENT_PERMISSIONS";
-        break;
-      case 404:
-        errorMessage = "User is not a member of this Discord server";
-        errorCode = "NOT_A_MEMBER";
-        isMember = false;
-        break;
-      case 429:
-        errorMessage = "Rate limited by Discord. Please try again in a few seconds.";
-        errorCode = "RATE_LIMITED";
-        break;
-      default:
-        errorMessage = `Discord API error (${errorStatus}). Please try again later.`;
-        errorCode = "DISCORD_API_ERROR";
+    if (tournamentError || !tournamentData) {
+      console.error("[verify-discord-membership] Tournament not found:", tournamentError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Tournament not found" }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const discord_server_id = tournamentData.discord_server_id;
+    if (!discord_server_id) {
+      console.log("[verify-discord-membership] Tournament has no Discord server configured - skipping verification");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          status: "skipped",
+          is_verified: true,
+          message: "Tournament does not require Discord verification",
+          discord_user_id,
+          discord_server_id: null,
+          verified_at: null,
+          last_checked_at: new Date().toISOString(),
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { data: apiIntegrationData, error: apiError } = await supabaseClient
+      .from("platform_api_integrations")
+      .select("api_key")
+      .eq("api_name", "Discord API")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (apiError || !apiIntegrationData) {
+      console.error("[verify-discord-membership] Discord API integration not configured:", apiError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Discord API integration not configured",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const apiKey = apiIntegrationData.api_key;
+    const parsedApiKey = typeof apiKey === "string" ? JSON.parse(apiKey) : apiKey;
+    const bot_token = parsedApiKey?.bot_token;
+
+    if (!bot_token) {
+      console.error("[verify-discord-membership] Discord bot token not found");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Discord bot token not configured",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log(
+      `[verify-discord-membership] Checking if user ${discord_user_id} is in server ${discord_server_id}`
+    );
+
+    const discordApiUrl = `https://discord.com/api/v10/guilds/${discord_server_id}/members/${discord_user_id}`;
+    const discordResponse = await fetch(discordApiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bot ${bot_token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    let is_verified = false;
+    let status = "failed";
+    let error_message: string | null = null;
+
+    if (discordResponse.ok) {
+      const memberData = await discordResponse.json();
+      console.log("[verify-discord-membership] User found in server:", memberData);
+      is_verified = true;
+      status = "verified";
+    } else if (discordResponse.status === 404) {
+      console.log("[verify-discord-membership] User not found in server");
+      is_verified = false;
+      status = "left_server";
+      error_message = "User is not a member of the Discord server";
+    } else {
+      const errorData = await discordResponse.json().catch(() => ({}));
+      console.error(
+        "[verify-discord-membership] Discord API error:",
+        discordResponse.status,
+        errorData
+      );
+      is_verified = false;
+      status = "failed";
+      error_message = `Discord API error: ${discordResponse.status}`;
+    }
+
+    const now = new Date().toISOString();
+    const verificationData = {
+      user_id,
+      tournament_id,
+      discord_user_id,
+      discord_server_id,
+      is_verified,
+      status,
+      verified_at: is_verified ? now : null,
+      last_checked_at: now,
+      updated_at: now,
+    };
+
+    const { data: existingVerification } = await supabaseClient
+      .from("tournament_discord_verification")
+      .select("id")
+      .eq("user_id", user_id)
+      .eq("tournament_id", tournament_id)
+      .single();
+
+    if (existingVerification) {
+      const { error: updateError } = await supabaseClient
+        .from("tournament_discord_verification")
+        .update(verificationData)
+        .eq("user_id", user_id)
+        .eq("tournament_id", tournament_id);
+
+      if (updateError) {
+        console.error("[verify-discord-membership] Error updating verification:", updateError);
+      }
+    } else {
+      const { error: insertError } = await supabaseClient
+        .from("tournament_discord_verification")
+        .insert([{ ...verificationData, created_at: now }]);
+
+      if (insertError) {
+        console.error("[verify-discord-membership] Error inserting verification:", insertError);
+      }
     }
 
     return new Response(
       JSON.stringify({
-        success: errorStatus === 404,
-        is_member: isMember,
-        message: errorMessage,
-        errorCode: errorCode,
-      } as MembershipResponse),
+        success: true,
+        status,
+        is_verified,
+        discord_user_id,
+        discord_server_id,
+        verified_at: is_verified ? now : null,
+        last_checked_at: now,
+        error_message,
+      }),
       {
-        status: errorStatus === 404 ? 200 : 200,
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Discord membership verification error:", error);
+    console.error("[verify-discord-membership] Unexpected error:", error);
     return new Response(
       JSON.stringify({
         success: false,
-        is_member: false,
-        message: "An unexpected error occurred while verifying Discord membership.",
-        errorCode: "UNEXPECTED_ERROR",
-      } as MembershipResponse),
+        error: (error as Error).message || "An unexpected error occurred",
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

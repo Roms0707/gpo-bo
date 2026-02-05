@@ -7,12 +7,12 @@
     - `api_key`: API key for authentication with Smartpages service
     - `api_type`: 'redirect' - Indicates this API is used for redirect URL generation
     - `is_active`: true - Enable the integration by default
-
+    
   2. Purpose
     - Provides dynamic subscription redirect URL generation
     - Called when users need to be redirected for subscription renewal
     - Returns personalized URLs based on user and package information
-
+    
   3. Security
     - API key is stored securely in the database
     - Only accessible by edge functions with service role key

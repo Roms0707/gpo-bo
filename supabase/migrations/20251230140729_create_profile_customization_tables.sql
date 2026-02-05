@@ -1,6 +1,6 @@
 /*
   # Profile Customization System
-
+  
   This migration creates the database schema for profile customization features
   including avatar frames, modal frames, and badges.
 
@@ -175,97 +175,97 @@ CREATE INDEX IF NOT EXISTS idx_user_unlocked_items_item ON user_unlocked_items(i
 -- Seed Avatar Frames
 INSERT INTO profile_frames (name, description, frame_type, style, rarity, css_styles, animation_class, is_available, is_premium, unlock_type, unlock_requirement, sort_order) VALUES
 -- Free frames
-('Default', 'A clean, simple border', 'avatar', 'simple', 'common',
-  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "rgba(255,255,255,0.2)", "borderRadius": "16px"}'::jsonb,
+('Default', 'A clean, simple border', 'avatar', 'simple', 'common', 
+  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "rgba(255,255,255,0.2)", "borderRadius": "16px"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 1),
-('Bronze Ring', 'A metallic bronze circular frame', 'avatar', 'metallic', 'common',
-  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#CD7F32", "borderRadius": "50%", "boxShadow": "0 0 10px rgba(205, 127, 50, 0.3)"}'::jsonb,
+('Bronze Ring', 'A metallic bronze circular frame', 'avatar', 'metallic', 'common', 
+  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#CD7F32", "borderRadius": "50%", "boxShadow": "0 0 10px rgba(205, 127, 50, 0.3)"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 2),
-('Silver Edge', 'A sleek silver border with subtle shine', 'avatar', 'metallic', 'common',
-  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#C0C0C0", "borderRadius": "12px", "boxShadow": "0 0 12px rgba(192, 192, 192, 0.4)"}'::jsonb,
+('Silver Edge', 'A sleek silver border with subtle shine', 'avatar', 'metallic', 'common', 
+  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#C0C0C0", "borderRadius": "12px", "boxShadow": "0 0 12px rgba(192, 192, 192, 0.4)"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 3),
 
 -- XP unlockable frames
-('Gold Crown', 'An ornate golden frame fit for royalty', 'avatar', 'elegant', 'rare',
-  '{"borderWidth": "4px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "14px", "boxShadow": "0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2)"}'::jsonb,
+('Gold Crown', 'An ornate golden frame fit for royalty', 'avatar', 'elegant', 'rare', 
+  '{"borderWidth": "4px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "14px", "boxShadow": "0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 10px rgba(255, 215, 0, 0.2)"}'::jsonb, 
   NULL, true, false, 'xp', '{"xp": 100}'::jsonb, 4),
-('Neon Pulse', 'An animated neon glow that pulses with energy', 'avatar', 'neon', 'rare',
-  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#00ff88", "borderRadius": "16px", "boxShadow": "0 0 15px #00ff88, 0 0 30px rgba(0, 255, 136, 0.3)"}'::jsonb,
+('Neon Pulse', 'An animated neon glow that pulses with energy', 'avatar', 'neon', 'rare', 
+  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#00ff88", "borderRadius": "16px", "boxShadow": "0 0 15px #00ff88, 0 0 30px rgba(0, 255, 136, 0.3)"}'::jsonb, 
   'animate-pulse-glow', true, false, 'xp', '{"xp": 250}'::jsonb, 5),
-('Diamond Elite', 'A crystalline diamond-inspired frame', 'avatar', 'elegant', 'epic',
-  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#b9f2ff", "borderRadius": "8px", "boxShadow": "0 0 25px rgba(185, 242, 255, 0.6), inset 0 0 15px rgba(185, 242, 255, 0.3)"}'::jsonb,
+('Diamond Elite', 'A crystalline diamond-inspired frame', 'avatar', 'elegant', 'epic', 
+  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#b9f2ff", "borderRadius": "8px", "boxShadow": "0 0 25px rgba(185, 242, 255, 0.6), inset 0 0 15px rgba(185, 242, 255, 0.3)"}'::jsonb, 
   'animate-shimmer', true, false, 'xp', '{"xp": 500}'::jsonb, 6),
-('Champion''s Glory', 'An ornate golden frame with laurels', 'avatar', 'elegant', 'epic',
-  '{"borderWidth": "5px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "50%", "boxShadow": "0 0 30px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 215, 0, 0.3)"}'::jsonb,
+('Champion''s Glory', 'An ornate golden frame with laurels', 'avatar', 'elegant', 'epic', 
+  '{"borderWidth": "5px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "50%", "boxShadow": "0 0 30px rgba(255, 215, 0, 0.7), 0 0 60px rgba(255, 215, 0, 0.3)"}'::jsonb, 
   'animate-shimmer', true, false, 'xp', '{"xp": 1000}'::jsonb, 7),
 
 -- Premium placeholder frames
-('Legendary Flame', 'An animated fire border that burns with passion', 'avatar', 'animated', 'legendary',
-  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#ff6b35", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(255, 107, 53, 0.8), 0 0 60px rgba(255, 69, 0, 0.4)"}'::jsonb,
+('Legendary Flame', 'An animated fire border that burns with passion', 'avatar', 'animated', 'legendary', 
+  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#ff6b35", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(255, 107, 53, 0.8), 0 0 60px rgba(255, 69, 0, 0.4)"}'::jsonb, 
   'animate-flame', false, true, 'premium', '{"premium": true}'::jsonb, 8),
-('Void Master', 'Dark animated particles swirl around your avatar', 'avatar', 'animated', 'legendary',
-  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#1a1a2e", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(138, 43, 226, 0.6), 0 0 60px rgba(75, 0, 130, 0.4)"}'::jsonb,
+('Void Master', 'Dark animated particles swirl around your avatar', 'avatar', 'animated', 'legendary', 
+  '{"borderWidth": "4px", "borderStyle": "solid", "borderColor": "#1a1a2e", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(138, 43, 226, 0.6), 0 0 60px rgba(75, 0, 130, 0.4)"}'::jsonb, 
   'animate-void', false, true, 'premium', '{"premium": true}'::jsonb, 9);
 
 -- Seed Modal Frames
 INSERT INTO profile_frames (name, description, frame_type, style, rarity, css_styles, animation_class, is_available, is_premium, unlock_type, unlock_requirement, sort_order) VALUES
 -- Free frames
-('Default', 'Standard modal border', 'modal', 'simple', 'common',
-  '{"borderWidth": "1px", "borderStyle": "solid", "borderColor": "rgba(75, 85, 99, 0.5)", "borderRadius": "16px"}'::jsonb,
+('Default', 'Standard modal border', 'modal', 'simple', 'common', 
+  '{"borderWidth": "1px", "borderStyle": "solid", "borderColor": "rgba(75, 85, 99, 0.5)", "borderRadius": "16px"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 1),
-('Bronze Accent', 'Subtle bronze corner accents', 'modal', 'metallic', 'common',
-  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#CD7F32", "borderRadius": "12px", "boxShadow": "0 0 15px rgba(205, 127, 50, 0.2)"}'::jsonb,
+('Bronze Accent', 'Subtle bronze corner accents', 'modal', 'metallic', 'common', 
+  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#CD7F32", "borderRadius": "12px", "boxShadow": "0 0 15px rgba(205, 127, 50, 0.2)"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 2),
-('Silver Frame', 'A clean metallic outline', 'modal', 'metallic', 'common',
-  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#C0C0C0", "borderRadius": "14px", "boxShadow": "0 0 15px rgba(192, 192, 192, 0.25)"}'::jsonb,
+('Silver Frame', 'A clean metallic outline', 'modal', 'metallic', 'common', 
+  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#C0C0C0", "borderRadius": "14px", "boxShadow": "0 0 15px rgba(192, 192, 192, 0.25)"}'::jsonb, 
   NULL, true, false, 'free', '{}'::jsonb, 3),
 
 -- XP unlockable frames
-('Gold Trim', 'An elegant golden border', 'modal', 'elegant', 'rare',
-  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#FFD700", "borderRadius": "16px", "boxShadow": "0 0 20px rgba(255, 215, 0, 0.3)"}'::jsonb,
+('Gold Trim', 'An elegant golden border', 'modal', 'elegant', 'rare', 
+  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#FFD700", "borderRadius": "16px", "boxShadow": "0 0 20px rgba(255, 215, 0, 0.3)"}'::jsonb, 
   NULL, true, false, 'xp', '{"xp": 200}'::jsonb, 4),
-('Neon Edge', 'A glowing colored border', 'modal', 'neon', 'rare',
-  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#00ff88", "borderRadius": "16px", "boxShadow": "0 0 20px rgba(0, 255, 136, 0.4)"}'::jsonb,
+('Neon Edge', 'A glowing colored border', 'modal', 'neon', 'rare', 
+  '{"borderWidth": "2px", "borderStyle": "solid", "borderColor": "#00ff88", "borderRadius": "16px", "boxShadow": "0 0 20px rgba(0, 255, 136, 0.4)"}'::jsonb, 
   'animate-pulse-glow', true, false, 'xp', '{"xp": 400}'::jsonb, 5),
-('Diamond Prestige', 'Sparkling border effects', 'modal', 'elegant', 'epic',
-  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#b9f2ff", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(185, 242, 255, 0.5)"}'::jsonb,
+('Diamond Prestige', 'Sparkling border effects', 'modal', 'elegant', 'epic', 
+  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#b9f2ff", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(185, 242, 255, 0.5)"}'::jsonb, 
   'animate-shimmer', true, false, 'xp', '{"xp": 800}'::jsonb, 6),
-('Royal Crest', 'An ornate top banner decoration', 'modal', 'elegant', 'epic',
-  '{"borderWidth": "3px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(255, 215, 0, 0.4)"}'::jsonb,
+('Royal Crest', 'An ornate top banner decoration', 'modal', 'elegant', 'epic', 
+  '{"borderWidth": "3px", "borderStyle": "double", "borderColor": "#FFD700", "borderRadius": "16px", "boxShadow": "0 0 30px rgba(255, 215, 0, 0.4)"}'::jsonb, 
   'animate-shimmer', true, false, 'xp', '{"xp": 1200}'::jsonb, 7),
 
 -- Premium placeholder frames
-('Inferno Blaze', 'Animated ember border that flickers', 'modal', 'animated', 'legendary',
-  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#ff6b35", "borderRadius": "16px", "boxShadow": "0 0 40px rgba(255, 107, 53, 0.6)"}'::jsonb,
+('Inferno Blaze', 'Animated ember border that flickers', 'modal', 'animated', 'legendary', 
+  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#ff6b35", "borderRadius": "16px", "boxShadow": "0 0 40px rgba(255, 107, 53, 0.6)"}'::jsonb, 
   'animate-flame', false, true, 'premium', '{"premium": true}'::jsonb, 8),
-('Cosmic Aura', 'Space-themed particle effects', 'modal', 'animated', 'legendary',
-  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#8b5cf6", "borderRadius": "16px", "boxShadow": "0 0 40px rgba(139, 92, 246, 0.5)"}'::jsonb,
+('Cosmic Aura', 'Space-themed particle effects', 'modal', 'animated', 'legendary', 
+  '{"borderWidth": "3px", "borderStyle": "solid", "borderColor": "#8b5cf6", "borderRadius": "16px", "boxShadow": "0 0 40px rgba(139, 92, 246, 0.5)"}'::jsonb, 
   'animate-cosmic', false, true, 'premium', '{"premium": true}'::jsonb, 9);
 
 -- Seed Badges
 INSERT INTO profile_badges (name, description, badge_type, position, rarity, css_styles, is_available, is_premium, unlock_type, unlock_requirement, sort_order) VALUES
 -- Free badges
-('Star Player', 'A small star icon showing dedication', 'corner', 'bottom-right', 'common',
-  '{"icon": "star", "color": "#FFD700", "size": "20px"}'::jsonb,
+('Star Player', 'A small star icon showing dedication', 'corner', 'bottom-right', 'common', 
+  '{"icon": "star", "color": "#FFD700", "size": "20px"}'::jsonb, 
   true, false, 'free', '{}'::jsonb, 1),
-('Verified', 'A checkmark badge for verified players', 'corner', 'bottom-right', 'common',
-  '{"icon": "check-circle", "color": "#00ff88", "size": "20px"}'::jsonb,
+('Verified', 'A checkmark badge for verified players', 'corner', 'bottom-right', 'common', 
+  '{"icon": "check-circle", "color": "#00ff88", "size": "20px"}'::jsonb, 
   true, false, 'free', '{}'::jsonb, 2),
 
 -- XP unlockable badges
-('Rising Star', 'An ascending star for promising players', 'corner', 'bottom-right', 'rare',
-  '{"icon": "trending-up", "color": "#3b82f6", "size": "22px", "glow": true}'::jsonb,
+('Rising Star', 'An ascending star for promising players', 'corner', 'bottom-right', 'rare', 
+  '{"icon": "trending-up", "color": "#3b82f6", "size": "22px", "glow": true}'::jsonb, 
   true, false, 'xp', '{"xp": 100}'::jsonb, 3),
-('Elite Gamer', 'A crown icon for elite players', 'corner', 'bottom-right', 'epic',
-  '{"icon": "crown", "color": "#FFD700", "size": "24px", "glow": true}'::jsonb,
+('Elite Gamer', 'A crown icon for elite players', 'corner', 'bottom-right', 'epic', 
+  '{"icon": "crown", "color": "#FFD700", "size": "24px", "glow": true}'::jsonb, 
   true, false, 'xp', '{"xp": 500}'::jsonb, 4),
 
 -- Achievement placeholder badges
-('Tournament Victor', 'Trophy icon for tournament winners', 'corner', 'bottom-right', 'epic',
-  '{"icon": "trophy", "color": "#FFD700", "size": "24px", "glow": true}'::jsonb,
+('Tournament Victor', 'Trophy icon for tournament winners', 'corner', 'bottom-right', 'epic', 
+  '{"icon": "trophy", "color": "#FFD700", "size": "24px", "glow": true}'::jsonb, 
   false, false, 'achievement', '{"achievement": "win_tournament"}'::jsonb, 5),
 
 -- Premium placeholder badges
-('Legend', 'An animated legendary emblem', 'corner', 'bottom-right', 'legendary',
-  '{"icon": "flame", "color": "#ff6b35", "size": "26px", "animated": true, "glow": true}'::jsonb,
+('Legend', 'An animated legendary emblem', 'corner', 'bottom-right', 'legendary', 
+  '{"icon": "flame", "color": "#ff6b35", "size": "26px", "animated": true, "glow": true}'::jsonb, 
   false, true, 'premium', '{"premium": true}'::jsonb, 6);

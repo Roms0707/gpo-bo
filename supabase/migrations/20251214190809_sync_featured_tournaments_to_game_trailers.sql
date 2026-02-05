@@ -1,7 +1,7 @@
 /*
   # Sync Featured Tournaments to Game Trailers
 
-  This migration creates a database trigger that automatically manages the
+  This migration creates a database trigger that automatically manages the 
   game_trailers table when a tournament's is_featured status changes.
 
   1. Trigger Function: sync_featured_tournament_to_game_trailers()
@@ -41,7 +41,7 @@ DECLARE
   v_config_id TEXT := 'default';
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    DELETE FROM game_trailers
+    DELETE FROM game_trailers 
     WHERE tournament_id = OLD.id;
     RETURN OLD;
   END IF;
@@ -74,7 +74,7 @@ BEGIN
         NOW(),
         NOW()
       )
-      ON CONFLICT (tournament_id)
+      ON CONFLICT (tournament_id) 
       WHERE tournament_id IS NOT NULL
       DO UPDATE SET
         game_id = EXCLUDED.game_id,
@@ -85,7 +85,7 @@ BEGIN
     END IF;
 
   ELSIF NEW.is_featured = FALSE AND OLD.is_featured = TRUE THEN
-    DELETE FROM game_trailers
+    DELETE FROM game_trailers 
     WHERE tournament_id = NEW.id;
   END IF;
 
@@ -94,8 +94,8 @@ END;
 $$;
 
 -- Create unique partial index on tournament_id for upsert to work
-CREATE UNIQUE INDEX IF NOT EXISTS idx_game_trailers_tournament_id_unique
-ON game_trailers(tournament_id)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_game_trailers_tournament_id_unique 
+ON game_trailers(tournament_id) 
 WHERE tournament_id IS NOT NULL;
 
 -- Drop existing trigger if it exists
@@ -108,7 +108,7 @@ FOR EACH ROW
 EXECUTE FUNCTION sync_featured_tournament_to_game_trailers();
 
 -- Add comment documenting the trigger
-COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS
-'Automatically syncs featured tournaments to game_trailers table for hero carousel display.
+COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS 
+'Automatically syncs featured tournaments to game_trailers table for hero carousel display. 
 When is_featured=true, creates/updates entry with tournament title and game trailer URL.
 When is_featured=false, removes the entry.';

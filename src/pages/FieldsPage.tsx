@@ -12,13 +12,13 @@ import DropdownOptionsBuilder from '../components/fields/DropdownOptionsBuilder'
 
 const FieldsPage: React.FC = () => {
   const { fields, fetchFields, createField, updateField, deleteField, isLoading } = useFieldStore();
-
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
-
+  
   // Form state
   const [fieldId, setFieldId] = useState('');
   const [fieldName, setFieldName] = useState('');
@@ -30,7 +30,7 @@ const FieldsPage: React.FC = () => {
   const [dropdownOptions, setDropdownOptions] = useState<string[]>([]);
   const [placeholderText, setPlaceholderText] = useState('');
   const [fieldCategory, setFieldCategory] = useState('custom');
-
+  
   useEffect(() => {
     fetchFields();
   }, [fetchFields]);
@@ -196,20 +196,20 @@ const FieldsPage: React.FC = () => {
             leftIcon={<Search className="h-5 w-5 text-gray-400" />}
           />
         </div>
-
-        <Button
+        
+        <Button 
           leftIcon={<Plus size={16} />}
           onClick={() => setIsCreateModalOpen(true)}
         >
           Ajouter une info
         </Button>
       </div>
-
+      
       <Card>
         <CardHeader>
           <CardTitle>Tournament Info</CardTitle>
         </CardHeader>
-
+        
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
@@ -237,8 +237,8 @@ const FieldsPage: React.FC = () => {
                     <TableCell>{field.required ? 'Yes' : 'No'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button
-                          size="sm"
+                        <Button 
+                          size="sm" 
                           variant="ghost"
                           title="Edit"
                           onClick={() => {
@@ -248,8 +248,8 @@ const FieldsPage: React.FC = () => {
                         >
                           <Edit size={16} />
                         </Button>
-                        <Button
-                          size="sm"
+                        <Button 
+                          size="sm" 
                           variant="ghost"
                           title="Delete"
                           onClick={() => handleDeleteClick(field.id)}
@@ -265,7 +265,7 @@ const FieldsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
+      
       {/* Create Field Modal */}
       <Modal
         isOpen={isCreateModalOpen}

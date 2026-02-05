@@ -68,14 +68,14 @@ const RoundRobinDebugPanel: React.FC<RoundRobinDebugPanelProps> = ({
           <p>Qualified participants: <span className="font-mono">{qualifiedParticipants.length}</span></p>
           <p>Valid user IDs count: <span className="font-mono">{validUserIds.size}</span></p>
         </div>
-
+        
         <div className="mt-3">
           <h4 className="font-semibold text-yellow-400 mb-1 text-xs">Valid User IDs:</h4>
           <div className="bg-dark-400 p-2 rounded-md overflow-x-auto max-h-32">
             <pre className="text-xs text-green-400 whitespace-pre-wrap">{Array.from(validUserIds).join(', ')}</pre>
           </div>
         </div>
-
+        
         {sqlQuery && (
           <div className="mt-3">
             <h4 className="font-semibold text-yellow-400 mb-1 text-xs">SQL Query:</h4>

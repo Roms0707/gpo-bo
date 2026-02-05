@@ -29,7 +29,7 @@
 */
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'fps',
   'Main Agents',
@@ -47,7 +47,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'hero_shooter',
   'Main Heroes',
@@ -65,7 +65,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'sports',
   'Preferred Cars',
@@ -83,7 +83,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'moba',
   'Main Champions',
@@ -101,7 +101,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'battle_royale',
   'Main Legends',
@@ -119,7 +119,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'fps',
   'Preferred Weapons',
@@ -137,7 +137,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'battle_royale',
   'Preferred Loadouts',
@@ -155,7 +155,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'sports',
   'Preferred Formations',
@@ -173,7 +173,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'fighting',
   'Main Characters',
@@ -191,7 +191,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'fighting',
   'Main Characters',
@@ -209,7 +209,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'autobattler',
   'Preferred Comps',
@@ -227,7 +227,7 @@ ON CONFLICT (game_id) DO UPDATE SET
   updated_at = now();
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers)
-SELECT
+SELECT 
   g.id,
   'moba',
   'Main Heroes',

@@ -20,13 +20,13 @@ interface GamePublisherId {
 
 const GamesPage: React.FC = () => {
   const { games, fetchGames, createGame, updateGame, deleteGame, isLoading } = useGameStore();
-
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
-
+  
   // Form state
   const [gameName, setGameName] = useState('');
   const [publisherName, setPublisherName] = useState('');
@@ -44,7 +44,7 @@ const GamesPage: React.FC = () => {
   const [editHasApi, setEditHasApi] = useState(false);
   const [editApiKey, setEditApiKey] = useState('');
   const [editTrailerUrl, setEditTrailerUrl] = useState('');
-
+  
   // Publisher IDs state
   const [publisherIds, setPublisherIds] = useState<GamePublisherId[]>([]);
   const [newPublisherIdLabel, setNewPublisherIdLabel] = useState('');
@@ -54,7 +54,7 @@ const GamesPage: React.FC = () => {
   const [isDeletingPublisherId, setIsDeletingPublisherId] = useState(false);
   const [selectedPublisherId, setSelectedPublisherId] = useState<string | null>(null);
   const [publisherIdFormError, setPublisherIdFormError] = useState<string | null>(null);
-
+  
   useEffect(() => {
     fetchGames();
   }, [fetchGames]);
@@ -66,7 +66,7 @@ const GamesPage: React.FC = () => {
     }
   }, [isEditModalOpen, selectedGameId]);
 
-  const filteredGames = games.filter(game =>
+  const filteredGames = games.filter(game => 
     game.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (game.publisher && game.publisher.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -75,7 +75,7 @@ const GamesPage: React.FC = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setFile(file);
-
+      
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -93,27 +93,27 @@ const GamesPage: React.FC = () => {
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
       if (!file) return null;
-
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${file.name}`;
       const filePath = `games/${fileName}`;
-
+      
       // Upload the file to the bucket
       const { error: uploadError } = await supabase.storage
         .from('tournament-image-bucket')
         .upload(filePath, file);
-
+        
       if (uploadError) {
         console.error('Error uploading file:', uploadError);
         toast.error(`Error uploading file: ${uploadError.message}`);
         return null;
       }
-
+      
       // Get the public URL for the uploaded file
       const { data } = supabase.storage
         .from('tournament-image-bucket')
         .getPublicUrl(filePath);
-
+        
       return data.publicUrl;
     } catch (error) {
       console.error('Error in file upload:', error);
@@ -124,7 +124,7 @@ const GamesPage: React.FC = () => {
 
   const handleCreateGame = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       // Upload image if provided
       let imageUrl = null;
@@ -135,7 +135,7 @@ const GamesPage: React.FC = () => {
           return;
         }
       }
-
+      
       const { data: newGame, error } = await createGame({
         name: gameName,
         publisher: publisherName || null,
@@ -144,11 +144,11 @@ const GamesPage: React.FC = () => {
         api_key: hasApi ? apiKey : null,
         trailer_url: trailerUrl || null,
       });
-
+      
       if (error) throw error;
-
+      
       console.log("Game created successfully, newGame:", newGame);
-
+      
       // Reset form and close modal
       setGameName('');
       setPublisherName('');
@@ -157,7 +157,7 @@ const GamesPage: React.FC = () => {
       setHasApi(false);
       setApiKey('');
       setIsCreateModalOpen(false);
-
+      
       // Open edit modal for the new game to add publisher IDs
       if (newGame) {
         console.log("Setting selectedGameId to:", newGame.id);
@@ -192,13 +192,13 @@ const GamesPage: React.FC = () => {
 
   const handleUpdateGame = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!selectedGameId) return;
-
+    
     try {
       const gameToUpdate = games.find(game => game.id === selectedGameId);
       if (!gameToUpdate) return;
-
+      
       // Upload image if a new one is provided
       let imageUrl = gameToUpdate.image_url;
       if (editImageFile) {
@@ -210,12 +210,12 @@ const GamesPage: React.FC = () => {
           return;
         }
       }
-
+      
       // If the image was removed (preview is null and no new file), set URL to null
       if (!editImagePreview && !editImageFile) {
         imageUrl = null;
       }
-
+      
       await updateGame(selectedGameId, {
         name: editGameName,
         publisher: editPublisherName || null,
@@ -224,7 +224,7 @@ const GamesPage: React.FC = () => {
         api_key: editHasApi ? editApiKey : null,
         trailer_url: editTrailerUrl || null,
       });
-
+      
       // Reset form and close modal
       setEditGameName('');
       setEditPublisherName('');
@@ -251,7 +251,7 @@ const GamesPage: React.FC = () => {
       setSelectedGameId(null);
     }
   };
-
+  
   const resetCreateForm = () => {
     setGameName('');
     setPublisherName('');
@@ -261,7 +261,7 @@ const GamesPage: React.FC = () => {
     setApiKey('');
     setTrailerUrl('');
   };
-
+  
   const resetEditForm = () => {
     setEditGameName('');
     setEditPublisherName('');
@@ -286,9 +286,9 @@ const GamesPage: React.FC = () => {
         .select('*')
         .eq('game_id', gameId)
         .order('created_at', { ascending: true });
-
+        
       if (error) throw error;
-
+      
       console.log("Publisher IDs fetched:", data);
       setPublisherIds(data || []);
     } catch (error) {
@@ -299,30 +299,30 @@ const GamesPage: React.FC = () => {
 
   const handleAddPublisherId = async () => {
     console.log("handleAddPublisherId called with gameId:", selectedGameId);
-
+    
     // Clear previous error
     setPublisherIdFormError(null);
-
+    
     // Validate form fields
     if (!selectedGameId) {
       console.error("Game ID is missing, selectedGameId:", selectedGameId);
       setPublisherIdFormError('Game ID is missing');
       return;
     }
-
+    
     if (!newPublisherIdLabel.trim()) {
       setPublisherIdFormError('Display label is required');
       return;
     }
-
+    
     if (!newPublisherIdName.trim()) {
       setPublisherIdFormError('ID name is required');
       return;
     }
-
+    
     try {
       setIsAddingPublisherId(true);
-
+      
       console.log("Adding publisher ID with gameId:", selectedGameId);
       const { data, error } = await supabase
         .from('game_publisher_ids')
@@ -334,15 +334,15 @@ const GamesPage: React.FC = () => {
         })
         .select()
         .single();
-
+        
       if (error) throw error;
-
+      
       console.log("Publisher ID added successfully:", data);
       setPublisherIds([...publisherIds, data]);
       setNewPublisherIdLabel('');
       setNewPublisherIdName('');
       setNewPublisherIdRequired(false);
-
+      
       toast.success('Publisher ID type added successfully');
     } catch (error) {
       console.error('Error adding publisher ID:', error);
@@ -356,14 +356,14 @@ const GamesPage: React.FC = () => {
     try {
       setIsDeletingPublisherId(true);
       setSelectedPublisherId(id);
-
+      
       const { error } = await supabase
         .from('game_publisher_ids')
         .delete()
         .eq('id', id);
-
+        
       if (error) throw error;
-
+      
       setPublisherIds(publisherIds.filter(pid => pid.id !== id));
       toast.success('Publisher ID type deleted successfully');
     } catch (error) {
@@ -386,20 +386,20 @@ const GamesPage: React.FC = () => {
             leftIcon={<Search className="h-5 w-5 text-gray-400" />}
           />
         </div>
-
-        <Button
+        
+        <Button 
           leftIcon={<Plus size={16} />}
           onClick={() => setIsCreateModalOpen(true)}
         >
           Add Game
         </Button>
       </div>
-
+      
       <Card>
         <CardHeader>
           <CardTitle>Games</CardTitle>
         </CardHeader>
-
+        
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
@@ -425,10 +425,10 @@ const GamesPage: React.FC = () => {
                   <TableRow key={game.id}>
                     <TableCell>
                       {game.image_url ? (
-                        <img
-                          src={game.image_url}
-                          alt={game.name}
-                          className="h-10 w-16 object-cover rounded-md"
+                        <img 
+                          src={game.image_url} 
+                          alt={game.name} 
+                          className="h-10 w-16 object-cover rounded-md" 
                         />
                       ) : (
                         <div className="h-10 w-16 bg-gray-200 dark:bg-dark-200 rounded-md flex items-center justify-center">
@@ -447,16 +447,16 @@ const GamesPage: React.FC = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button
-                          size="sm"
+                        <Button 
+                          size="sm" 
                           variant="ghost"
                           title="Edit"
                           onClick={() => handleEditClick(game.id)}
                         >
                           <Edit size={16} />
                         </Button>
-                        <Button
-                          size="sm"
+                        <Button 
+                          size="sm" 
                           variant="ghost"
                           title="Delete"
                           onClick={() => handleDeleteClick(game.id)}
@@ -472,7 +472,7 @@ const GamesPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
+      
       {/* Create Game Modal */}
       <Modal
         isOpen={isCreateModalOpen}
@@ -483,8 +483,8 @@ const GamesPage: React.FC = () => {
         title="Add New Game"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button
-              variant="ghost"
+            <Button 
+              variant="ghost" 
               onClick={() => {
                 resetCreateForm();
                 setIsCreateModalOpen(false);
@@ -505,14 +505,14 @@ const GamesPage: React.FC = () => {
             onChange={(e) => setGameName(e.target.value)}
             required
           />
-
+          
           <Input
             label="Publisher"
             value={publisherName}
             onChange={(e) => setPublisherName(e.target.value)}
             placeholder="e.g. Riot Games, Valve, etc."
           />
-
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Game Image
@@ -520,9 +520,9 @@ const GamesPage: React.FC = () => {
             <div className="mt-1 flex items-center space-x-4">
               {imagePreview ? (
                 <div className="relative">
-                  <img
-                    src={imagePreview}
-                    alt="Game image preview"
+                  <img 
+                    src={imagePreview} 
+                    alt="Game image preview" 
                     className="h-32 w-48 object-cover rounded-md"
                   />
                   <button
@@ -594,7 +594,7 @@ const GamesPage: React.FC = () => {
           </div>
         </form>
       </Modal>
-
+      
       {/* Edit Game Modal */}
       <Modal
         isOpen={isEditModalOpen}
@@ -606,8 +606,8 @@ const GamesPage: React.FC = () => {
         size="lg"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button
-              variant="ghost"
+            <Button 
+              variant="ghost" 
               onClick={() => {
                 resetEditForm();
                 setIsEditModalOpen(false);
@@ -628,14 +628,14 @@ const GamesPage: React.FC = () => {
             onChange={(e) => setEditGameName(e.target.value)}
             required
           />
-
+          
           <Input
             label="Publisher"
             value={editPublisherName}
             onChange={(e) => setEditPublisherName(e.target.value)}
             placeholder="e.g. Riot Games, Valve, etc."
           />
-
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Game Image
@@ -643,9 +643,9 @@ const GamesPage: React.FC = () => {
             <div className="mt-1 flex items-center space-x-4">
               {editImagePreview ? (
                 <div className="relative">
-                  <img
-                    src={editImagePreview}
-                    alt="Game image preview"
+                  <img 
+                    src={editImagePreview} 
+                    alt="Game image preview" 
                     className="h-32 w-48 object-cover rounded-md"
                   />
                   <button
@@ -715,7 +715,7 @@ const GamesPage: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-4">
               Publisher IDs
             </h3>
-
+            
             {/* Add Publisher ID form */}
             <div className="bg-gray-50 dark:bg-dark-200 p-4 rounded-lg mb-4">
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -837,7 +837,7 @@ const GamesPage: React.FC = () => {
           </div>
         </form>
       </Modal>
-
+      
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}

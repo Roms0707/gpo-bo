@@ -53,15 +53,15 @@ DO $$
 BEGIN
   -- Check if the constraint exists and drop it
   IF EXISTS (
-    SELECT 1 FROM information_schema.table_constraints
-    WHERE constraint_name = 'tournament_registrations_status_check'
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'tournament_registrations_status_check' 
     AND table_name = 'tournament_registrations'
   ) THEN
     ALTER TABLE tournament_registrations DROP CONSTRAINT tournament_registrations_status_check;
   END IF;
-
+  
   -- Add the new constraint with 'disqualified' status
-  ALTER TABLE tournament_registrations ADD CONSTRAINT tournament_registrations_status_check
+  ALTER TABLE tournament_registrations ADD CONSTRAINT tournament_registrations_status_check 
     CHECK (status IN ('pending', 'approved', 'rejected', 'validated', 'refused', 'backup', 'disqualified'));
 EXCEPTION
   WHEN duplicate_object THEN
@@ -69,7 +69,7 @@ EXCEPTION
 END $$;
 
 -- Add index for efficient querying of registrations needing warnings or disqualification
-CREATE INDEX IF NOT EXISTS idx_tournament_registrations_discord_join_tracking
+CREATE INDEX IF NOT EXISTS idx_tournament_registrations_discord_join_tracking 
   ON tournament_registrations (discord_join_shown_at, discord_warning_sent_at, status)
   WHERE discord_join_shown_at IS NOT NULL;
 

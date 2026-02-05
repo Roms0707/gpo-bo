@@ -30,7 +30,7 @@ const LoginPage: React.FC = () => {
       <div className="absolute top-4 right-4">
         <ThemeToggle variant="full" />
       </div>
-
+      
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-dark-200 rounded-lg shadow-xl overflow-hidden border border-gray-200 dark:border-dark-100">
           {/* Header */}

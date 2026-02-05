@@ -31,7 +31,7 @@ const TournamentsPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [currentUserCountry, setCurrentUserCountry] = useState<string | null>(null);
-
+  
   // Rules modal state
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [selectedTournamentForRules, setSelectedTournamentForRules] = useState<any>(null);
@@ -84,12 +84,12 @@ const TournamentsPage: React.FC = () => {
       setDeleteModalOpen(false);
     }
   };
-
+  
   const handleManageRulesClick = (tournament: any) => {
     setSelectedTournamentForRules(tournament);
     setIsRulesModalOpen(true);
   };
-
+  
   const handleSaveRules = async (rules: string) => {
     if (!selectedTournamentForRules) return;
 
@@ -176,25 +176,25 @@ const TournamentsPage: React.FC = () => {
   const renderGridView = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {filteredTournaments.map((tournament) => (
-        <Card
+        <Card 
           key={tournament.id}
           variant={tournament.status === 'active' ? 'active' : tournament.status === 'past' ? 'past' : 'default'}
           className="h-full flex flex-col"
         >
           <div className="relative h-32 bg-gradient-to-r from-dark-300 to-dark-100 rounded-t-lg overflow-hidden">
             {tournament.header_url ? (
-              <img
-                src={tournament.header_url}
-                alt=""
+              <img 
+                src={tournament.header_url} 
+                alt="" 
                 className="w-full h-full object-cover"
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-dark-500 to-transparent flex items-end p-4">
               <div className="flex items-center space-x-2">
                 {tournament.icon_url ? (
-                  <img
-                    src={tournament.icon_url}
-                    alt=""
+                  <img 
+                    src={tournament.icon_url} 
+                    alt="" 
                     className="h-10 w-10 rounded-full object-cover border-2 border-white"
                   />
                 ) : (
@@ -208,7 +208,7 @@ const TournamentsPage: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           <CardContent className="flex-1 flex flex-col">
             <div className="flex flex-wrap gap-2 mb-3 mt-2">
               {getStatusBadge(tournament.status)}
@@ -236,7 +236,7 @@ const TournamentsPage: React.FC = () => {
                 </div>
               )}
             </div>
-
+            
             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-2" />
@@ -251,11 +251,11 @@ const TournamentsPage: React.FC = () => {
                 <span>{tournament.type === 'solo' ? 'Solo Players' : 'Teams'}</span>
               </div>
             </div>
-
+            
             <div className="mt-auto flex justify-end space-x-2">
               <Link to={`/tournaments/${tournament.id}`}>
-                <Button
-                  size="sm"
+                <Button 
+                  size="sm" 
                   variant="ghost"
                   title="View"
                 >
@@ -285,16 +285,16 @@ const TournamentsPage: React.FC = () => {
                 <Copy size={16} />
               </Button>
               <Link to={`/tournaments/edit/${tournament.id}`}>
-                <Button
-                  size="sm"
+                <Button 
+                  size="sm" 
                   variant="ghost"
                   title="Edit"
                 >
                   <Edit size={16} />
                 </Button>
               </Link>
-              <Button
-                size="sm"
+              <Button 
+                size="sm" 
                 variant="ghost"
                 title="Delete"
                 onClick={() => handleDeleteClick(tournament.id)}
@@ -344,16 +344,16 @@ const TournamentsPage: React.FC = () => {
         </thead>
         <tbody className="bg-white dark:bg-dark-300 divide-y divide-gray-200 dark:divide-dark-300">
           {filteredTournaments.map((tournament) => (
-            <tr
+            <tr 
               key={tournament.id}
               className={tournament.status === 'active' ? 'bg-success-50 dark:bg-success-900/10' : ''}
             >
               <td className="px-3 py-4 whitespace-nowrap">
                 <div className="flex items-center space-x-2">
                   {tournament.icon_url ? (
-                    <img
-                      src={tournament.icon_url}
-                      alt=""
+                    <img 
+                      src={tournament.icon_url} 
+                      alt="" 
                       className="h-6 w-6 rounded-full object-cover"
                     />
                   ) : (
@@ -411,8 +411,8 @@ const TournamentsPage: React.FC = () => {
               <td className="px-3 py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end space-x-2">
                   <Link to={`/tournaments/${tournament.id}`}>
-                    <Button
-                      size="sm"
+                    <Button 
+                      size="sm" 
                       variant="ghost"
                       title="View"
                     >
@@ -442,16 +442,16 @@ const TournamentsPage: React.FC = () => {
                     <Copy size={16} />
                   </Button>
                   <Link to={`/tournaments/edit/${tournament.id}`}>
-                    <Button
-                      size="sm"
+                    <Button 
+                      size="sm" 
                       variant="ghost"
                       title="Edit"
                     >
                       <Edit size={16} />
                     </Button>
                   </Link>
-                  <Button
-                    size="sm"
+                  <Button 
+                    size="sm" 
                     variant="ghost"
                     title="Delete"
                     onClick={() => handleDeleteClick(tournament.id)}
@@ -478,7 +478,7 @@ const TournamentsPage: React.FC = () => {
             leftIcon={<Search className="h-5 w-5 text-gray-400" />}
           />
         </div>
-
+        
         <div className="flex flex-wrap gap-3 items-center">
           <div className="flex items-center space-x-2">
             <Button
@@ -507,7 +507,7 @@ const TournamentsPage: React.FC = () => {
               </div>
             </Button>
           </div>
-
+          
           <div className="w-32">
             <Select
               value={statusFilter}
@@ -521,7 +521,7 @@ const TournamentsPage: React.FC = () => {
               leftIcon={<Filter className="h-4 w-4 text-gray-400" />}
             />
           </div>
-
+          
           <div className="w-32">
             <Select
               value={typeFilter}
@@ -534,7 +534,7 @@ const TournamentsPage: React.FC = () => {
               leftIcon={<Users className="h-4 w-4 text-gray-400" />}
             />
           </div>
-
+          
           <Link to="/tournaments/new">
             <Button leftIcon={<Plus size={16} />}>
               Add Tournament
@@ -564,7 +564,7 @@ const TournamentsPage: React.FC = () => {
             viewMode === 'grid' ? renderGridView() : renderListView()
           )}
         </CardContent>
-
+        
         {filteredTournaments.length > 0 && (
           <CardFooter className="flex justify-between items-center">
             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -628,7 +628,7 @@ const TournamentsPage: React.FC = () => {
           </div>
         </div>
       </Modal>
-
+      
       {/* Tournament Rules Modal */}
       {selectedTournamentForRules && (
         <TournamentRulesModal

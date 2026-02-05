@@ -39,7 +39,7 @@ DO $$
 BEGIN
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'game_trailers'
+    WHERE table_name = 'game_trailers' 
     AND column_name = 'config_id'
     AND is_nullable = 'YES'
   ) THEN
@@ -55,13 +55,13 @@ CREATE INDEX IF NOT EXISTS idx_game_trailers_config_id ON game_trailers(config_i
 
 -- Create unique partial index to ensure one home trailer per config_id
 DROP INDEX IF EXISTS idx_game_trailers_one_default_per_config;
-CREATE UNIQUE INDEX idx_game_trailers_one_default_per_config
-ON game_trailers(config_id)
+CREATE UNIQUE INDEX idx_game_trailers_one_default_per_config 
+ON game_trailers(config_id) 
 WHERE is_default = true;
 
 -- Update typewriter phrases to use i18n translation keys
 UPDATE game_trailers
-SET
+SET 
   typewriter_phrase_1 = 'heroCarousel.home.phrase1',
   typewriter_phrase_2 = 'heroCarousel.home.phrase2'
 WHERE is_default = true;

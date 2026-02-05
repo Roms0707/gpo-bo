@@ -34,11 +34,11 @@ const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
             </div>
           </div>
         </div>
-
+        
         <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 mb-4 animate-pulse">
           CHAMPION!
         </h1>
-
+        
         <div className="mb-6">
           <h2 className="text-4xl font-bold text-white mb-2">
             {winner.name}
@@ -67,11 +67,11 @@ const WinnerCelebration: React.FC<WinnerCelebrationProps> = ({
             )}
           </div>
         </div>
-
+        
         <div className="text-2xl font-semibold text-yellow-200 mb-6">
           🏆 {tournament?.title} Winner 🏆
         </div>
-
+        
         <div className="flex justify-center space-x-4">
           <Button
             onClick={onContinue}

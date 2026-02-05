@@ -40,16 +40,16 @@ DECLARE
   v_grace_period_passed BOOLEAN;
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    DELETE FROM game_trailers
+    DELETE FROM game_trailers 
     WHERE tournament_id = OLD.id;
     RETURN OLD;
   END IF;
 
   IF NEW.status = 'past' AND (OLD.status IS NULL OR OLD.status != 'past') THEN
     v_grace_period_passed := (NEW.end_date + INTERVAL '24 hours') <= NOW();
-
+    
     IF v_grace_period_passed THEN
-      DELETE FROM game_trailers
+      DELETE FROM game_trailers 
       WHERE tournament_id = NEW.id;
     END IF;
 
@@ -96,7 +96,7 @@ BEGIN
         NOW(),
         NOW()
       )
-      ON CONFLICT (tournament_id)
+      ON CONFLICT (tournament_id) 
       WHERE tournament_id IS NOT NULL
       DO UPDATE SET
         game_id = EXCLUDED.game_id,
@@ -107,7 +107,7 @@ BEGIN
     END IF;
 
   ELSIF NEW.is_featured IS NOT TRUE AND OLD.is_featured IS TRUE THEN
-    DELETE FROM game_trailers
+    DELETE FROM game_trailers 
     WHERE tournament_id = NEW.id;
   END IF;
 
@@ -122,7 +122,7 @@ AFTER INSERT OR UPDATE OF is_featured, title, game_id, status ON tournaments
 FOR EACH ROW
 EXECUTE FUNCTION sync_featured_tournament_to_game_trailers();
 
-COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS
+COMMENT ON FUNCTION sync_featured_tournament_to_game_trailers() IS 
 'Automatically syncs featured tournaments to game_trailers table for hero carousel display.
 - When is_featured=true: creates/updates entry with tournament title and game trailer URL
 - When is_featured becomes false/null: removes the entry

@@ -29,19 +29,19 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     if (savedTheme) {
       return savedTheme;
     }
-
+    
     // Check system preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
-
+    
     return 'light';
   });
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem('theme', newTheme);
-
+    
     // Update document class
     if (newTheme === 'dark') {
       document.documentElement.classList.add('dark');

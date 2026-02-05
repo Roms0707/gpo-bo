@@ -12,5 +12,5 @@
     - Support the enhanced Discord registration flow
 */
 
-ALTER TABLE tournament_registrations
+ALTER TABLE tournament_registrations 
 ADD COLUMN IF NOT EXISTS discord_join_clicked_at timestamptz;

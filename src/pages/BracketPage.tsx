@@ -174,7 +174,7 @@ const BracketPage: React.FC = () => {
       // Check if we have results for all 3 matches
       const matchNumbers = new Set(results.map(r => r.match_number));
       const completed = matchNumbers.has(1) && matchNumbers.has(2) && matchNumbers.has(3);
-
+      
       setAllMatchesCompleted(completed);
     } catch (error) {
       console.error('Error checking Battle Royale completion:', error);
@@ -185,7 +185,7 @@ const BracketPage: React.FC = () => {
     // Find the final match (highest round number)
     const maxRound = Math.max(...updatedMatches.map(m => m.round));
     const finalMatch = updatedMatches.find(m => m.round === maxRound);
-
+    
     if (finalMatch && finalMatch.winner_id && !showCelebration) {
       if (tournament?.type === 'team') {
         const winner = teams.find(t => t.captain_id === finalMatch.winner_id);
@@ -280,25 +280,25 @@ const BracketPage: React.FC = () => {
         .from('tournament_matches')
         .select('*')
         .eq('tournament_id', id);
-
+        
       if (existingMatchesError) throw existingMatchesError;
-
+      
       // Fetch participants (players or teams) based on tournament type
       let participants: Player[] | Team[] = [];
-
+      
       if (tournamentData.type === 'solo') {
         participants = await fetchSoloPlayers(tournamentData, userIdSet);
       } else {
         participants = await fetchTeams(tournamentData, userIdSet);
       }
-
+      
       // If we have existing matches, use them
       if (existingMatches && existingMatches.length > 0) {
         setMatches(existingMatches);
         setEditableMatches(existingMatches);
         setBracketAlreadyGenerated(true);
         setIsDraftMode(tournamentData.bracket_status === 'draft');
-
+        
         // Check if tournament is already completed
         checkForTournamentWinner(existingMatches);
       } else {
@@ -357,7 +357,7 @@ const BracketPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-
+  
   const fetchSoloPlayers = async (tournamentData: any, userIdSet: Set<string>): Promise<Player[]> => {
     // Construct the SQL query for debugging
     const sqlQuery = `
@@ -570,73 +570,73 @@ WHERE
     // Return the formatted players for immediate use
     return formattedPlayers;
   };
-
+  
   const fetchTeams = async (tournamentData: any, userIdSet: Set<string>): Promise<Team[]> => {
     // For team tournaments, we need to fetch teams and their captains
     const sqlQuery = `
 WITH approved_registrations AS (
-  SELECT
+  SELECT 
     tr.user_id,
     tr.team_id,
     tr.status
-  FROM
+  FROM 
     tournament_registrations tr
-  WHERE
+  WHERE 
     tr.tournament_id = '${id}'
     AND tr.status = 'approved'
 ),
 team_captains AS (
-  SELECT
+  SELECT 
     tm.team_id,
     tm.user_id AS captain_id
-  FROM
+  FROM 
     team_members tm
-  WHERE
+  WHERE 
     tm.role = 'captain'
     AND tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
 ),
 team_member_counts AS (
-  SELECT
+  SELECT 
     tm.team_id,
     COUNT(tm.user_id) AS member_count
-  FROM
+  FROM 
     team_members tm
-  WHERE
+  WHERE 
     tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
-  GROUP BY
+  GROUP BY 
     tm.team_id
 )
-SELECT
+SELECT 
   t.id,
   t.name,
   tc.captain_id,
   tmc.member_count,
-  CASE
+  CASE 
     WHEN EXISTS (
-      SELECT 1 FROM approved_registrations ar
+      SELECT 1 FROM approved_registrations ar 
       WHERE ar.user_id = tc.captain_id AND ar.team_id = t.id
     ) THEN true
     ELSE false
   END AS captain_approved,
-  CASE
+  CASE 
     WHEN tmc.member_count >= ${tournamentData.max_players_per_team || 5} THEN true
     ELSE false
   END AS has_enough_members,
   ${tournamentData.max_players_per_team || 5} AS required_members
-FROM
+FROM 
   teams t
-LEFT JOIN
+LEFT JOIN 
   team_captains tc ON t.id = tc.team_id
-LEFT JOIN
+LEFT JOIN 
   team_member_counts tmc ON t.id = tmc.team_id
-WHERE
+WHERE 
   t.tournament_id = '${id}'
-ORDER BY
+ORDER BY 
   tmc.member_count DESC, t.name ASC
     `;
-
+    
     setSqlQuery(sqlQuery);
-
+    
     // Fetch teams for this tournament
     const { data: teamsData, error: teamsError } = await supabase
       .from('teams')
@@ -646,9 +646,9 @@ ORDER BY
         captain_id
       `)
       .eq('tournament_id', id);
-
+      
     if (teamsError) throw teamsError;
-
+    
     // Fetch team members to get member counts and captain info
     const { data: teamMembers, error: teamMembersError } = await supabase
       .from('team_members')
@@ -664,7 +664,7 @@ ORDER BY
       .in('team_id', teamsData.map(t => t.id));
 
     if (teamMembersError) throw teamMembersError;
-
+    
     // Fetch approved registrations for captains
     const { data: approvedRegistrations, error: registrationsError } = await supabase
       .from('tournament_registrations')
@@ -675,31 +675,31 @@ ORDER BY
       `)
       .eq('tournament_id', id)
       .eq('status', 'approved');
-
+      
     if (registrationsError) throw registrationsError;
-
+    
     // Create a set of approved user IDs
     const approvedUserIds = new Set(approvedRegistrations.map(reg => reg.user_id));
-
+    
     // Process teams and check approvals...
     const processedTeams = teamsData.map((team, index) => {
       // Find the captain
       const captain = teamMembers.find(tm => tm.team_id === team.id && tm.role === 'captain');
       const captainId = captain?.user_id || team.captain_id;
-
+      
       // Count team members
       const memberCount = teamMembers.filter(tm => tm.team_id === team.id).length;
-
+      
       // Check if captain is approved
       const captainApproved = captainId ? approvedUserIds.has(captainId) && userIdSet.has(captainId) : false;
-
+      
       // Check if team has enough members
       const requiredMembers = tournamentData.max_players_per_team || 5;
       const hasEnoughMembers = memberCount >= requiredMembers;
-
+      
       // Team is approved if captain is approved AND it has enough members
       const isApproved = captainApproved && hasEnoughMembers;
-
+      
       return {
         id: team.id,
         name: team.name,
@@ -711,14 +711,14 @@ ORDER BY
         isApproved
       };
     });
-
+    
     // Store all teams for debugging
     setAllTeams(processedTeams);
-
+    
     // Filter to only approved teams
     const approvedTeamsData = processedTeams.filter(team => team.isApproved);
     setApprovedTeams(approvedTeamsData);
-
+    
     // Sort approved teams by member count (highest first) and assign seeds
     approvedTeamsData.sort((a, b) => b.memberCount - a.memberCount);
     let seededTeams = approvedTeamsData.map((team, index) => ({
@@ -1499,20 +1499,20 @@ ORDER BY
 
   const handleEditBracket = async () => {
     if (!id) return;
-
+    
     try {
       setIsUpdatingBracketStatus(true);
-
+      
       const { updateBracketStatus } = useTournamentStore.getState();
       await updateBracketStatus(id, 'draft');
-
+      
       setIsDraftMode(true);
-
+      
       // Update tournament state
       if (tournament) {
         setTournament({ ...tournament, bracket_status: 'draft' });
       }
-
+      
       toast.success('Bracket is now in draft mode. You can make changes.');
     } catch (error) {
       console.error('Error setting bracket to draft:', error);
@@ -1872,7 +1872,7 @@ ORDER BY
           >
             Back to Brackets
           </Button>
-
+          
           <div className="flex items-center space-x-2">
             <div className="text-xs text-gray-400 bg-dark-200 px-2 py-1 rounded">
               Battle Royale Tournament
@@ -1899,12 +1899,12 @@ ORDER BY
                   <h2 className="text-2xl font-bold text-white mb-2">Tournament Complete!</h2>
                   <p className="text-gray-400 mb-6">All 3 matches have been completed. Here are the final results:</p>
                 </div>
-
-                <BattleRoyaleLeaderboard
+                
+                <BattleRoyaleLeaderboard 
                   tournamentId={id!}
                   showTitle={false}
                 />
-
+                
                 <div className="flex justify-center space-x-4 mt-6">
                   <Button
                     onClick={() => navigate(`/tournaments/${id}/br-entry`)}
@@ -1932,11 +1932,11 @@ ORDER BY
                   </div>
                   <h2 className="text-2xl font-bold text-white mb-2">Battle Royale Tournament</h2>
                   <p className="text-gray-400 mb-6 max-w-md">
-                    Enter match results for each of the 3 Battle Royale matches.
+                    Enter match results for each of the 3 Battle Royale matches. 
                     Players will be ranked based on their cumulative points across all matches.
                   </p>
                 </div>
-
+                
                 <Button
                   onClick={() => navigate(`/tournaments/${id}/br-entry`)}
                   leftIcon={<Target size={20} />}
@@ -1945,7 +1945,7 @@ ORDER BY
                 >
                   Enter Match Results
                 </Button>
-
+                
                 <div className="mt-8 bg-dark-200 p-4 rounded-lg max-w-md">
                   <h3 className="text-sm font-medium text-gray-300 mb-2">How it works:</h3>
                   <ul className="text-xs text-gray-400 space-y-1">

@@ -15,7 +15,7 @@
   2. Security
     - Enable RLS on `kliento_otp_codes` table
     - No public access policies (accessed only via service role in Edge Functions)
-
+    
   3. Indexes
     - Index on phone_number for fast lookups
     - Index on project_config_id for filtering

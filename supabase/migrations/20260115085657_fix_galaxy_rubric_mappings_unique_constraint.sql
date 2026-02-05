@@ -17,18 +17,18 @@
 */
 
 -- Drop the incorrect unique constraint on rubric_id alone
-ALTER TABLE galaxy_rubric_mappings
+ALTER TABLE galaxy_rubric_mappings 
 DROP CONSTRAINT IF EXISTS galaxy_rubric_mappings_rubric_id_key;
 
 -- Ensure the composite unique constraint exists (safe to run if already exists)
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
+    SELECT 1 FROM pg_constraint 
     WHERE conname = 'galaxy_rubric_mappings_unique_mapping'
   ) THEN
-    ALTER TABLE galaxy_rubric_mappings
-    ADD CONSTRAINT galaxy_rubric_mappings_unique_mapping
+    ALTER TABLE galaxy_rubric_mappings 
+    ADD CONSTRAINT galaxy_rubric_mappings_unique_mapping 
     UNIQUE (project_config_id, game_id, rubric_id);
   END IF;
 END $$;

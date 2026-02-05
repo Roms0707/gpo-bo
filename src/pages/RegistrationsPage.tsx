@@ -107,7 +107,7 @@ const RegistrationsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [groupedRegistrations, setGroupedRegistrations] = useState<Record<string, TournamentRegistration[]>>({});
-
+  
   const [isPlayerDetailsModalOpen, setIsPlayerDetailsModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState<TournamentRegistration | null>(null);
   const [userFieldValues, setUserFieldValues] = useState<UserTournamentFieldValue[]>([]);
@@ -319,49 +319,49 @@ const RegistrationsPage: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-
+      
       // Create the SQL query for debugging - Fixed to use proper JOIN syntax
       const sqlQuery = `
-SELECT
-  tr.id,
-  tr.status,
+SELECT 
+  tr.id, 
+  tr.status, 
   tr.created_at,
   tr.tournament_id,
   tr.user_id,
   tr.team_id,
-  t.id as tournament_id,
-  t.title as tournament_title,
-  t.type as tournament_type,
-  t.status as tournament_status,
+  t.id as tournament_id, 
+  t.title as tournament_title, 
+  t.type as tournament_type, 
+  t.status as tournament_status, 
   t.tournament_format,
-  u.id as user_id,
+  u.id as user_id, 
   u.email as user_email,
-  tm.id as team_id,
+  tm.id as team_id, 
   tm.name as team_name,
   (
     SELECT EXISTS (
-      SELECT 1 FROM team_members
-      WHERE team_id = tr.team_id
-      AND user_id = tr.user_id
+      SELECT 1 FROM team_members 
+      WHERE team_id = tr.team_id 
+      AND user_id = tr.user_id 
       AND role = 'captain'
     )
   ) as is_captain
-FROM
+FROM 
   tournament_registrations tr
-JOIN
+JOIN 
   tournaments t ON tr.tournament_id = t.id
-JOIN
+JOIN 
   users u ON tr.user_id = u.id
-LEFT JOIN
+LEFT JOIN 
   teams tm ON tr.team_id = tm.id
-WHERE
+WHERE 
   t.status = 'upcoming'
-ORDER BY
+ORDER BY 
   tr.created_at DESC;
       `;
-
+      
       setDebugSqlQuery(sqlQuery);
-
+      
       // Fetch registrations with team and captain information
       const { data, error } = await supabase
         .from('tournament_registrations')
@@ -374,16 +374,16 @@ ORDER BY
           team:team_id(id, name)
         `)
         .order('created_at', { ascending: false });
-
+      
       if (error) throw error;
 
       // Fetch team members to identify which users are captains
       const { data: teamMembers, error: teamMembersError } = await supabase
         .from('team_members')
         .select('team_id, user_id, role');
-
+        
       if (teamMembersError) throw teamMembersError;
-
+      
       // Create a map of team captains for quick lookup
       const captainMap = new Map();
       teamMembers.forEach(member => {
@@ -399,7 +399,7 @@ ORDER BY
       }));
 
       const filteredData = registrationsWithCaptainInfo;
-
+      
       setRegistrations(filteredData as TournamentRegistration[]);
       setFilteredRegistrations(filteredData as TournamentRegistration[]);
       setIsLoading(false);
@@ -413,7 +413,7 @@ ORDER BY
   useEffect(() => {
     // Group registrations by tournament and team
     const grouped: Record<string, TournamentRegistration[]> = {};
-
+    
     filteredRegistrations.forEach(reg => {
       const tournamentId = reg.tournament.id;
       if (!grouped[tournamentId]) {
@@ -421,33 +421,33 @@ ORDER BY
       }
       grouped[tournamentId].push(reg);
     });
-
+    
     // For each tournament, sort registrations by team name
     Object.keys(grouped).forEach(tournamentId => {
       const tournamentRegs = grouped[tournamentId];
-
+      
       // Check if this is a team tournament
       const isTeamTournament = tournamentRegs.length > 0 && tournamentRegs[0].tournament.type === 'team';
-
+      
       if (isTeamTournament) {
         // Sort by team name first, then by captain status (captains first)
         tournamentRegs.sort((a, b) => {
           // First sort by team name
           const teamNameA = a.team?.name || '';
           const teamNameB = b.team?.name || '';
-
+          
           if (teamNameA !== teamNameB) {
             return teamNameA.localeCompare(teamNameB);
           }
-
+          
           // Then sort by captain status (captains first)
           return (b.is_captain ? 1 : 0) - (a.is_captain ? 1 : 0);
         });
       }
-
+      
       grouped[tournamentId] = tournamentRegs;
     });
-
+    
     setGroupedRegistrations(grouped);
   }, [filteredRegistrations]);
 
@@ -512,15 +512,15 @@ ORDER BY
         .from('tournament_registrations')
         .update({ status: newStatus })
         .eq('id', registrationId);
-
+        
       if (error) throw error;
-
-      setRegistrations(prevState =>
-        prevState.map(reg =>
+      
+      setRegistrations(prevState => 
+        prevState.map(reg => 
           reg.id === registrationId ? { ...reg, status: newStatus } : reg
         )
       );
-
+      
       if (newStatus === 'pending') {
         toast.success('Registration validation undone');
       } else {
@@ -831,7 +831,7 @@ ORDER BY
   const fetchTeamMembers = async (teamId: string) => {
     try {
       setIsLoadingTeamMembers(true);
-
+      
       const { data, error } = await supabase
         .from('team_members')
         .select(`
@@ -844,9 +844,9 @@ ORDER BY
           )
         `)
         .eq('team_id', teamId);
-
+        
       if (error) throw error;
-
+      
       setTeamMembers(data as TeamMember[]);
     } catch (err) {
       console.error('Error fetching team members:', err);
@@ -860,18 +860,18 @@ ORDER BY
   const handleViewPlayerDetails = async (registration: TournamentRegistration) => {
     setSelectedRegistration(registration);
     setIsPlayerDetailsModalOpen(true);
-
+    
     try {
       setIsLoadingFields(true);
       setIsLoadingPublisherIds(true);
-
+      
       // If this is a team registration, fetch team members
       if (registration.team) {
         fetchTeamMembers(registration.team.id);
       } else {
         setTeamMembers([]);
       }
-
+      
       // Fetch user tournament field values
       const { data, error } = await supabase
         .from('user_tournament_field_values')
@@ -887,11 +887,11 @@ ORDER BY
         .eq('user_id', registration.user.id)
         .eq('tournament_id', registration.tournament.id)
         .order('field_index', { ascending: true });
-
+        
       if (error) throw error;
-
+      
       setUserFieldValues(data as UserTournamentFieldValue[]);
-
+      
       // If the tournament has a game, fetch the user's game publisher IDs
       if (registration.tournament.game_id) {
         // First get the game publisher ID types for this game
@@ -899,9 +899,9 @@ ORDER BY
           .from('game_publisher_ids')
           .select('id')
           .eq('game_id', registration.tournament.game_id);
-
+          
         if (publisherIdTypesError) throw publisherIdTypesError;
-
+        
         if (publisherIdTypes && publisherIdTypes.length > 0) {
           // Then get the user's values for these publisher ID types
           const { data: userPublisherIds, error: userPublisherIdsError } = await supabase
@@ -920,9 +920,9 @@ ORDER BY
             `)
             .eq('user_id', registration.user.id)
             .eq('game_id', registration.tournament.game_id);
-
+            
           if (userPublisherIdsError) throw userPublisherIdsError;
-
+          
           setUserGamePublisherIds(userPublisherIds as GamePublisherId[] || []);
         } else {
           setUserGamePublisherIds([]);
@@ -930,7 +930,7 @@ ORDER BY
       } else {
         setUserGamePublisherIds([]);
       }
-
+      
       setIsLoadingFields(false);
       setIsLoadingPublisherIds(false);
     } catch (err) {
@@ -1185,18 +1185,18 @@ ORDER BY
           </button>
         </div>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTournaments.map(tournament => {
           const tournamentRegistrations = registrations.filter(
             reg => reg.tournament.id === tournament.id
           );
-
+          
           const pending = tournamentRegistrations.filter(r => r.status === 'pending').length;
           const approved = tournamentRegistrations.filter(r => r.status === 'approved').length;
           const rejected = tournamentRegistrations.filter(r => r.status === 'rejected').length;
           const total = tournamentRegistrations.length;
-
+          
           return (
             <Card key={tournament.id}>
               <CardContent className="pt-6">
@@ -1228,7 +1228,7 @@ ORDER BY
                       )}
                     </div>
                   </div>
-
+                  
                   <div className="flex flex-col space-y-2">
                     {tournament.bracket_launched_at ? (
                       <Button
@@ -1268,27 +1268,27 @@ ORDER BY
                     )}
                   </div>
                 </div>
-
+                
                 <div className="mt-4 space-y-3">
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-sm text-white font-medium">Registrations</span>
                       <span className="text-sm font-medium text-white">{total} players</span>
                     </div>
-
+                    
                     {total > 0 ? (
                       <div className="w-full bg-gray-200 dark:bg-dark-200 h-2.5 rounded-full overflow-hidden">
                         <div className="flex h-full">
-                          <div
-                            className="bg-success-500 h-full"
+                          <div 
+                            className="bg-success-500 h-full" 
                             style={{ width: `${(approved / total) * 100}%` }}
                           ></div>
-                          <div
-                            className="bg-warning-500 h-full"
+                          <div 
+                            className="bg-warning-500 h-full" 
                             style={{ width: `${(pending / total) * 100}%` }}
                           ></div>
-                          <div
-                            className="bg-error-500 h-full"
+                          <div 
+                            className="bg-error-500 h-full" 
                             style={{ width: `${(rejected / total) * 100}%` }}
                           ></div>
                         </div>
@@ -1297,7 +1297,7 @@ ORDER BY
                       <div className="w-full bg-gray-200 dark:bg-dark-200 h-2.5 rounded-full"></div>
                     )}
                   </div>
-
+                  
                   <div className="flex justify-between">
                     <div className="flex items-center text-sm">
                       <div className="w-3 h-3 rounded-full bg-success-500 mr-1.5"></div>
@@ -1313,7 +1313,7 @@ ORDER BY
                     </div>
                   </div>
                 </div>
-
+                
                 <div className="mt-4">
                   <a
                     href="#registrations-list"
@@ -1341,7 +1341,7 @@ ORDER BY
 
             const matchesFilter = filteredTournaments.some(t => t.id === tournamentId);
             if (!matchesFilter) return null;
-
+            
             return (
               <Card
                 key={tournamentId}
@@ -1359,7 +1359,7 @@ ORDER BY
                     <div>
                       <CardTitle className="flex items-center">
                         <span>{tournament.title}</span>
-                        <Badge
+                        <Badge 
                           variant={tournament.type === 'solo' ? 'accent' : 'secondary'}
                           className="ml-2"
                         >
@@ -1375,7 +1375,7 @@ ORDER BY
                         {regs.length} registration{regs.length !== 1 ? 's' : ''}
                       </p>
                     </div>
-
+                    
                     {canGenerateReports() && (
                       <Button
                         size="sm"
@@ -1394,7 +1394,7 @@ ORDER BY
                     )}
                   </div>
                 </CardHeader>
-
+                
                 <CardContent>
                   <Table>
                     <TableHeader>
@@ -1602,7 +1602,7 @@ ORDER BY
                           <Badge variant="primary" className="ml-2">Captain</Badge>
                         )}
                       </div>
-
+                      
                       {/* Team Members Section */}
                       <div className="mt-3">
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Team Members</p>
@@ -1687,7 +1687,7 @@ ORDER BY
                     <p className="text-sm text-gray-500 dark:text-gray-400">Tournament</p>
                     <p className="font-medium text-primary-600 dark:text-primary-400">{selectedRegistration.tournament.title}</p>
                   </div>
-
+                  
                   <div className="flex flex-wrap gap-2">
                     <div className="flex-1 min-w-[150px]">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
@@ -1697,7 +1697,7 @@ ORDER BY
                         </Badge>
                       </p>
                     </div>
-
+                    
                     {selectedRegistration.tournament.tournament_format && (
                       <div className="flex-1 min-w-[150px]">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Format</p>
@@ -1708,12 +1708,12 @@ ORDER BY
                         </p>
                       </div>
                     )}
-
+                    
                     <div className="flex-1 min-w-[150px]">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
                       <p>{getStatusBadge(selectedRegistration.status)}</p>
                     </div>
-
+                    
                     <div className="flex-1 min-w-[150px]">
                       <p className="text-sm text-gray-500 dark:text-gray-400">Registration Date</p>
                       <p className="text-primary-600 dark:text-primary-400">{formatDateWithTime(selectedRegistration.created_at)}</p>

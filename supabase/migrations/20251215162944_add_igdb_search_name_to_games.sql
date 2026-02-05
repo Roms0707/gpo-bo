@@ -3,7 +3,7 @@
 
   1. New Columns
     - `igdb_search_name` (text) - Optional custom search term for IGDB API lookups
-
+    
   2. Purpose
     - Allows specifying an alternative name for IGDB searches when the game name
       doesn't match IGDB's naming (e.g., "FC26" needs to search for "EA Sports FC 25")

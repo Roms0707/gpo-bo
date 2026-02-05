@@ -32,7 +32,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
     }
   };
 
-  const filteredCountries = countries.filter(country =>
+  const filteredCountries = countries.filter(country => 
     country.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -52,15 +52,15 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
 
   return (
     <div className="relative" ref={containerRef}>
-      <div
+      <div 
         className="flex items-center justify-between p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-dark-200 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center">
           <Globe className="h-5 w-5 text-gray-400 mr-2" />
           <span className="text-gray-700 dark:text-gray-300">
-            {selectedCountries.length === 0
-              ? 'Select countries'
+            {selectedCountries.length === 0 
+              ? 'Select countries' 
               : `${selectedCountries.length} countries selected`}
           </span>
         </div>
@@ -83,7 +83,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
       </div>
 
       {isOpen && (
-        <div
+        <div 
           ref={dropdownRef}
           className="absolute z-10 bottom-full mb-1 w-full bg-white dark:bg-dark-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg"
           style={{ maxHeight: '320px', display: 'flex', flexDirection: 'column' }}
@@ -97,7 +97,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
               className="text-sm"
             />
           </div>
-
+          
           <div className="flex-1 overflow-y-auto p-2" style={{ maxHeight: '240px' }}>
             {filteredCountries.length === 0 ? (
               <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-sm">
@@ -130,7 +130,7 @@ const CountrySelector: React.FC<CountrySelectorProps> = ({
               </div>
             )}
           </div>
-
+          
           <div className="p-2 border-t border-gray-200 dark:border-dark-300 flex justify-between items-center">
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {selectedCountries.length} selected

@@ -35,15 +35,15 @@ const SwissStandings: React.FC<SwissStandingsProps> = ({
   };
 
   const knockoutSize = getKnockoutSize(sortedParticipants.length);
-
+  
   // Count qualified and eliminated participants
   const qualifiedCount = sortedParticipants.filter(p => p.wins >= 3 || p.isQualified).length;
   const eliminatedCount = sortedParticipants.filter(p => p.losses >= 3 || p.isEliminated).length;
   const activeCount = sortedParticipants.length - qualifiedCount - eliminatedCount;
-
+  
   // Check if 50% threshold is reached
   const fiftyPercentReached = qualifiedCount >= Math.ceil(sortedParticipants.length / 2);
-
+  
   return (
     <Card>
       <CardHeader>
@@ -103,8 +103,8 @@ const SwissStandings: React.FC<SwissStandingsProps> = ({
             <tbody>
               {sortedParticipants.map((participant, index) => (
                 <tr key={participant.id} className={`border-b border-gray-100 dark:border-dark-300 ${
-                  participant.wins >= 3 ? 'bg-success-900/20' :
-                  participant.losses >= 3 ? 'bg-error-900/10' :
+                  participant.wins >= 3 ? 'bg-success-900/20' : 
+                  participant.losses >= 3 ? 'bg-error-900/10' : 
                   index < knockoutSize && (fiftyPercentReached || currentRound >= maxRounds) ? 'bg-primary-900/10' : ''
                 }`}>
                   <td className="py-2 px-3 font-bold text-white">
@@ -156,28 +156,28 @@ const SwissStandings: React.FC<SwissStandingsProps> = ({
             </tbody>
           </table>
         </div>
-
+        
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
           <div className="p-3 bg-success-900/20 border border-success-500/30 rounded-lg">
             <div className="text-xl font-bold text-success-400">{qualifiedCount}</div>
             <div className="text-sm text-success-300">Qualified</div>
           </div>
-
+          
           <div className="p-3 bg-primary-900/20 border border-primary-500/30 rounded-lg">
             <div className="text-xl font-bold text-primary-400">{activeCount}</div>
             <div className="text-sm text-primary-300">Active</div>
           </div>
-
+          
           <div className="p-3 bg-error-900/20 border border-error-500/30 rounded-lg">
             <div className="text-xl font-bold text-error-400">{eliminatedCount}</div>
             <div className="text-sm text-error-300">Eliminated</div>
           </div>
         </div>
-
+        
         <div className="mt-4 p-3 bg-dark-200 rounded-lg text-sm text-gray-300">
           <p className="flex items-center">
             <Trophy className="h-4 w-4 mr-2 text-yellow-500" />
-            <strong>Swiss Tournament Rules:</strong> Players with 3 wins qualify automatically. Players with 3 losses are eliminated.
+            <strong>Swiss Tournament Rules:</strong> Players with 3 wins qualify automatically. Players with 3 losses are eliminated. 
             The tournament advances to knockout stage when 50% of participants qualify or after 5 rounds.
           </p>
         </div>
