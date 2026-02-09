@@ -5,7 +5,7 @@
     - Inserts initial test record into `bigfloetoli` table
     - bigflo: "Kickoff Glitch - FIFA"
     - oli: M3U8 video stream URL from Galaxy API
-  
+
   2. Notes
     - This is test data for the Jul page
     - Uses ON CONFLICT to prevent duplicate inserts

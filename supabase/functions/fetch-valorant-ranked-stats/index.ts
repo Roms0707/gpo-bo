@@ -27,7 +27,7 @@ const getValorantRegion = (region: string): string => {
     'tr1': 'eu',
     'ru': 'eu'
   };
-  
+
   return regionMap[region] || 'eu';
 };
 
@@ -90,7 +90,7 @@ serve(async (req) => {
     // Fetch player's competitive updates (ranked stats)
     const competitiveUrl = `https://${valorantRegion}.api.riotgames.com/val/ranked/v1/leaderboards/by-act/${currentActId}?size=1&startIndex=0&query=${puuid}`;
     console.log(`[Valorant Ranked] Calling Competitive API: ${competitiveUrl}`);
-    
+
     const competitiveResponse = await fetch(competitiveUrl, {
       headers: { "X-Riot-Token": RIOT_API_KEY },
     });
@@ -99,11 +99,11 @@ serve(async (req) => {
 
     if (competitiveResponse.ok) {
       const competitiveDataRaw = await competitiveResponse.json();
-      
+
       // Process the competitive data
       if (competitiveDataRaw.players && competitiveDataRaw.players.length > 0) {
         const playerData = competitiveDataRaw.players;
-        
+
         rankedData = {
           puuid: playerData.puuid,
           gameName: playerData.gameName,
@@ -114,11 +114,11 @@ serve(async (req) => {
           competitiveTier: playerData.competitiveTier,
           actId: currentActId
         };
-        
+
         console.log("[Valorant Ranked] Ranked data obtained successfully");
       } else {
         console.log("[Valorant Ranked] Player not found in leaderboard");
-        
+
         // If player is not in leaderboard, try to get basic competitive info
         // This would require a different endpoint or approach
         rankedData = {
@@ -133,7 +133,7 @@ serve(async (req) => {
     } else {
       const errorText = await competitiveResponse.text();
       console.warn(`[Valorant Ranked] Competitive API error: Status ${competitiveResponse.status}, Body: ${errorText}`);
-      
+
       // Return basic structure even if API call fails
       rankedData = {
         puuid: puuid,

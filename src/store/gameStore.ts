@@ -25,7 +25,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   fetchGames: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('games')
         .select('*')
@@ -33,12 +33,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         .order('name', { ascending: true });
 
       if (error) throw error;
-      
+
       set({ games: data, isLoading: false });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred fetching games',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -46,7 +46,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   createGame: async (game) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('games')
         .insert([game])
@@ -54,17 +54,17 @@ export const useGameStore = create<GameState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         games: [...get().games, data],
-        isLoading: false 
+        isLoading: false
       });
-      
+
       toast.success('Game created successfully');
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred creating game',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to create game');
       throw error;
@@ -74,7 +74,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   updateGame: async (id, game) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('games')
         .update(game)
@@ -83,17 +83,17 @@ export const useGameStore = create<GameState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         games: get().games.map(g => g.id === id ? data : g),
-        isLoading: false 
+        isLoading: false
       });
-      
+
       toast.success('Game updated successfully');
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating game',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to update game');
       throw error;
@@ -103,24 +103,24 @@ export const useGameStore = create<GameState>((set, get) => ({
   deleteGame: async (id) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { error } = await supabase
         .from('games')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         games: get().games.filter(g => g.id !== id),
-        isLoading: false 
+        isLoading: false
       });
-      
+
       toast.success('Game deleted successfully');
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred deleting game',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to delete game');
     }

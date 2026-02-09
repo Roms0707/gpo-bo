@@ -43,8 +43,8 @@ CREATE POLICY "Anyone can read game coaching configs"
   TO authenticated
   USING (true);
 
-CREATE INDEX IF NOT EXISTS idx_game_coaching_ui_config_game_id 
+CREATE INDEX IF NOT EXISTS idx_game_coaching_ui_config_game_id
   ON game_coaching_ui_config(game_id);
 
-CREATE INDEX IF NOT EXISTS idx_game_coaching_ui_config_category 
+CREATE INDEX IF NOT EXISTS idx_game_coaching_ui_config_category
   ON game_coaching_ui_config(game_category);

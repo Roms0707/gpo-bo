@@ -212,17 +212,17 @@ const PrizeManager: React.FC<PrizeManagerProps> = ({
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `tournament-prizes/${fileName}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('tournament-image-bucket')
         .upload(filePath, file);
-        
+
       if (uploadError) throw uploadError;
-      
+
       const { data } = supabase.storage
         .from('tournament-image-bucket')
         .getPublicUrl(filePath);
-        
+
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -257,7 +257,7 @@ const PrizeManager: React.FC<PrizeManagerProps> = ({
 
     try {
       let imageUrl = editingPrize?.image_url || null;
-      
+
       // Upload new image if provided
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile);
@@ -285,7 +285,7 @@ const PrizeManager: React.FC<PrizeManagerProps> = ({
               redemption_code: prizeType === 'physical_digital' ? redemptionCode || null : null
             })
             .eq('id', editingPrize.id);
-          
+
           if (error) throw error;
         }
 
@@ -338,9 +338,9 @@ const PrizeManager: React.FC<PrizeManagerProps> = ({
             })
             .select()
             .single();
-          
+
           if (error) throw error;
-          
+
           newPrize.id = data.id;
         }
 

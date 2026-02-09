@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info, X } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info, X, Globe, FileText } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -21,8 +21,10 @@ import {
   validateOtpSmsTemplate,
   AuthMethod,
   KlientoAuthType,
+  LegalMode,
   DEFAULT_OTP_SMS_TEMPLATE,
   OTP_SMS_TEMPLATE_MAX_LENGTH,
+  validateLegalUrl,
 } from '../../services/projectConfigService';
 import { validateDomainFormat, normalizeDomain } from '../../utils/domainValidation';
 import { LegalVariablesPreview } from './LegalVariablesPreview';
@@ -101,6 +103,12 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [discordUrl, setDiscordUrl] = useState('https://discord.gg/orangearena');
 
+  const [legalMode, setLegalMode] = useState<LegalMode>('variables');
+  const [tosUrl, setTosUrl] = useState('');
+  const [privacyPolicyUrl, setPrivacyPolicyUrl] = useState('');
+  const [legalNoticeUrl, setLegalNoticeUrl] = useState('');
+  const [contactUrl, setContactUrl] = useState('');
+
   useEffect(() => {
     if (!isOpen) {
       resetForm();
@@ -144,6 +152,11 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setPhoneNumber('');
     setRegistrationNumber('');
     setDiscordUrl('https://discord.gg/orangearena');
+    setLegalMode('variables');
+    setTosUrl('');
+    setPrivacyPolicyUrl('');
+    setLegalNoticeUrl('');
+    setContactUrl('');
     setErrors({});
   };
 
@@ -245,42 +258,57 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     }
 
     if (step === 5) {
-      if (!supportEmail.trim()) {
-        newErrors.supportEmail = 'Support email is required';
-      } else if (!validateEmail(supportEmail)) {
-        newErrors.supportEmail = 'Invalid email format';
-      }
+      if (legalMode === 'url') {
+        if (tosUrl.trim() && !validateLegalUrl(tosUrl)) {
+          newErrors.tosUrl = 'Invalid URL format';
+        }
+        if (privacyPolicyUrl.trim() && !validateLegalUrl(privacyPolicyUrl)) {
+          newErrors.privacyPolicyUrl = 'Invalid URL format';
+        }
+        if (legalNoticeUrl.trim() && !validateLegalUrl(legalNoticeUrl)) {
+          newErrors.legalNoticeUrl = 'Invalid URL format';
+        }
+        if (contactUrl.trim() && !validateLegalUrl(contactUrl)) {
+          newErrors.contactUrl = 'Invalid URL format';
+        }
+      } else {
+        if (!supportEmail.trim()) {
+          newErrors.supportEmail = 'Support email is required';
+        } else if (!validateEmail(supportEmail)) {
+          newErrors.supportEmail = 'Invalid email format';
+        }
 
-      if (!legalEmail.trim()) {
-        newErrors.legalEmail = 'Legal email is required';
-      } else if (!validateEmail(legalEmail)) {
-        newErrors.legalEmail = 'Invalid email format';
-      }
+        if (!legalEmail.trim()) {
+          newErrors.legalEmail = 'Legal email is required';
+        } else if (!validateEmail(legalEmail)) {
+          newErrors.legalEmail = 'Invalid email format';
+        }
 
-      if (!privacyEmail.trim()) {
-        newErrors.privacyEmail = 'Privacy email is required';
-      } else if (!validateEmail(privacyEmail)) {
-        newErrors.privacyEmail = 'Invalid email format';
-      }
+        if (!privacyEmail.trim()) {
+          newErrors.privacyEmail = 'Privacy email is required';
+        } else if (!validateEmail(privacyEmail)) {
+          newErrors.privacyEmail = 'Invalid email format';
+        }
 
-      if (!companyName.trim()) {
-        newErrors.companyName = 'Company name is required';
-      }
+        if (!companyName.trim()) {
+          newErrors.companyName = 'Company name is required';
+        }
 
-      if (!companyAddress.trim()) {
-        newErrors.companyAddress = 'Company address is required';
-      }
+        if (!companyAddress.trim()) {
+          newErrors.companyAddress = 'Company address is required';
+        }
 
-      if (!phoneNumber.trim()) {
-        newErrors.phoneNumber = 'Phone number is required';
-      }
+        if (!phoneNumber.trim()) {
+          newErrors.phoneNumber = 'Phone number is required';
+        }
 
-      if (!registrationNumber.trim()) {
-        newErrors.registrationNumber = 'Registration number is required';
-      }
+        if (!registrationNumber.trim()) {
+          newErrors.registrationNumber = 'Registration number is required';
+        }
 
-      if (discordUrl.trim() && !validateDiscordUrl(discordUrl)) {
-        newErrors.discordUrl = 'Invalid Discord URL format. Use https://discord.gg/[invite-code]';
+        if (discordUrl.trim() && !validateDiscordUrl(discordUrl)) {
+          newErrors.discordUrl = 'Invalid Discord URL format. Use https://discord.gg/[invite-code]';
+        }
       }
     }
 
@@ -385,6 +413,11 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         phone_number: phoneNumber.trim(),
         registration_number: registrationNumber.trim(),
         discord_url: discordUrl.trim() || null,
+        legal_mode: legalMode,
+        tos_url: legalMode === 'url' ? (tosUrl.trim() || null) : null,
+        privacy_policy_url: legalMode === 'url' ? (privacyPolicyUrl.trim() || null) : null,
+        legal_notice_url: legalMode === 'url' ? (legalNoticeUrl.trim() || null) : null,
+        contact_url: legalMode === 'url' ? (contactUrl.trim() || null) : null,
       });
 
       if (error) throw error;
@@ -1002,127 +1035,202 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
           <div className="space-y-4">
             <h3 className="text-base md:text-lg font-semibold text-white mb-3 md:mb-4">Legal Information</h3>
 
-            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
-              <h4 className="text-sm font-medium text-white mb-2">Contact Information</h4>
-              <p className="text-xs text-gray-400">
-                These email addresses will be used in legal documents and communications
-              </p>
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => { setLegalMode('variables'); setErrors({}); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  legalMode === 'variables'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-dark-200 text-gray-400 hover:text-white hover:bg-dark-100'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                Template Variables
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLegalMode('url'); setErrors({}); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  legalMode === 'url'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-dark-200 text-gray-400 hover:text-white hover:bg-dark-100'
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                External URLs
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              <Input
-                label="Support Email"
-                type="email"
-                value={supportEmail}
-                onChange={(e) => setSupportEmail(e.target.value)}
-                error={errors.supportEmail}
-                placeholder="support@example.com"
-                helperText="General support inquiries"
-                required
-              />
+            {legalMode === 'url' ? (
+              <>
+                <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+                  <h4 className="text-sm font-medium text-white mb-2">External Legal Pages</h4>
+                  <p className="text-xs text-gray-400">
+                    Provide URLs to your externally hosted legal pages. Users will be redirected to these links.
+                  </p>
+                </div>
 
-              <Input
-                label="Legal Email"
-                type="email"
-                value={legalEmail}
-                onChange={(e) => setLegalEmail(e.target.value)}
-                error={errors.legalEmail}
-                placeholder="legal@example.com"
-                helperText="Legal matters and compliance"
-                required
-              />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <Input
+                    label="Terms of Service URL"
+                    value={tosUrl}
+                    onChange={(e) => setTosUrl(e.target.value)}
+                    error={errors.tosUrl}
+                    placeholder="https://example.com/terms"
+                    helperText="Link to your Terms of Service page"
+                  />
+                  <Input
+                    label="Privacy Policy URL"
+                    value={privacyPolicyUrl}
+                    onChange={(e) => setPrivacyPolicyUrl(e.target.value)}
+                    error={errors.privacyPolicyUrl}
+                    placeholder="https://example.com/privacy"
+                    helperText="Link to your Privacy Policy page"
+                  />
+                  <Input
+                    label="Legal Notice URL"
+                    value={legalNoticeUrl}
+                    onChange={(e) => setLegalNoticeUrl(e.target.value)}
+                    error={errors.legalNoticeUrl}
+                    placeholder="https://example.com/legal-notice"
+                    helperText="Link to your Legal Notice page"
+                  />
+                  <Input
+                    label="Contact Page URL"
+                    value={contactUrl}
+                    onChange={(e) => setContactUrl(e.target.value)}
+                    error={errors.contactUrl}
+                    placeholder="https://example.com/contact"
+                    helperText="Link to your Contact page"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+                  <h4 className="text-sm font-medium text-white mb-2">Contact Information</h4>
+                  <p className="text-xs text-gray-400">
+                    These email addresses will be used in legal documents and communications
+                  </p>
+                </div>
 
-              <Input
-                label="Privacy Email"
-                type="email"
-                value={privacyEmail}
-                onChange={(e) => setPrivacyEmail(e.target.value)}
-                error={errors.privacyEmail}
-                placeholder="privacy@example.com"
-                helperText="Privacy-related concerns"
-                required
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                  <Input
+                    label="Support Email"
+                    type="email"
+                    value={supportEmail}
+                    onChange={(e) => setSupportEmail(e.target.value)}
+                    error={errors.supportEmail}
+                    placeholder="support@example.com"
+                    helperText="General support inquiries"
+                    required
+                  />
 
-            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
-              <h4 className="text-sm font-medium text-white mb-2">Company Information</h4>
-              <p className="text-xs text-gray-400">
-                Official company details for legal documents
-              </p>
-            </div>
+                  <Input
+                    label="Legal Email"
+                    type="email"
+                    value={legalEmail}
+                    onChange={(e) => setLegalEmail(e.target.value)}
+                    error={errors.legalEmail}
+                    placeholder="legal@example.com"
+                    helperText="Legal matters and compliance"
+                    required
+                  />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <Input
-                label="Company Name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                error={errors.companyName}
-                placeholder="Acme Corporation"
-                helperText="Official registered company name"
-                required
-              />
+                  <Input
+                    label="Privacy Email"
+                    type="email"
+                    value={privacyEmail}
+                    onChange={(e) => setPrivacyEmail(e.target.value)}
+                    error={errors.privacyEmail}
+                    placeholder="privacy@example.com"
+                    helperText="Privacy-related concerns"
+                    required
+                  />
+                </div>
 
-              <Input
-                label="Registration Number"
-                value={registrationNumber}
-                onChange={(e) => setRegistrationNumber(e.target.value)}
-                error={errors.registrationNumber}
-                placeholder="12345678"
-                helperText="Company registration or tax ID"
-                required
-              />
-            </div>
+                <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+                  <h4 className="text-sm font-medium text-white mb-2">Company Information</h4>
+                  <p className="text-xs text-gray-400">
+                    Official company details for legal documents
+                  </p>
+                </div>
 
-            <Input
-              label="Phone Number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              error={errors.phoneNumber}
-              placeholder="+1 (555) 123-4567"
-              helperText="Company contact phone number"
-              required
-            />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <Input
+                    label="Company Name"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    error={errors.companyName}
+                    placeholder="Acme Corporation"
+                    helperText="Official registered company name"
+                    required
+                  />
 
-            <div>
-              <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
-                Company Address <span className="text-error-500">*</span>
-              </label>
-              <textarea
-                value={companyAddress}
-                onChange={(e) => setCompanyAddress(e.target.value)}
-                className={`
-                  w-full px-3 py-2 min-h-[80px] text-xs md:text-sm
-                  bg-dark-300
-                  border ${errors.companyAddress ? 'border-error-500' : 'border-dark-200'}
-                  rounded-lg
-                  text-white
-                  focus:outline-none focus:ring-2 focus:ring-primary-500
-                `}
-                placeholder="123 Main Street, Suite 100, City, State, ZIP"
-              />
-              {errors.companyAddress && (
-                <p className="text-xs text-error-500 mt-1">{errors.companyAddress}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                Full company address ({companyAddress.length} characters)
-              </p>
-            </div>
+                  <Input
+                    label="Registration Number"
+                    value={registrationNumber}
+                    onChange={(e) => setRegistrationNumber(e.target.value)}
+                    error={errors.registrationNumber}
+                    placeholder="12345678"
+                    helperText="Company registration or tax ID"
+                    required
+                  />
+                </div>
 
-            <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
-              <h4 className="text-sm font-medium text-white mb-2">Community Links</h4>
-              <p className="text-xs text-gray-400">
-                Social and community links displayed on the Contact page
-              </p>
-            </div>
+                <Input
+                  label="Phone Number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  error={errors.phoneNumber}
+                  placeholder="+1 (555) 123-4567"
+                  helperText="Company contact phone number"
+                  required
+                />
 
-            <Input
-              label="Discord Invite URL"
-              value={discordUrl}
-              onChange={(e) => setDiscordUrl(e.target.value)}
-              error={errors.discordUrl}
-              placeholder="https://discord.gg/your-server"
-              helperText="Discord server invite link for the Contact page (optional)"
-            />
+                <div>
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                    Company Address <span className="text-error-500">*</span>
+                  </label>
+                  <textarea
+                    value={companyAddress}
+                    onChange={(e) => setCompanyAddress(e.target.value)}
+                    className={`
+                      w-full px-3 py-2 min-h-[80px] text-xs md:text-sm
+                      bg-dark-300
+                      border ${errors.companyAddress ? 'border-error-500' : 'border-dark-200'}
+                      rounded-lg
+                      text-white
+                      focus:outline-none focus:ring-2 focus:ring-primary-500
+                    `}
+                    placeholder="123 Main Street, Suite 100, City, State, ZIP"
+                  />
+                  {errors.companyAddress && (
+                    <p className="text-xs text-error-500 mt-1">{errors.companyAddress}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    Full company address ({companyAddress.length} characters)
+                  </p>
+                </div>
+
+                <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
+                  <h4 className="text-sm font-medium text-white mb-2">Community Links</h4>
+                  <p className="text-xs text-gray-400">
+                    Social and community links displayed on the Contact page
+                  </p>
+                </div>
+
+                <Input
+                  label="Discord Invite URL"
+                  value={discordUrl}
+                  onChange={(e) => setDiscordUrl(e.target.value)}
+                  error={errors.discordUrl}
+                  placeholder="https://discord.gg/your-server"
+                  helperText="Discord server invite link for the Contact page (optional)"
+                />
+              </>
+            )}
 
             <div className="mt-6">
               <LegalVariablesPreview
@@ -1134,6 +1242,11 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                 phoneNumber={phoneNumber}
                 registrationNumber={registrationNumber}
                 discordUrl={discordUrl}
+                legalMode={legalMode}
+                tosUrl={tosUrl}
+                privacyPolicyUrl={privacyPolicyUrl}
+                legalNoticeUrl={legalNoticeUrl}
+                contactUrl={contactUrl}
               />
             </div>
           </div>

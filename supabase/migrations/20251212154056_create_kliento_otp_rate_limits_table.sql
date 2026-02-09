@@ -14,11 +14,11 @@
   2. Security
     - Enable RLS on `kliento_otp_rate_limits` table
     - No public access policies (accessed only via service role in Edge Functions)
-    
+
   3. Indexes
     - Unique index on (phone_number, project_config_id) for upsert operations
     - Index on window_start for cleanup operations
-    
+
   4. Notes
     - Rate limit: Max 5 requests per phone per 15-minute window
     - Window resets after 15 minutes of inactivity
@@ -41,8 +41,8 @@ COMMENT ON COLUMN kliento_otp_rate_limits.window_start IS 'Start timestamp of th
 
 ALTER TABLE kliento_otp_rate_limits ENABLE ROW LEVEL SECURITY;
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_kliento_otp_rate_limits_phone_project 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_kliento_otp_rate_limits_phone_project
   ON kliento_otp_rate_limits(phone_number, project_config_id);
 
-CREATE INDEX IF NOT EXISTS idx_kliento_otp_rate_limits_window_start 
+CREATE INDEX IF NOT EXISTS idx_kliento_otp_rate_limits_window_start
   ON kliento_otp_rate_limits(window_start);

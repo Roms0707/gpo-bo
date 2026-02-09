@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
     console.log(`[Coaching Videos] Fetching videos for game ${game_id}, topic: ${topic}`);
 
     let searchKeywords: string[] = [...keywords];
-    
+
     if (topic && TOPIC_KEYWORD_MAP[topic.toLowerCase()]) {
       searchKeywords = [...searchKeywords, ...TOPIC_KEYWORD_MAP[topic.toLowerCase()]];
     }
@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (searchKeywords.length > 0) {
-      const orConditions = searchKeywords.map(kw => 
+      const orConditions = searchKeywords.map(kw =>
         `title.ilike.%${kw}%,description.ilike.%${kw}%`
       ).join(',');
       query = query.or(orConditions);

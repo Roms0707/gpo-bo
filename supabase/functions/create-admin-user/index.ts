@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     // Initialize Supabase clients
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
+
     // Client for checking permissions (using user's token)
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
     const supabaseUser = createClient(supabaseUrl, supabaseServiceKey, {
@@ -44,9 +44,9 @@ Deno.serve(async (req) => {
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid user token' }),
-        { 
-          status: 401, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -61,9 +61,9 @@ Deno.serve(async (req) => {
     if (userDataError || userData?.role !== 'master_admin') {
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions. Only master_admin can create administrators.' }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -74,9 +74,9 @@ Deno.serve(async (req) => {
     if (!email || !password || !role) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: email, password, role' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -86,9 +86,9 @@ Deno.serve(async (req) => {
     if (!validRoles.includes(role)) {
       return new Response(
         JSON.stringify({ error: 'Invalid role. Must be one of: admin, super_admin, master_admin' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -97,9 +97,9 @@ Deno.serve(async (req) => {
     if (role === 'admin' && !country) {
       return new Response(
         JSON.stringify({ error: 'Country is required for admin role' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -114,9 +114,9 @@ Deno.serve(async (req) => {
     if (authError) {
       return new Response(
         JSON.stringify({ error: `Failed to create user: ${authError.message}` }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -124,9 +124,9 @@ Deno.serve(async (req) => {
     if (!authData.user) {
       return new Response(
         JSON.stringify({ error: 'Failed to create user - no user data returned' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
@@ -145,19 +145,19 @@ Deno.serve(async (req) => {
     if (userInsertError) {
       // If user table insert fails, clean up the auth user
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      
+
       return new Response(
         JSON.stringify({ error: `Failed to create user record: ${userInsertError.message}` }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Administrator created successfully',
         user: {
           id: authData.user.id,
@@ -166,9 +166,9 @@ Deno.serve(async (req) => {
           country: role === 'admin' ? country : null,
         }
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
@@ -176,9 +176,9 @@ Deno.serve(async (req) => {
     console.error('Error in create-admin-user function:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

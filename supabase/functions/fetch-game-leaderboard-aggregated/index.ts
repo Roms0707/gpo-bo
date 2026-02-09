@@ -47,7 +47,7 @@ serve(async (req) => {
   );
 
   try {
-    const { 
+    const {
       game_id,
       leaderboard_type = 'both',
       search_query = '',
@@ -57,7 +57,7 @@ serve(async (req) => {
       limit = 50,
       offset = 0
     } = await req.json() as GameLeaderboardRequest;
-    
+
     console.log(`[Game Leaderboard Aggregated] Request received for game: ${game_id}, type: ${leaderboard_type}`);
 
     // Validate input
@@ -136,7 +136,7 @@ serve(async (req) => {
         soloLeaderboard = soloData.map((ranking, index) => {
           const matches = ranking.wins + ranking.losses;
           const winRate = matches > 0 ? Math.round((ranking.wins / matches) * 100) : 0;
-          
+
           return {
             rank: offset + index + 1,
             user_id: ranking.user_id,
@@ -206,7 +206,7 @@ serve(async (req) => {
         teamLeaderboard = teamData.map((ranking, index) => {
           const matches = ranking.wins + ranking.losses;
           const winRate = matches > 0 ? Math.round((ranking.wins / matches) * 100) : 0;
-          
+
           return {
             rank: offset + index + 1,
             team_id: ranking.team_id,
@@ -255,7 +255,7 @@ serve(async (req) => {
           let player2Name = 'Unknown Player';
           let player1Id = '';
           let player2Id = '';
-          
+
           if (match.is_team_match) {
             // Get team names
             if (match.winner_team_id) {
@@ -269,7 +269,7 @@ serve(async (req) => {
                 player1Id = match.winner_team_id;
               }
             }
-            
+
             if (match.loser_team_id) {
               const { data: loserTeam } = await supabase
                 .from('teams')
@@ -294,7 +294,7 @@ serve(async (req) => {
                 player1Id = match.winner_player_id;
               }
             }
-            
+
             if (match.loser_player_id) {
               const { data: loserUser } = await supabase
                 .from('users')
@@ -307,7 +307,7 @@ serve(async (req) => {
               }
             }
           }
-          
+
           return {
             id: match.id,
             date: match.match_date,

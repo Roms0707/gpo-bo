@@ -24,7 +24,8 @@ const RubricMappingModal: React.FC<RubricMappingModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={`Rubric Mappings - ${projectConfig.config_name}`}
-      size="5xl"
+      size="full"
+      maxWidth="max-w-7xl"
     >
       <div className="space-y-4">
         <div className="bg-dark-300 rounded-lg p-3 md:p-4 border border-dark-200">

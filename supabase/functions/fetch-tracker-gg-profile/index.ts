@@ -95,9 +95,9 @@ serve(async (req) => {
     if (!trackerResponse.ok) {
       const errorText = await trackerResponse.text();
       console.error(`[Tracker.gg] API error: Status ${trackerResponse.status}, Body: ${errorText}`);
-      
+
       let errorMessage = `API Error: ${trackerResponse.status}`;
-      
+
       switch (trackerResponse.status) {
         case 401:
           errorMessage = "Invalid API key";
@@ -117,7 +117,7 @@ serve(async (req) => {
         default:
           errorMessage = `Tracker.gg API error: ${trackerResponse.status}`;
       }
-      
+
       return new Response(
         JSON.stringify({ success: false, error: errorMessage }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }

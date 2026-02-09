@@ -3,6 +3,7 @@ import { validateDomainFormat, normalizeDomain } from '../utils/domainValidation
 
 export type AuthMethod = 'email' | 'discord' | 'kliento';
 export type KlientoAuthType = 'password' | 'otp';
+export type LegalMode = 'variables' | 'url';
 
 export const AUTH_METHODS: AuthMethod[] = ['email', 'discord', 'kliento'];
 export const KLIENTO_AUTH_TYPES: KlientoAuthType[] = ['password', 'otp'];
@@ -48,6 +49,11 @@ export interface ProjectConfiguration {
   phone_number: string;
   registration_number: string;
   discord_url: string | null;
+  legal_mode: LegalMode;
+  tos_url: string | null;
+  privacy_policy_url: string | null;
+  legal_notice_url: string | null;
+  contact_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +96,11 @@ export interface CreateProjectConfigData {
   phone_number: string;
   registration_number: string;
   discord_url?: string | null;
+  legal_mode?: LegalMode;
+  tos_url?: string | null;
+  privacy_policy_url?: string | null;
+  legal_notice_url?: string | null;
+  contact_url?: string | null;
 }
 
 export interface UpdateProjectConfigData extends Partial<CreateProjectConfigData> {
@@ -187,6 +198,16 @@ export type LegalVariablePlaceholders = {
 export const validateDiscordUrl = (url: string): boolean => {
   if (!url || !url.trim()) return true;
   return /^https:\/\/discord\.gg\/[a-zA-Z0-9]+$/.test(url.trim());
+};
+
+export const validateLegalUrl = (url: string): boolean => {
+  if (!url || !url.trim()) return true;
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+  } catch {
+    return false;
+  }
 };
 
 export const validateOtpSmsTemplate = (template: string): { valid: boolean; error?: string } => {
@@ -738,6 +759,11 @@ export const duplicateProjectConfiguration = async (
       phone_number: sourceConfig.phone_number,
       registration_number: sourceConfig.registration_number,
       discord_url: sourceConfig.discord_url,
+      legal_mode: sourceConfig.legal_mode || 'variables',
+      tos_url: sourceConfig.tos_url,
+      privacy_policy_url: sourceConfig.privacy_policy_url,
+      legal_notice_url: sourceConfig.legal_notice_url,
+      contact_url: sourceConfig.contact_url,
     };
 
     const { data, error } = await supabase

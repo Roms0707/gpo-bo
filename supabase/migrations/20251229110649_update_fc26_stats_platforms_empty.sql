@@ -12,8 +12,8 @@
 UPDATE game_coaching_ui_config
 SET stats_platforms = '[]'::jsonb
 WHERE game_id IN (
-  SELECT id FROM games 
-  WHERE LOWER(name) LIKE '%fc%' 
-    OR LOWER(name) LIKE '%fifa%' 
+  SELECT id FROM games
+  WHERE LOWER(name) LIKE '%fc%'
+    OR LOWER(name) LIKE '%fifa%'
     OR LOWER(name) LIKE '%ea sports fc%'
 );

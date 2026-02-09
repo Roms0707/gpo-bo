@@ -1,9 +1,9 @@
 /*
   # Add Sendito SMS API Configuration
-  
+
   1. Schema Changes
     - Adds `extra_config` JSONB column to `platform_api_integrations` table
-    
+
   2. New Configuration
     - Adds Sendito SMS provider with credentials
     - api_key = sesame_login
@@ -42,7 +42,7 @@ VALUES (
     'sender_name', 'Arena'
   )
 )
-ON CONFLICT (api_name) 
+ON CONFLICT (api_name)
 DO UPDATE SET
   api_url = EXCLUDED.api_url,
   api_key = EXCLUDED.api_key,

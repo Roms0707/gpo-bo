@@ -28,7 +28,7 @@ const SupportTicketsPage: React.FC = () => {
     addTicketMessage,
     setSelectedTicket
   } = useSupportTicketStore();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
@@ -41,13 +41,13 @@ const SupportTicketsPage: React.FC = () => {
   }, [fetchTickets]);
 
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = 
+    const matchesSearch =
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (ticket.user?.email && ticket.user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (ticket.tournament?.title && ticket.tournament.title.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+
     const matchesStatus = statusFilter ? ticket.status === statusFilter : true;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -65,7 +65,7 @@ const SupportTicketsPage: React.FC = () => {
 
   const handleDeleteTicket = async () => {
     if (!selectedTicket) return;
-    
+
     await deleteTicket(selectedTicket.id);
     setIsDeleteConfirmOpen(false);
     setIsTicketModalOpen(false);
@@ -73,7 +73,7 @@ const SupportTicketsPage: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!selectedTicket || !newMessage.trim()) return;
-    
+
     setIsSendingMessage(true);
     try {
       await addTicketMessage(selectedTicket.id, newMessage, true);
@@ -107,7 +107,7 @@ const SupportTicketsPage: React.FC = () => {
             leftIcon={<Search className="h-5 w-5 text-gray-400" />}
           />
         </div>
-        
+
         <div className="w-48 ml-4">
           <Select
             value={statusFilter}
@@ -122,7 +122,7 @@ const SupportTicketsPage: React.FC = () => {
           />
         </div>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -130,7 +130,7 @@ const SupportTicketsPage: React.FC = () => {
             Support Tickets
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
@@ -212,7 +212,7 @@ const SupportTicketsPage: React.FC = () => {
                   {getStatusBadge(selectedTicket.status)}
                 </div>
               </div>
-              
+
               <div className="bg-dark-200 p-4 rounded-lg">
                 <div className="text-white">
                   {/* Check if description contains an image URL */}
@@ -227,9 +227,9 @@ const SupportTicketsPage: React.FC = () => {
                             <Image size={14} className="mr-1 text-primary-400" />
                             <span className="text-xs text-gray-300">Attached Image</span>
                           </div>
-                          <img 
-                            src={url} 
-                            alt="User uploaded" 
+                          <img
+                            src={url}
+                            alt="User uploaded"
                             className="max-w-full rounded-md border border-dark-100 max-h-64 object-contain"
                             onClick={() => window.open(url, '_blank')}
                             style={{ cursor: 'pointer' }}
@@ -248,13 +248,13 @@ const SupportTicketsPage: React.FC = () => {
                   <p className="text-white">{selectedTicket.tournament.title}</p>
                 </div>
               )}
-              
+
               <div className="flex justify-between text-sm text-gray-400">
                 <span>Created: {formatDateWithTime(selectedTicket.created_at)}</span>
                 <span>Last Updated: {formatDateWithTime(selectedTicket.updated_at)}</span>
               </div>
             </div>
-            
+
             {/* Status Controls */}
             <div className="flex space-x-2">
               <Button
@@ -294,11 +294,11 @@ const SupportTicketsPage: React.FC = () => {
                 Closed
               </Button>
             </div>
-            
+
             {/* Messages */}
             <div>
               <h4 className="text-md font-medium text-white mb-3">Conversation</h4>
-              
+
               {isLoadingMessages ? (
                 <div className="flex justify-center py-6">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
@@ -310,11 +310,11 @@ const SupportTicketsPage: React.FC = () => {
               ) : (
                 <div className="space-y-4 max-h-80 overflow-y-auto p-2">
                   {ticketMessages.map((message) => (
-                    <div 
-                      key={message.id} 
+                    <div
+                      key={message.id}
                       className={`p-3 rounded-lg ${
-                        message.is_admin_message 
-                          ? 'bg-primary-900/20 border border-primary-500/30 ml-8' 
+                        message.is_admin_message
+                          ? 'bg-primary-900/20 border border-primary-500/30 ml-8'
                           : 'bg-dark-200 mr-8'
                       }`}
                     >
@@ -339,9 +339,9 @@ const SupportTicketsPage: React.FC = () => {
                                   <Image size={14} className="mr-1 text-primary-400" />
                                   <span className="text-xs text-gray-300">Attached Image</span>
                                 </div>
-                                <img 
-                                  src={url} 
-                                  alt="User uploaded" 
+                                <img
+                                  src={url}
+                                  alt="User uploaded"
                                   className="max-w-full rounded-md border border-dark-100 max-h-64 object-contain"
                                   onClick={() => window.open(url, '_blank')}
                                   style={{ cursor: 'pointer' }}
@@ -357,7 +357,7 @@ const SupportTicketsPage: React.FC = () => {
                   ))}
                 </div>
               )}
-              
+
               {/* Reply Form */}
               <div className="mt-4">
                 <div className="flex space-x-2">
@@ -393,14 +393,14 @@ const SupportTicketsPage: React.FC = () => {
         size="md"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setIsDeleteConfirmOpen(false)}
             >
               Cancel
             </Button>
-            <Button 
-              variant="danger" 
+            <Button
+              variant="danger"
               onClick={handleDeleteTicket}
               isLoading={isDeleting}
               leftIcon={<Trash2 size={16} />}
@@ -420,7 +420,7 @@ const SupportTicketsPage: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           {selectedTicket && (
             <div className="bg-dark-200 p-3 rounded-md">
               <p className="text-sm text-gray-400">Ticket Subject:</p>

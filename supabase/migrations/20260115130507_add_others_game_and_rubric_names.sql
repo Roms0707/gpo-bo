@@ -4,15 +4,15 @@
   1. Changes to `galaxy_rubric_mappings` table
     - Add `rubric_name` column (text) to store human-readable display names for rubrics
     - This enables dynamic tab generation in the Others hub
-  
+
   2. Changes to `games` table
     - Add `sort_order` column (integer) to control display order in carousels and sidebars
     - Add `is_collection` column (boolean) to mark special collection entries like "Others"
     - "Others" game will have highest sort_order to appear last
-  
+
   3. Security
     - No RLS changes needed as these are public read columns
-  
+
   4. Notes
     - The "Others" game entry should be created manually with slug='others'
     - Rubric names can be populated via admin interface or SQL updates

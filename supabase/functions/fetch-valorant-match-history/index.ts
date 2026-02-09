@@ -65,7 +65,7 @@ const getValorantRegion = (region: string): string => {
     'tr1': 'eu',
     'ru': 'eu'
   };
-  
+
   return regionMap[region] || 'eu';
 };
 
@@ -124,7 +124,7 @@ serve(async (req) => {
     // 1. Get match IDs from Valorant Match V1 API
     const matchListUrl = `https://${valorantRegion}.api.riotgames.com/val/match/v1/matchlists/by-puuid/${puuid}?size=${count}`;
     console.log(`[Valorant Match History] Fetching match list: ${matchListUrl}`);
-    
+
     const matchListResponse = await fetch(matchListUrl, {
       headers: { "X-Riot-Token": RIOT_API_KEY },
     });
@@ -151,12 +151,12 @@ serve(async (req) => {
 
     // 2. Get detailed match data for each match
     const matches: SimplifiedValorantMatch[] = [];
-    
+
     for (const matchId of matchIds.slice(0, count)) {
       try {
         const matchDetailUrl = `https://${valorantRegion}.api.riotgames.com/val/match/v1/matches/${matchId}`;
         console.log(`[Valorant Match History] Fetching match details: ${matchId}`);
-        
+
         const matchDetailResponse = await fetch(matchDetailUrl, {
           headers: { "X-Riot-Token": RIOT_API_KEY },
         });
@@ -167,10 +167,10 @@ serve(async (req) => {
         }
 
         const matchData = await matchDetailResponse.json();
-        
+
         // Find the player data for our PUUID
         const playerData = matchData.players?.find((p: any) => p.puuid === puuid);
-        
+
         if (!playerData) {
           console.warn(`[Valorant Match History] Player not found in match ${matchId}`);
           continue;
@@ -229,7 +229,7 @@ serve(async (req) => {
 
         matches.push(simplifiedMatch);
         console.log(`[Valorant Match History] Processed match ${matchId} - ${playerData.characterId} ${won ? 'Win' : 'Loss'}`);
-        
+
       } catch (error) {
         console.error(`[Valorant Match History] Error processing match ${matchId}:`, error);
         continue;

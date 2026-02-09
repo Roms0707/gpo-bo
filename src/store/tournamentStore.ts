@@ -30,14 +30,14 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   fetchTournaments: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       // Get current user to check their role and country
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
+
       let query = supabase
         .from('tournaments')
         .select('*');
-      
+
       // Only filter by country for regular admin users (not master_admin or super_admin)
       if (currentUser) {
         const { data: userData, error: userError } = await supabase
@@ -45,7 +45,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           .select('role, country')
           .eq('id', currentUser.id)
           .single();
-        
+
         if (!userError && userData) {
           // Only filter by country for regular admin users (master_admin and super_admin have unlimited access)
           if (userData.role === 'admin' && userData.country) {
@@ -54,18 +54,18 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           // master_admin and super_admin can see all tournaments regardless of country
         }
       }
-      
+
       const { data, error } = await query
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-      
+
       // Update status based on dates
       const now = new Date();
       const updatedTournaments = data.map(tournament => {
         const startDate = new Date(tournament.start_date);
         const endDate = new Date(tournament.end_date);
-        
+
         let status: 'upcoming' | 'active' | 'past';
         if (now < startDate) {
           status = 'upcoming';
@@ -74,7 +74,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         } else {
           status = 'past';
         }
-        
+
         // Only update if status has changed
         if (status !== tournament.status) {
           supabase
@@ -82,10 +82,10 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
             .update({ status })
             .eq('id', tournament.id)
             .then();
-          
+
           return { ...tournament, status };
         }
-        
+
         return tournament;
       });
 
@@ -124,9 +124,9 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
 
       set({ tournaments: sortedTournaments, isLoading: false });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred fetching tournaments',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -134,7 +134,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   createTournament: async (tournament) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournaments')
         .insert([tournament])
@@ -142,11 +142,11 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
+
       // Add the new tournament and re-sort the list
       const currentTournaments = get().tournaments;
       const updatedTournaments = [...currentTournaments, data];
-      
+
       // Apply the same sorting logic
       const sortedTournaments = updatedTournaments.sort((a, b) => {
         const getStatusPriority = (status: string) => {
@@ -174,18 +174,18 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           return dateA.getTime() - dateB.getTime();
         }
       });
-      
-      set({ 
+
+      set({
         tournaments: sortedTournaments,
-        isLoading: false 
+        isLoading: false
       });
-      
+
       return { data, error: null };
     } catch (error) {
       console.error('Error creating tournament:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred creating tournament',
-        isLoading: false 
+        isLoading: false
       });
       return { data: null, error };
     }
@@ -194,7 +194,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   updateTournament: async (id, tournament) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournaments')
         .update(tournament)
@@ -203,11 +203,11 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
+
       // Update the tournament and re-sort the list
       const currentTournaments = get().tournaments;
       const updatedTournaments = currentTournaments.map(t => t.id === id ? data : t);
-      
+
       // Apply the same sorting logic
       const sortedTournaments = updatedTournaments.sort((a, b) => {
         const getStatusPriority = (status: string) => {
@@ -235,18 +235,18 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
           return dateA.getTime() - dateB.getTime();
         }
       });
-      
-      set({ 
+
+      set({
         tournaments: sortedTournaments,
-        isLoading: false 
+        isLoading: false
       });
-      
+
       return { data, error: null };
     } catch (error) {
       console.error('Error updating tournament:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating tournament',
-        isLoading: false 
+        isLoading: false
       });
       return { data: null, error };
     }
@@ -255,7 +255,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   updateTournamentRules: async (id, rules) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournaments')
         .update({ rules })
@@ -264,24 +264,24 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
+
       // Update the tournament in the list
       const currentTournaments = get().tournaments;
-      const updatedTournaments = currentTournaments.map(t => 
+      const updatedTournaments = currentTournaments.map(t =>
         t.id === id ? { ...t, rules } : t
       );
-      
-      set({ 
+
+      set({
         tournaments: updatedTournaments,
-        isLoading: false 
+        isLoading: false
       });
-      
+
       toast.success('Tournament rules updated successfully');
     } catch (error) {
       console.error('Error updating tournament rules:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating tournament rules',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to update tournament rules');
       throw error;
@@ -291,7 +291,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
   updateBracketStatus: async (id, status) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournaments')
         .update({ bracket_status: status })
@@ -300,24 +300,24 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
+
       // Update the tournament in the list
       const currentTournaments = get().tournaments;
-      const updatedTournaments = currentTournaments.map(t => 
+      const updatedTournaments = currentTournaments.map(t =>
         t.id === id ? { ...t, bracket_status: status } : t
       );
-      
-      set({ 
+
+      set({
         tournaments: updatedTournaments,
-        isLoading: false 
+        isLoading: false
       });
-      
+
       toast.success(`Bracket status updated to ${status}`);
     } catch (error) {
       console.error('Error updating bracket status:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating bracket status',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to update bracket status');
       throw error;

@@ -34,12 +34,7 @@ export const generateProfessionalBracket = (
 ): MatchInsert[] => {
   const totalParticipants = participants.length;
 
-  console.log(`🎯 BRACKET GENERATION: Starting with ${totalParticipants} participants`);
-  console.log(`🎯 BRACKET GENERATION: Max players configured: ${maxNbPlayers || 'not set'}`);
-  console.log(`🎯 BRACKET GENERATION: Tournament type: ${tournamentType}`);
-
   if (totalParticipants < 2) {
-    console.log(`🎯 BRACKET GENERATION: Not enough participants (${totalParticipants}), aborting`);
     return [];
   }
 
@@ -47,15 +42,7 @@ export const generateProfessionalBracket = (
   const bracketSize = getNextPowerOfTwo(targetSize);
   const totalRounds = Math.log2(bracketSize);
   const numberOfByes = bracketSize - totalParticipants;
-  const r2Size = bracketSize / 2;
-  const realR1Matches = (totalParticipants - numberOfByes) / 2;
-
-  console.log(`🎯 BRACKET GENERATION: Power-of-2 Structure:`);
-  console.log(`   - Bracket Size: ${bracketSize} (2^${totalRounds})`);
-  console.log(`   - Total Rounds: ${totalRounds}`);
-  console.log(`   - BYEs: ${numberOfByes} players advance directly to R2`);
-  console.log(`   - R1 Real Matches: ${realR1Matches} (${totalParticipants - numberOfByes} players compete)`);
-  console.log(`   - R2 Matches: ${r2Size}`);
+  const totalR1Matches = bracketSize / 2;
 
   const participantsByRank = [...participants].sort((a, b) => {
     const eloA = a.elo || 1000;
@@ -70,48 +57,37 @@ export const generateProfessionalBracket = (
     return playerId && validUserIds.has(playerId) ? playerId : null;
   };
 
-  const byePlayers: string[] = [];
-  const r1Players: string[] = [];
-
+  const allPlayerIds: (string | null)[] = [];
   for (let i = 0; i < totalParticipants; i++) {
-    const playerId = getPlayerId(participantsByRank[i]);
-    if (!playerId) continue;
-
-    if (i < numberOfByes) {
-      byePlayers.push(playerId);
-    } else {
-      r1Players.push(playerId);
-    }
+    allPlayerIds.push(getPlayerId(participantsByRank[i]));
   }
-
-  console.log(`🎯 BRACKET GENERATION: BYE players (top ${numberOfByes} seeds): ${byePlayers.length}`);
-  console.log(`🎯 BRACKET GENERATION: R1 players (competing): ${r1Players.length}`);
 
   const matches: MatchInsert[] = [];
 
-  const r1Seeding = generateR1Seeding(r1Players.length);
-  console.log(`🎯 BRACKET GENERATION: R1 seeding for ${r1Players.length} players:`, r1Seeding.slice(0, 10), '...');
+  const seeding = generateR1Seeding(bracketSize);
 
-  for (let matchIndex = 0; matchIndex < realR1Matches; matchIndex++) {
-    const seed1Idx = r1Seeding[matchIndex * 2];
-    const seed2Idx = r1Seeding[matchIndex * 2 + 1];
+  for (let matchIndex = 0; matchIndex < totalR1Matches; matchIndex++) {
+    const seed1Idx = seeding[matchIndex * 2];
+    const seed2Idx = seeding[matchIndex * 2 + 1];
 
-    const player1Id = r1Players[seed1Idx] || null;
-    const player2Id = r1Players[seed2Idx] || null;
+    const player1Id = seed1Idx < totalParticipants ? allPlayerIds[seed1Idx] : null;
+    const player2Id = seed2Idx < totalParticipants ? allPlayerIds[seed2Idx] : null;
+
+    const hasPlayer1 = player1Id !== null;
+    const hasPlayer2 = player2Id !== null;
+    const isBye = (hasPlayer1 && !hasPlayer2) || (!hasPlayer1 && hasPlayer2);
 
     matches.push({
       round: 1,
       position: matchIndex + 1,
       player1_id: player1Id,
       player2_id: player2Id,
-      winner_id: null,
+      winner_id: isBye ? (player1Id || player2Id) : null,
       tournament_id: tournamentId,
       is_draw: false,
-      is_bye: false
+      is_bye: isBye
     });
   }
-
-  console.log(`🎯 BRACKET GENERATION: Created ${realR1Matches} R1 matches`);
 
   for (let round = 2; round <= totalRounds; round++) {
     const matchesInRound = bracketSize / Math.pow(2, round);
@@ -130,30 +106,7 @@ export const generateProfessionalBracket = (
     }
   }
 
-  const r2Matches = matches.filter(m => m.round === 2);
-  const byeSeeding = generateByeR2Seeding(numberOfByes, r2Size);
-
-  console.log(`🎯 BRACKET GENERATION: Placing ${byePlayers.length} BYE players in R2`);
-
-  for (let i = 0; i < byePlayers.length && i < byeSeeding.length; i++) {
-    const { matchPosition, slot } = byeSeeding[i];
-    const r2Match = r2Matches.find(m => m.position === matchPosition);
-
-    if (r2Match) {
-      if (slot === 'player1') {
-        r2Match.player1_id = byePlayers[i];
-      } else {
-        r2Match.player2_id = byePlayers[i];
-      }
-      console.log(`   BYE Seed #${i + 1} -> R2:M${matchPosition} (${slot})`);
-    }
-  }
-
-  linkR1WinnersToR2(matches, realR1Matches, r2Matches, numberOfByes);
-
-  const round1Matches = matches.filter(m => m.round === 1);
-  const round2Matches = matches.filter(m => m.round === 2);
-  const r2WithPlayers = round2Matches.filter(m => m.player1_id || m.player2_id);
+  advanceByeWinnersRecursively(matches);
 
   const uniquePlayersInBracket = new Set<string>();
   matches.forEach(m => {
@@ -161,17 +114,8 @@ export const generateProfessionalBracket = (
     if (m.player2_id) uniquePlayersInBracket.add(m.player2_id);
   });
 
-  console.log(`🎯 BRACKET GENERATION: Final Summary:`);
-  console.log(`   - Total matches: ${matches.length}`);
-  console.log(`   - R1 matches: ${round1Matches.length} (all real matches)`);
-  console.log(`   - R2 matches: ${round2Matches.length}`);
-  console.log(`   - R2 matches with pre-seeded BYE players: ${r2WithPlayers.length}`);
-  console.log(`   - Unique players in bracket: ${uniquePlayersInBracket.size} / ${totalParticipants} expected`);
-
   if (uniquePlayersInBracket.size !== totalParticipants) {
-    console.error(`❌ BRACKET VALIDATION FAILED: Expected ${totalParticipants} players, found ${uniquePlayersInBracket.size}`);
-  } else {
-    console.log(`✅ All ${totalParticipants} players are correctly placed in the bracket`);
+    console.error(`BRACKET VALIDATION FAILED: Expected ${totalParticipants} players, found ${uniquePlayersInBracket.size}`);
   }
 
   return matches;
@@ -200,40 +144,6 @@ const generateR1Seeding = (playerCount: number): number[] => {
   return seeding.filter(idx => idx < playerCount);
 };
 
-const generateByeR2Seeding = (
-  byeCount: number,
-  r2Size: number
-): Array<{ matchPosition: number; slot: 'player1' | 'player2' }> => {
-  const placements: Array<{ matchPosition: number; slot: 'player1' | 'player2' }> = [];
-
-  for (let i = 0; i < byeCount && i < r2Size; i++) {
-    const matchPosition = (i % r2Size) + 1;
-    const slot: 'player1' | 'player2' = i < r2Size ? 'player1' : 'player2';
-    placements.push({ matchPosition, slot });
-  }
-
-  return placements;
-};
-
-const linkR1WinnersToR2 = (
-  allMatches: MatchInsert[],
-  r1MatchCount: number,
-  r2Matches: MatchInsert[],
-  byeCount: number
-): void => {
-  const r1Matches = allMatches.filter(m => m.round === 1);
-
-  for (let i = 0; i < r1Matches.length; i++) {
-    const r2MatchIdx = byeCount + i;
-    const r2Position = Math.floor(r2MatchIdx / 2) + 1;
-    const isPlayer1Slot = r2MatchIdx % 2 === 0;
-
-    const r2Match = r2Matches.find(m => m.position === r2Position);
-    if (!r2Match) continue;
-
-    console.log(`   R1:M${i + 1} winner -> R2:M${r2Position} (${isPlayer1Slot ? 'player1' : 'player2'})`);
-  }
-};
 
 const advanceByeWinnersRecursively = (matches: MatchInsert[]): void => {
   const maxRound = Math.max(...matches.map(m => m.round));
@@ -526,7 +436,7 @@ export const saveBracket = async (
 };
 
 export const insertMatches = async (
-  matches: MatchInsert[], 
+  matches: MatchInsert[],
   validUserIds: Set<string>,
   tournamentId?: string,
   bracketStatus?: 'draft' | 'live'
@@ -542,7 +452,7 @@ export const insertMatches = async (
       // Ensure winner_id is either null or a valid user ID
       winner_id: match.winner_id && validUserIds.has(match.winner_id) ? match.winner_id : null
     }));
-    
+
     // Insert matches without deleting existing ones
     const { data, error } = await supabase
       .from('tournament_matches')

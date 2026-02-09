@@ -24,8 +24,8 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'project_configurations' AND column_name = 'auth_method'
   ) THEN
-    ALTER TABLE project_configurations 
-    ADD COLUMN auth_method text DEFAULT 'email' 
+    ALTER TABLE project_configurations
+    ADD COLUMN auth_method text DEFAULT 'email'
     CHECK (auth_method IN ('email', 'discord', 'kliento'));
   END IF;
 END $$;

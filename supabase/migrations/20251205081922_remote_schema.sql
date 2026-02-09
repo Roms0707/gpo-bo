@@ -65,10 +65,10 @@ BEGIN
     INSERT INTO public.user_quests (user_id, quest_id, status)
     SELECT NEW.id, q.id, 'active'
     FROM public.quests q
-    WHERE q.is_active = true 
+    WHERE q.is_active = true
     AND q.is_repeatable = false
     AND q.quest_type IN ('profile_completion', 'tournament_participation', 'social_share');
-    
+
     -- Débloquer automatiquement le premier achievement (Badge Novice)
     INSERT INTO public.user_achievements (user_id, achievement_id)
     SELECT NEW.id, a.id
@@ -78,7 +78,7 @@ BEGIN
     AND a.type = 'badge'
     LIMIT 1
     ON CONFLICT DO NOTHING;
-    
+
     RETURN NEW;
 END;
 $$
@@ -98,25 +98,25 @@ BEGIN
     SELECT level, xp INTO current_user_data
     FROM public.users
     WHERE id = target_user_id;
-    
+
     IF NOT FOUND THEN
         RETURN json_build_object('success', false, 'error', 'User not found');
     END IF;
-    
+
     old_level := current_user_data.level;
     new_xp := current_user_data.xp + xp_amount;
     new_level := public.calculate_level_from_xp(new_xp);
-    
+
     -- Vérifier si l'utilisateur a monté de niveau
     IF new_level > old_level THEN
         level_up := TRUE;
     END IF;
-    
+
     -- Mettre à jour l'utilisateur
     UPDATE public.users
     SET xp = new_xp, level = new_level
     WHERE id = target_user_id;
-    
+
     -- Construire le résultat
     result := json_build_object(
         'success', true,
@@ -127,7 +127,7 @@ BEGIN
         'xp_gained', xp_amount,
         'level_up', level_up
     );
-    
+
     RETURN result;
 END;
 $$
@@ -151,7 +151,7 @@ BEGIN
     INTO calculated_level
     FROM public.xp_thresholds
     WHERE xp_required <= user_xp;
-    
+
     RETURN calculated_level;
 END;
 $$
@@ -168,19 +168,19 @@ DECLARE
 BEGIN
     -- Récupérer les données de l'utilisateur
     SELECT * INTO user_data FROM public.users WHERE id = target_user_id;
-    
+
     IF NOT FOUND THEN
         RETURN json_build_object('success', false, 'error', 'User not found');
     END IF;
-    
+
     -- Compter les tournois complétés
     SELECT COUNT(*) INTO tournaments_count
     FROM public.tournament_registrations tr
     JOIN public.tournaments t ON tr.tournament_id = t.id
-    WHERE tr.user_id = target_user_id 
+    WHERE tr.user_id = target_user_id
     AND tr.status = 'approved'
     AND t.status = 'past';
-    
+
     -- Calculer le pourcentage de complétion du profil (simplifié)
     profile_completion_percentage := 0;
     IF user_data.username IS NOT NULL AND user_data.username != '' THEN
@@ -198,14 +198,14 @@ BEGIN
     IF user_data.discord_handle IS NOT NULL AND user_data.discord_handle != '' THEN
         profile_completion_percentage := profile_completion_percentage + 20;
     END IF;
-    
+
     -- Parcourir tous les achievements actifs
-    FOR achievement_record IN 
-        SELECT * FROM public.achievements 
+    FOR achievement_record IN
+        SELECT * FROM public.achievements
         WHERE is_active = true
         AND id NOT IN (
-            SELECT achievement_id 
-            FROM public.user_achievements 
+            SELECT achievement_id
+            FROM public.user_achievements
             WHERE user_id = target_user_id
         )
     LOOP
@@ -232,18 +232,18 @@ BEGIN
                     -- should_unlock reste FALSE par défaut
                     NULL; -- Ne fait rien, mais gère explicitement le cas
             END CASE;
-            
+
             -- Débloquer l'achievement si les conditions sont remplies
             IF should_unlock THEN
                 INSERT INTO public.user_achievements (user_id, achievement_id)
                 VALUES (target_user_id, achievement_record.id)
                 ON CONFLICT DO NOTHING;
-                
+
                 unlocked_achievements := array_append(unlocked_achievements, achievement_record.id);
             END IF;
         END;
     END LOOP;
-    
+
     RETURN json_build_object(
         'success', true,
         'unlocked_achievements', unlocked_achievements,
@@ -277,7 +277,7 @@ BEGIN
   SELECT COUNT(*) INTO unread_count
   FROM messages
   WHERE receiver_id = user_id AND read = false;
-  
+
   RETURN unread_count;
 END;
 $$
@@ -438,19 +438,19 @@ BEGIN
   IF NOT (OLD.status = 'pending' AND NEW.status = 'accepted') THEN
     RETURN NEW;
   END IF;
-  
+
   -- Get acceptor username and avatar
   SELECT username, avatar_url INTO acceptor_username, acceptor_avatar_url
   FROM users
   WHERE id = NEW.user_id_2;
-  
+
   -- Create notification for the original sender
   INSERT INTO public.notifications (
-    user_id, 
-    title, 
-    message, 
-    type, 
-    link, 
+    user_id,
+    title,
+    message,
+    type,
+    link,
     related_id,
     read
   )
@@ -463,7 +463,7 @@ BEGIN
     NEW.id,
     false
   );
-  
+
   RETURN NEW;
 END;
 $$
@@ -479,19 +479,19 @@ BEGIN
   IF TG_OP <> 'INSERT' THEN
     RETURN NEW;
   END IF;
-  
+
   -- Get sender username and avatar
   SELECT username, avatar_url INTO sender_username, sender_avatar_url
   FROM users
   WHERE id = NEW.user_id_1;
-  
+
   -- Create notification for the recipient
   INSERT INTO public.notifications (
-    user_id, 
-    title, 
-    message, 
-    type, 
-    link, 
+    user_id,
+    title,
+    message,
+    type,
+    link,
     related_id,
     read
   )
@@ -504,7 +504,7 @@ BEGIN
     NEW.id,
     false
   );
-  
+
   RETURN NEW;
 END;
 $$
@@ -519,7 +519,7 @@ BEGIN
   SELECT username INTO ticket_creator_name
   FROM users
   WHERE id = NEW.user_id;
-  
+
   -- Create notifications for all admins
   INSERT INTO notifications (
     user_id,
@@ -529,7 +529,7 @@ BEGIN
     link,
     related_id
   )
-  SELECT 
+  SELECT
     users.id,
     'Nouveau ticket de support',
     ticket_creator_name || ' a créé un nouveau ticket: ' || NEW.subject,
@@ -538,7 +538,7 @@ BEGIN
     NEW.id
   FROM users
   WHERE users.type = 'admin';
-  
+
   RETURN NEW;
 END;
 $$
@@ -554,27 +554,27 @@ BEGIN
   IF OLD.status = NEW.status THEN
     RETURN NEW;
   END IF;
-  
+
   -- Get tournament information
   SELECT title, start_date INTO tournament_title, tournament_start_date
   FROM tournaments
   WHERE id = NEW.tournament_id;
-  
+
   -- Create notification for the user
   INSERT INTO public.notifications (
-    user_id, 
-    title, 
-    message, 
-    type, 
-    link, 
+    user_id,
+    title,
+    message,
+    type,
+    link,
     related_id,
     start_date
   )
   VALUES (
     NEW.user_id,
     'Statut d''inscription modifié',
-    'Votre inscription au tournoi "' || tournament_title || '" est maintenant ' || 
-    CASE 
+    'Votre inscription au tournoi "' || tournament_title || '" est maintenant ' ||
+    CASE
       WHEN NEW.status = 'pending' THEN 'en attente de validation'
       WHEN NEW.status = 'approved' THEN 'approuvée'
       WHEN NEW.status = 'rejected' THEN 'refusée'
@@ -585,7 +585,7 @@ BEGIN
     NEW.tournament_id,
     tournament_start_date
   );
-  
+
   RETURN NEW;
 END;
 $$
@@ -606,17 +606,17 @@ BEGIN
     INSERT INTO public.notifications (user_id, title, message, type, link, related_id, start_date)
     VALUES (
       NEW.user_id,
-      CASE 
+      CASE
         WHEN NEW.status = 'accepted' THEN 'Candidature acceptée'
         WHEN NEW.status = 'rejected' THEN 'Candidature refusée'
         ELSE 'Statut de candidature mis à jour'
       END,
-      CASE 
+      CASE
         WHEN NEW.status = 'accepted' THEN 'Votre candidature pour rejoindre l''équipe "' || (SELECT name FROM teams WHERE id = NEW.team_id) || '" a été acceptée'
         WHEN NEW.status = 'rejected' THEN 'Votre candidature pour rejoindre l''équipe "' || (SELECT name FROM teams WHERE id = NEW.team_id) || '" a été refusée'
         ELSE 'Le statut de votre candidature a été mis à jour'
       END,
-      CASE 
+      CASE
         WHEN NEW.status = 'accepted' THEN 'team_accepted'
         WHEN NEW.status = 'rejected' THEN 'team_rejected'
         ELSE 'team_application'
@@ -625,11 +625,11 @@ BEGIN
       NEW.team_id,
       tournament_start_date
     );
-    
+
     -- If accepted, also create notification for team captain
     IF NEW.status = 'accepted' THEN
       INSERT INTO public.notifications (user_id, title, message, type, link, related_id, start_date)
-      SELECT 
+      SELECT
         captain_id,
         'Nouveau membre dans l''équipe',
         (SELECT username FROM users WHERE id = NEW.user_id) || ' a rejoint votre équipe "' || teams.name || '"',
@@ -641,7 +641,7 @@ BEGIN
       WHERE id = NEW.team_id;
     END IF;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$
@@ -659,43 +659,43 @@ BEGIN
   IF TG_OP <> 'INSERT' THEN
     RETURN NEW;
   END IF;
-  
+
   -- Get team information including captain_id
-  SELECT id, name, captain_id, tournament_id, is_looking_for_players 
+  SELECT id, name, captain_id, tournament_id, is_looking_for_players
   INTO team_record
   FROM teams
   WHERE id = NEW.team_id;
-  
+
   -- Only send notification if team is looking for players
   IF team_record.is_looking_for_players = false THEN
     RETURN NEW;
   END IF;
-  
+
   -- Get tournament information
-  SELECT id, title, start_date 
+  SELECT id, title, start_date
   INTO tournament_record
   FROM tournaments
   WHERE id = NEW.tournament_id;
-  
+
   -- Get applicant username
   SELECT username INTO applicant_username
   FROM users
   WHERE id = NEW.user_id;
-  
+
   -- Get application message (truncate if too long)
-  applicant_message := CASE 
+  applicant_message := CASE
     WHEN NEW.message IS NULL THEN ''
     WHEN LENGTH(NEW.message) > 50 THEN SUBSTRING(NEW.message FROM 1 FOR 47) || '...'
     ELSE NEW.message
   END;
-  
+
   -- Create notification for the team captain
   INSERT INTO public.notifications (
-    user_id, 
-    title, 
-    message, 
-    type, 
-    link, 
+    user_id,
+    title,
+    message,
+    type,
+    link,
     related_id,
     start_date,
     read
@@ -703,7 +703,7 @@ BEGIN
   VALUES (
     team_record.captain_id,
     'Nouvelle candidature',
-    applicant_username || ' a postulé pour rejoindre votre équipe "' || team_record.name || 
+    applicant_username || ' a postulé pour rejoindre votre équipe "' || team_record.name ||
     CASE WHEN applicant_message <> '' THEN '" avec le message: "' || applicant_message || '"'
     ELSE '"' END,
     'team_application',
@@ -712,7 +712,7 @@ BEGIN
     tournament_record.start_date,
     false
   );
-  
+
   RETURN NEW;
 END;
 $$
@@ -729,12 +729,12 @@ BEGIN
   SELECT user_id, subject INTO ticket_owner_id, ticket_subject
   FROM support_tickets
   WHERE id = NEW.ticket_id;
-  
+
   -- Get the message sender's name
   SELECT username INTO message_sender_name
   FROM users
   WHERE id = NEW.user_id;
-  
+
   -- If the message is from an admin and the recipient is not the admin
   IF NEW.is_admin_message = true AND ticket_owner_id != NEW.user_id THEN
     -- Create notification for the ticket owner
@@ -764,7 +764,7 @@ BEGIN
       link,
       related_id
     )
-    SELECT 
+    SELECT
       users.id,
       'Nouveau message de support',
       message_sender_name || ' a envoyé un message sur le ticket: ' || ticket_subject,
@@ -774,7 +774,7 @@ BEGIN
     FROM users
     WHERE users.type = 'admin';
   END IF;
-  
+
   RETURN NEW;
 END;
 $$
@@ -785,7 +785,7 @@ CREATE OR REPLACE FUNCTION "public"."create_tournament_join_now_notification"() 
 BEGIN
   -- Insert notifications for all approved users registered to this tournament
   INSERT INTO public.notifications (user_id, title, message, type, link, related_id)
-  SELECT 
+  SELECT
     tr.user_id,
     'Tournoi en direct ! 🎮',
     'Le tournoi "' || NEW.title || '" est maintenant en direct. Cliquez pour rejoindre !',
@@ -793,7 +793,7 @@ BEGIN
     '/tournaments/' || NEW.id,
     NEW.id
   FROM public.tournament_registrations tr
-  WHERE tr.tournament_id = NEW.id 
+  WHERE tr.tournament_id = NEW.id
     AND tr.status = 'approved';
 
   RETURN NEW;
@@ -806,7 +806,7 @@ CREATE OR REPLACE FUNCTION "public"."create_tournament_start_notification"() RET
 BEGIN
   -- For each registered user with approved status, create a notification
   INSERT INTO public.notifications (user_id, title, message, type, link, related_id, start_date)
-  SELECT 
+  SELECT
     user_id,
     'Tournoi commence bientôt',
     'Le tournoi "' || NEW.title || '" va commencer bientôt. Préparez-vous !',
@@ -816,7 +816,7 @@ BEGIN
     NEW.start_date
   FROM tournament_registrations
   WHERE tournament_id = NEW.id AND status = 'approved';
-  
+
   RETURN NEW;
 END;
 $$
@@ -828,11 +828,11 @@ BEGIN
   IF OLD.status <> NEW.status THEN
     -- For each registered user, create a notification
     INSERT INTO public.notifications (user_id, title, message, type, link, related_id, start_date)
-    SELECT 
+    SELECT
       user_id,
       'Statut du tournoi mis à jour',
-      'Le tournoi "' || (SELECT title FROM tournaments WHERE id = NEW.id) || '" est maintenant ' || 
-      CASE 
+      'Le tournoi "' || (SELECT title FROM tournaments WHERE id = NEW.id) || '" est maintenant ' ||
+      CASE
         WHEN NEW.status = 'upcoming' THEN 'à venir'
         WHEN NEW.status = 'active' THEN 'en cours'
         WHEN NEW.status = 'past' THEN 'terminé'
@@ -845,7 +845,7 @@ BEGIN
     FROM tournament_registrations
     WHERE tournament_id = NEW.id;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$
@@ -856,16 +856,16 @@ CREATE OR REPLACE FUNCTION "public"."enforce_single_default_config"() RETURNS "t
 BEGIN
   -- If setting a config to default, unset all others
   IF NEW.is_default = true THEN
-    UPDATE project_configurations 
-    SET is_default = false 
+    UPDATE project_configurations
+    SET is_default = false
     WHERE id != NEW.id AND is_default = true;
   END IF;
-  
+
   -- Ensure domain is null if is_default is true
   IF NEW.is_default = true AND NEW.domain IS NOT NULL THEN
     RAISE EXCEPTION 'Configuration cannot have both a domain and be set as default';
   END IF;
-  
+
   RETURN NEW;
 END;
 $$
@@ -952,7 +952,7 @@ CREATE OR REPLACE FUNCTION "public"."get_config_by_domain"("domain_name" "text")
     AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     pc.id,
     pc.config_id,
     pc.config_name,
@@ -982,7 +982,7 @@ CREATE OR REPLACE FUNCTION "public"."get_default_config"() RETURNS TABLE("id" "u
     AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     pc.id,
     pc.config_id,
     pc.config_name,
@@ -1012,7 +1012,7 @@ CREATE OR REPLACE FUNCTION "public"."get_eligible_lucky_losers"("p_tournament_id
     AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     be.player_id,
     be.elo_at_elimination,
     be.eliminated_at
@@ -1020,7 +1020,7 @@ BEGIN
   WHERE be.tournament_id = p_tournament_id
     AND be.eliminated_round = p_round
     AND be.reintegrated = false
-  ORDER BY 
+  ORDER BY
     be.elo_at_elimination DESC NULLS LAST,
     be.eliminated_at DESC
   LIMIT 1;
@@ -1082,7 +1082,7 @@ BEGIN
   FROM tournament_registrations
   WHERE user_id = $1 AND tournament_id = $2
   LIMIT 1;
-  
+
   RETURN COALESCE(reg_status, 'not_registered');
 END;
 $_$
@@ -1095,18 +1095,18 @@ BEGIN
     IF OLD.bio IS NULL AND NEW.bio IS NOT NULL AND NEW.bio != '' THEN
         PERFORM public.award_xp_and_check_level(NEW.id, 25);
     END IF;
-    
+
     IF OLD.avatar_url IS NULL AND NEW.avatar_url IS NOT NULL AND NEW.avatar_url != '' THEN
         PERFORM public.award_xp_and_check_level(NEW.id, 25);
     END IF;
-    
+
     IF OLD.discord_handle IS NULL AND NEW.discord_handle IS NOT NULL AND NEW.discord_handle != '' THEN
         PERFORM public.award_xp_and_check_level(NEW.id, 15);
     END IF;
-    
+
     -- Vérifier les achievements après mise à jour du profil
     PERFORM public.check_and_unlock_achievements(NEW.id);
-    
+
     RETURN NEW;
 END;
 $$
@@ -1117,10 +1117,10 @@ CREATE OR REPLACE FUNCTION "public"."handle_tournament_registration_xp"() RETURN
 BEGIN
     -- Attribuer 50 XP pour l'inscription à un tournoi
     PERFORM public.award_xp_and_check_level(NEW.user_id, 50);
-    
+
     -- Vérifier les achievements
     PERFORM public.check_and_unlock_achievements(NEW.user_id);
-    
+
     RETURN NEW;
 END;
 $$
@@ -1217,7 +1217,7 @@ BEGIN
     p_elo
   )
   RETURNING id INTO v_elimination_id;
-  
+
   RETURN v_elimination_id;
 END;
 $$
@@ -1227,13 +1227,13 @@ CREATE OR REPLACE FUNCTION "public"."reintegrate_lucky_loser"("p_elimination_id"
     AS $$
 BEGIN
   UPDATE bracket_eliminations
-  SET 
+  SET
     reintegrated = true,
     reintegrated_at = NOW(),
     reintegrated_in_round = p_reintegrated_round
   WHERE id = p_elimination_id
     AND reintegrated = false;
-  
+
   RETURN FOUND;
 END;
 $$
@@ -1342,11 +1342,11 @@ now()
 )
 ON CONFLICT (user_id) DO UPDATE SET
 balance = user_virtual_currency.balance + NEW.amount,
-lifetime_earned = CASE 
+lifetime_earned = CASE
 WHEN NEW.amount > 0 THEN user_virtual_currency.lifetime_earned + NEW.amount
 ELSE user_virtual_currency.lifetime_earned
 END,
-lifetime_spent = CASE 
+lifetime_spent = CASE
 WHEN NEW.amount < 0 THEN user_virtual_currency.lifetime_spent + ABS(NEW.amount)
 ELSE user_virtual_currency.lifetime_spent
 END,
@@ -2573,7 +2573,7 @@ CREATE TABLE IF NOT EXISTS "public"."user_tournament_field_values" (
     CONSTRAINT "user_tournament_field_values_value_is_json" CHECK (("jsonb_typeof"("value") = 'object'::"text"))
 )
 ALTER TABLE "public"."user_tournament_field_values" OWNER TO "postgres"
-COMMENT ON COLUMN "public"."user_tournament_field_values"."value" IS 'JSONB structure storing flexible key-value pairs. 
+COMMENT ON COLUMN "public"."user_tournament_field_values"."value" IS 'JSONB structure storing flexible key-value pairs.
 Example: {"Discord ID": "user123", "Téléphone": "+123456789"}
 For legacy data: {"value": "original_text_value"}'
 CREATE TABLE IF NOT EXISTS "public"."user_virtual_currency" (

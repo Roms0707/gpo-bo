@@ -21,4 +21,3 @@ ADD COLUMN IF NOT EXISTS discord_server_id TEXT
 
 
 COMMENT ON COLUMN tournaments.discord_server_id IS 'Discord server/guild ID for tournament member verification'
-

@@ -20,7 +20,7 @@ BEGIN
     WHERE table_name = 'users' AND column_name = 'preferred_language'
   ) THEN
     ALTER TABLE users ADD COLUMN preferred_language TEXT DEFAULT 'en';
-    
+
     ALTER TABLE users ADD CONSTRAINT users_preferred_language_check
       CHECK (preferred_language IN ('en', 'fr'));
   END IF;

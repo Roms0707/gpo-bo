@@ -145,7 +145,7 @@ serve(async (req) => {
     const getVideoUrl = (content: GalaxyContent): string => {
       // Helper to check if URL is a valid HLS stream
       const isHlsUrl = (url: string): boolean => {
-        return url.toLowerCase().includes('.m3u8') || 
+        return url.toLowerCase().includes('.m3u8') ||
                url.toLowerCase().includes('manifest') ||
                url.toLowerCase().includes('playlist');
       };
@@ -168,11 +168,11 @@ serve(async (req) => {
         else priority = 2;
         urlCandidates.push({ url, priority, source: 'mainDelivery' });
       }
-      
+
       // Priority 2: Stream with highest quality
       if (content.deliveries?.stream) {
         const qualityPriority = ['VHD (1080p)', 'HD (720p)', 'SD (480p)'];
-        
+
         for (const quality of qualityPriority) {
           const streamUrls = content.deliveries.stream[quality];
           if (Array.isArray(streamUrls)) {
@@ -181,34 +181,34 @@ serve(async (req) => {
                 let priority = 3 + index; // Base priority for streams
                 if (isHlsUrl(stream.url)) priority = 0; // Highest priority for HLS
                 else if (isDirectVideoUrl(stream.url)) priority = 1;
-                urlCandidates.push({ 
-                  url: stream.url, 
-                  priority, 
-                  source: `stream-${quality}-${index}` 
+                urlCandidates.push({
+                  url: stream.url,
+                  priority,
+                  source: `stream-${quality}-${index}`
                 });
               }
             });
           }
         }
       }
-      
+
       // Priority 3: Any delivery in additionalDeliveries
-      if (Array.isArray(content.deliveries?.additionalDeliveries) && 
+      if (Array.isArray(content.deliveries?.additionalDeliveries) &&
           content.deliveries.additionalDeliveries.length > 0) {
         content.deliveries.additionalDeliveries.forEach((delivery, index) => {
           if (delivery?.url) {
             let priority = 4 + index; // Lower priority for additional deliveries
             if (isHlsUrl(delivery.url)) priority = 0; // Highest priority for HLS
             else if (isDirectVideoUrl(delivery.url)) priority = 1;
-            urlCandidates.push({ 
-              url: delivery.url, 
-              priority, 
-              source: `additionalDelivery-${index}` 
+            urlCandidates.push({
+              url: delivery.url,
+              priority,
+              source: `additionalDelivery-${index}`
             });
           }
         });
       }
-      
+
       // Sort by priority (lower number = higher priority) and return the best URL
       if (urlCandidates.length > 0) {
         urlCandidates.sort((a, b) => a.priority - b.priority);
@@ -231,7 +231,7 @@ serve(async (req) => {
       const landscapeImage = content.assets.cover.find(
         cover => cover.ratio_tech_label === 'landscape-16-9'
       );
-      
+
       if (landscapeImage) {
         return landscapeImage.url;
       }
@@ -251,19 +251,19 @@ serve(async (req) => {
       const { data, error } = await supabase
         .from('galaxy_rubric_mappings')
         .select('rubric_id, game_id');
-      
+
       if (error) {
         throw error;
       }
-      
+
       rubricGameMappings = data;
       console.log(`[Galaxy Sync] Fetched ${rubricGameMappings?.length || 0} rubric-game mappings from database`);
-      
+
       if (!rubricGameMappings || rubricGameMappings.length === 0) {
         console.warn("[Galaxy Sync] No rubric-game mappings found in database");
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: "No rubric-game mappings found",
             stats: {
               total_synced: 0,
@@ -361,7 +361,7 @@ serve(async (req) => {
 
         // Collect all content data for batch processing
         const gameContentDataArray = [];
-        
+
         for (const content of contents) {
           try {
             const videoUrl = getVideoUrl(content);
@@ -412,7 +412,7 @@ serve(async (req) => {
         // Perform batch upsert for all content items at once
         if (gameContentDataArray.length > 0) {
           console.log(`[Galaxy Sync] Performing batch upsert of ${gameContentDataArray.length} items for game ${mapping.game_id}`);
-          
+
           try {
             const { error: batchUpsertError } = await supabase
               .from('game_contents')
@@ -445,8 +445,8 @@ serve(async (req) => {
     console.log(`[Galaxy Sync] Synchronization completed. Synced: ${totalSynced}, Errors: ${totalErrors}, Deleted: ${totalDeleted}`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: `Galaxy content synchronization completed`,
         stats: {
           total_synced: totalSynced,

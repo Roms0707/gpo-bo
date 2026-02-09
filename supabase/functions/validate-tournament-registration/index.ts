@@ -117,7 +117,7 @@ serve(async (req) => {
 
     // 4. Check registration dates
     const now = new Date();
-    
+
     if (tournament.registration_start_date) {
       const regStartDate = new Date(tournament.registration_start_date);
       if (now < regStartDate) {
@@ -140,7 +140,7 @@ serve(async (req) => {
 
     // 5. Check tournament capacity
     const isTeamTournament = tournament.type?.toLowerCase().includes('team');
-    
+
     if (isTeamTournament && tournament.max_players_per_team) {
       // For team tournaments, check team capacity if team_id is provided
       if (team_id) {
@@ -233,7 +233,7 @@ serve(async (req) => {
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
@@ -258,8 +258,8 @@ serve(async (req) => {
 
     // All validations passed
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         details: {
           tournament_title: tournament.title,
           user_eligible: true,

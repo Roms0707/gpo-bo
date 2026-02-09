@@ -60,7 +60,7 @@ const getRoutingRegion = (platformRegion: string): string => {
     'tr1': 'europe',
     'ru': 'europe'
   };
-  
+
   return routingMap[platformRegion] || 'europe';
 };
 
@@ -119,7 +119,7 @@ serve(async (req) => {
     // 1. Get match IDs from Match V5 API
     const matchListUrl = `https://${routingRegion}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=${start}&count=${count}`;
     console.log(`[Match History] Fetching match list: ${matchListUrl}`);
-    
+
     const matchListResponse = await fetch(matchListUrl, {
       headers: { "X-Riot-Token": RIOT_API_KEY },
     });
@@ -145,12 +145,12 @@ serve(async (req) => {
 
     // 2. Get detailed match data for each match
     const matches: SimplifiedMatch[] = [];
-    
+
     for (const matchId of matchIds) {
       try {
         const matchDetailUrl = `https://${routingRegion}.api.riotgames.com/lol/match/v5/matches/${matchId}`;
         console.log(`[Match History] Fetching match details: ${matchId}`);
-        
+
         const matchDetailResponse = await fetch(matchDetailUrl, {
           headers: { "X-Riot-Token": RIOT_API_KEY },
         });
@@ -161,10 +161,10 @@ serve(async (req) => {
         }
 
         const matchData = await matchDetailResponse.json();
-        
+
         // Find the participant data for our PUUID
         const participant = matchData.info.participants.find((p: any) => p.puuid === puuid);
-        
+
         if (!participant) {
           console.warn(`[Match History] Participant not found in match ${matchId}`);
           continue;
@@ -218,7 +218,7 @@ serve(async (req) => {
 
         matches.push(simplifiedMatch);
         console.log(`[Match History] Processed match ${matchId} - ${participant.championName} ${participant.win ? 'Win' : 'Loss'}`);
-        
+
       } catch (error) {
         console.error(`[Match History] Error processing match ${matchId}:`, error);
         continue;

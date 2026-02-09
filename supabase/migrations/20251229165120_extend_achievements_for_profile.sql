@@ -118,4 +118,3 @@ UPDATE achievements SET xp_reward = 50 WHERE xp_reward IS NULL OR xp_reward = 0
 UPDATE achievements SET icon = 'trophy' WHERE icon IS NULL
 
 UPDATE achievements SET category = 'milestone' WHERE category IS NULL
-

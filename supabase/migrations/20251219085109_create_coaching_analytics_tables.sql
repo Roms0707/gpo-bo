@@ -11,7 +11,7 @@
       - `detected_topics` (text array) - topics detected in the question
       - `category` (text) - primary category of the question
       - `created_at` (timestamptz)
-    
+
     - `coaching_ai_config`
       - `id` (uuid, primary key)
       - `game_id` (uuid, references games, nullable for global config)
@@ -80,27 +80,27 @@ CREATE POLICY "Authenticated users can read active AI config"
   USING (is_active = true);
 
 -- Create indexes for efficient queries
-CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_game_id 
+CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_game_id
   ON coaching_question_analytics(game_id);
-  
-CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_category 
+
+CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_category
   ON coaching_question_analytics(category);
-  
-CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_created_at 
+
+CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_created_at
   ON coaching_question_analytics(created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_user_id 
+CREATE INDEX IF NOT EXISTS idx_coaching_question_analytics_user_id
   ON coaching_question_analytics(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_ai_config_game_id 
+CREATE INDEX IF NOT EXISTS idx_coaching_ai_config_game_id
   ON coaching_ai_config(game_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_ai_config_active 
+CREATE INDEX IF NOT EXISTS idx_coaching_ai_config_active
   ON coaching_ai_config(is_active) WHERE is_active = true;
 
 -- Insert default coaching configurations
 INSERT INTO coaching_ai_config (game_id, config_key, config_value, is_active)
-VALUES 
+VALUES
   (NULL, 'topic_priorities', '["farming", "vision", "teamfighting", "laning", "macro", "builds", "champions", "mental"]', true),
   (NULL, 'emphasis_areas', '[]', true)
 ON CONFLICT (game_id, config_key) DO NOTHING;

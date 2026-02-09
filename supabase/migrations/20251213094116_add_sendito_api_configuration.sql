@@ -1,14 +1,14 @@
 /*
   # Add Sendito SMS API Configuration
-  
+
   1. Schema Changes
     - Adds `extra_config` JSONB column to `platform_api_integrations` table
     - This column stores additional configuration like secrets, templates, etc.
-    
+
   2. New Configuration
     - Adds Sendito SMS provider to `platform_api_integrations` table
     - Stores API credentials and configuration for OTP sending
-    
+
   3. Configuration Details
     - `api_name`: 'sendito' - identifier for the SMS provider
     - `api_url`: Sendito messages endpoint
@@ -18,7 +18,7 @@
       - `api_secret_key`: sesame_password (base64 encoded)
       - `message_template`: OTP message template with {otp} placeholder
       - `sender_name`: Default sender name for SMS
-      
+
   4. Notes
     - Uses INSERT ON CONFLICT to safely upsert the configuration
     - Credentials should be updated with actual values in production
@@ -56,7 +56,7 @@ VALUES (
     'sender_name', 'Arena'
   )
 )
-ON CONFLICT (api_name) 
+ON CONFLICT (api_name)
 DO UPDATE SET
   api_url = EXCLUDED.api_url,
   api_key = EXCLUDED.api_key,

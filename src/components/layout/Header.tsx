@@ -15,14 +15,14 @@ const Header: React.FC = () => {
   React.useEffect(() => {
     const fetchUserRole = async () => {
       if (!user?.id) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('users')
           .select('role')
           .eq('id', user.id)
           .single();
-          
+
         if (!error && data) {
           setUserRole(data.role);
         }
@@ -30,14 +30,14 @@ const Header: React.FC = () => {
         console.error('Error fetching user role:', error);
       }
     };
-    
+
     fetchUserRole();
   }, [user?.id]);
-  
+
   // Determine page title based on current path
   const getPageTitle = () => {
     const path = location.pathname;
-    
+
     if (path === '/') return 'Tournaments';
     if (path === '/tournaments/new') return 'Create Tournament';
     if (path === '/statistics') return 'Statistics';
@@ -47,7 +47,7 @@ const Header: React.FC = () => {
     if (path === '/admin') return 'Admin Configuration';
     if (path === '/support-tickets') return 'Support Tickets';
     if (path.startsWith('/leaderboards')) return 'Leaderboards';
-    
+
     return 'Gaming Tournaments';
   };
 

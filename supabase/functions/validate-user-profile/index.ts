@@ -41,7 +41,7 @@ const validateUsername = (username: string): { valid: boolean; error?: string } 
   if (username.length < 3) {
     return { valid: false, error: "Username must be at least 3 characters long" };
   }
-  
+
   if (username.length > 20) {
     return { valid: false, error: "Username must be no more than 20 characters long" };
   }
@@ -128,23 +128,23 @@ const validateTwitterHandle = (handle: string): { valid: boolean; error?: string
 const validatePhoneNumber = (phone: string): { valid: boolean; error?: string } => {
   // Remove all non-digit characters except +
   const cleanPhone = phone.replace(/[^\d+]/g, '');
-  
+
   // Check if it starts with + (international format)
   if (!cleanPhone.startsWith('+')) {
     return { valid: false, error: "Phone number must be in international format (starting with +)" };
   }
-  
+
   // Check length (international phone numbers are typically 7-15 digits after country code)
   const digitsOnly = cleanPhone.substring(1); // Remove the +
   if (digitsOnly.length < 7 || digitsOnly.length > 15) {
     return { valid: false, error: "Phone number must be between 7 and 15 digits" };
   }
-  
+
   // Check if all characters after + are digits
   if (!/^\d+$/.test(digitsOnly)) {
     return { valid: false, error: "Phone number can only contain digits after the country code" };
   }
-  
+
   return { valid: true };
 };
 
@@ -154,23 +154,23 @@ const validateCountryCode = (countryCode: string): { valid: boolean; error?: str
   if (!/^[A-Z]{2}$/.test(countryCode)) {
     return { valid: false, error: "Country code must be a valid 2-letter ISO code" };
   }
-  
+
   // List of valid country codes from your countries.ts file
   const validCountryCodes = [
-    'BF', 'BJ', 'BW', 'CD', 'CF', 'CI', 'CM', 'EG', 'GA', 'GH', 
+    'BF', 'BJ', 'BW', 'CD', 'CF', 'CI', 'CM', 'EG', 'GA', 'GH',
     'GN', 'GW', 'JO', 'LR', 'MA', 'MG', 'ML', 'SL', 'SN', 'TG', 'TN'
   ];
-  
+
   if (!validCountryCodes.includes(countryCode)) {
     return { valid: false, error: "Invalid country code" };
   }
-  
+
   return { valid: true };
 };
 
 serve(async (req) => {
   console.log("[User Profile Validation] Function started");
-  
+
   // Handle CORS
   if (req.method === "OPTIONS") {
     console.log("[User Profile Validation] CORS preflight request");
@@ -191,7 +191,7 @@ serve(async (req) => {
     console.log("[User Profile Validation] Parsing request body");
     const requestBody = await req.json() as UserProfileRequest;
     console.log("[User Profile Validation] Request body parsed:", JSON.stringify(requestBody, null, 2));
-    
+
     const { user_id, username, bio, discord_handle, twitter_handle, country, msisdn } = requestBody;
     console.log("[User Profile Validation] Extracted fields:", {
       user_id,
@@ -219,7 +219,7 @@ serve(async (req) => {
       .select('id, username')
       .eq('id', user_id)
       .single();
-    
+
     console.log("[User Profile Validation] User query result:", { user, userError });
 
     if (userError || !user) {
@@ -229,14 +229,14 @@ serve(async (req) => {
         { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
+
     console.log("[User Profile Validation] User found:", user.username);
 
     // 2. Validate username if provided
     if (username !== undefined && username !== null) {
       console.log("[User Profile Validation] Validating username:", username);
       const trimmedUsername = username.trim();
-      
+
       if (trimmedUsername === '') {
         console.error("[User Profile Validation] Empty username provided");
         return new Response(
@@ -265,7 +265,7 @@ serve(async (req) => {
           .eq('username', trimmedUsername)
           .neq('id', user_id)
           .maybeSingle();
-        
+
         console.log("[User Profile Validation] Username availability check result:", { existingUser, existingUserError });
 
         if (existingUserError) {
@@ -284,7 +284,7 @@ serve(async (req) => {
           );
         }
       }
-      
+
       console.log("[User Profile Validation] Username validation passed");
     }
 
@@ -292,7 +292,7 @@ serve(async (req) => {
     if (bio !== undefined && bio !== null) {
       console.log("[User Profile Validation] Validating bio, length:", bio.length);
       const trimmedBio = bio.trim();
-      
+
       if (trimmedBio.length > 0) {
         console.log("[User Profile Validation] Calling validateBio");
         const bioValidation = validateBio(trimmedBio);
@@ -305,7 +305,7 @@ serve(async (req) => {
           );
         }
       }
-      
+
       console.log("[User Profile Validation] Bio validation passed");
     }
 
@@ -313,7 +313,7 @@ serve(async (req) => {
     if (discord_handle !== undefined && discord_handle !== null) {
       console.log("[User Profile Validation] Validating Discord handle:", discord_handle);
       const trimmedDiscordHandle = discord_handle.trim();
-      
+
       if (trimmedDiscordHandle.length > 0) {
         console.log("[User Profile Validation] Calling validateDiscordHandle");
         const discordValidation = validateDiscordHandle(trimmedDiscordHandle);
@@ -326,7 +326,7 @@ serve(async (req) => {
           );
         }
       }
-      
+
       console.log("[User Profile Validation] Discord handle validation passed");
     }
 
@@ -334,7 +334,7 @@ serve(async (req) => {
     if (twitter_handle !== undefined && twitter_handle !== null) {
       console.log("[User Profile Validation] Validating Twitter handle:", twitter_handle);
       const trimmedTwitterHandle = twitter_handle.trim();
-      
+
       if (trimmedTwitterHandle.length > 0) {
         console.log("[User Profile Validation] Calling validateTwitterHandle");
         const twitterValidation = validateTwitterHandle(trimmedTwitterHandle);
@@ -347,7 +347,7 @@ serve(async (req) => {
           );
         }
       }
-      
+
       console.log("[User Profile Validation] Twitter handle validation passed");
     }
 
@@ -363,12 +363,12 @@ serve(async (req) => {
         { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-    
+
     // 7. Validate phone number if provided
     if (msisdn !== undefined && msisdn !== null) {
       console.log("[User Profile Validation] Validating phone number:", msisdn);
       const trimmedPhone = msisdn.trim();
-      
+
       if (trimmedPhone.length > 0) {
         console.log("[User Profile Validation] Calling validatePhoneNumber");
         const phoneValidation = validatePhoneNumber(trimmedPhone);
@@ -381,15 +381,15 @@ serve(async (req) => {
           );
         }
       }
-      
+
       console.log("[User Profile Validation] Phone number validation passed");
     }
-    
+
     // All validations passed
     console.log("[User Profile Validation] All validations passed successfully");
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         details: {
           user_id: user_id,
           validations_passed: {
@@ -416,7 +416,7 @@ serve(async (req) => {
     console.error("[User Profile Validation] Error message:", error.message);
     console.error("[User Profile Validation] Error stack:", error.stack);
     console.error("[User Profile Validation] Error name:", error.name);
-    
+
     return new Response(
       JSON.stringify({ success: false, error: "Internal server error during validation" }),
       {

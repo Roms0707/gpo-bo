@@ -4,11 +4,11 @@
   1. Modified Columns
     - `project_configurations.subscription_redirect_url` renamed to `template_id`
       - Text field for storing template identifier (Kliento auth only)
-    
+
   2. New Columns
     - `project_configurations.package_id` (text, nullable)
       - Package identifier for Kliento authentication configurations
-  
+
   3. Notes
     - Both fields are only used when auth_method is 'kliento'
     - Existing data in subscription_redirect_url will be preserved in template_id

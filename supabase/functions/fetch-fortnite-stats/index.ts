@@ -114,9 +114,9 @@ serve(async (req) => {
     if (!fortniteResponse.ok) {
       const errorText = await fortniteResponse.text();
       console.error(`Fortnite API: API error: Status ${fortniteResponse.status}, Body: ${errorText}`);
-      
+
       let errorMessage = `API Error: ${fortniteResponse.status}`;
-      
+
       switch (fortniteResponse.status) {
         case 401:
           errorMessage = "Invalid API key or authentication failed";
@@ -136,7 +136,7 @@ serve(async (req) => {
         default:
           errorMessage = `Fortnite API error: ${fortniteResponse.status}`;
       }
-      
+
       return new Response(
         JSON.stringify({ success: false, error: errorMessage }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }

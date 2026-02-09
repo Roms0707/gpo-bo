@@ -141,7 +141,7 @@ serve(async (req) => {
 
     // 5. Check team capacity
     const maxPlayersPerTeam = team.tournaments?.max_players_per_team;
-    
+
     if (maxPlayersPerTeam) {
       const { count: currentMemberCount, error: countError } = await supabase
         .from('team_members')
@@ -157,12 +157,12 @@ serve(async (req) => {
       }
 
       const currentMembers = currentMemberCount || 0;
-      
+
       if (currentMembers >= maxPlayersPerTeam) {
         return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: `Team is full (${currentMembers}/${maxPlayersPerTeam} members)` 
+          JSON.stringify({
+            success: false,
+            error: `Team is full (${currentMembers}/${maxPlayersPerTeam} members)`
           }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
@@ -171,7 +171,7 @@ serve(async (req) => {
 
     // 6. Verify user meets tournament requirements (country, age, parental consent)
     const tournament_data = team.tournaments;
-    
+
     // Check country eligibility
     if (tournament_data?.eligible_countries && user.country) {
       const eligibleCountries = tournament_data.eligible_countries.split(',').map(c => c.trim());
@@ -189,7 +189,7 @@ serve(async (req) => {
       const today = new Date();
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
-      
+
       if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         age--;
       }
@@ -214,8 +214,8 @@ serve(async (req) => {
 
     // All validations passed
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         details: {
           team_name: team.name,
           tournament_title: tournament_data?.title,

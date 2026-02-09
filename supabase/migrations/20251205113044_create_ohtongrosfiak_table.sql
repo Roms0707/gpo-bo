@@ -7,7 +7,7 @@
       - `bbl` (text) - First data column
       - `guzman` (text) - Second data column
       - `created_at` (timestamptz) - Timestamp when record was created
-  
+
   2. Security
     - Enable RLS on `ohtongrosfiak` table
     - Add policy for authenticated users to read all data

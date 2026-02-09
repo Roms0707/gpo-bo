@@ -57,7 +57,7 @@ BEGIN
   ) THEN
     ALTER TABLE user_profile_customizations ADD COLUMN selected_avatar_id uuid REFERENCES profile_avatars(id) ON DELETE SET NULL;
   END IF;
-  
+
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'user_profile_customizations' AND column_name = 'use_preset_avatar'
@@ -68,7 +68,7 @@ END $$;
 
 -- Update user_unlocked_items check constraint to include 'avatar' type
 ALTER TABLE user_unlocked_items DROP CONSTRAINT IF EXISTS user_unlocked_items_item_type_check;
-ALTER TABLE user_unlocked_items ADD CONSTRAINT user_unlocked_items_item_type_check 
+ALTER TABLE user_unlocked_items ADD CONSTRAINT user_unlocked_items_item_type_check
   CHECK (item_type IN ('frame', 'badge', 'avatar'));
 
 -- Enable RLS on profile_avatars

@@ -131,7 +131,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const now = new Date().toISOString();
-    
+
     if (status === 'ongoing') {
       query = query
         .lte('start_date', now)
@@ -217,8 +217,8 @@ Deno.serve(async (req: Request) => {
     console.log(`[Filtered Tournaments] Successfully fetched ${processedTournaments.length} tournaments`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         data: processedTournaments,
         total_count: count || 0
       }),

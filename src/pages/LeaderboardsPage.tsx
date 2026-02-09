@@ -6,10 +6,10 @@ import Card, { CardHeader, CardTitle, CardContent, CardFooter } from '../compone
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
-import { 
+import {
   TowerControl as GameController,
   ArrowLeft,
-  Trophy, 
+  Trophy,
   User,
   Shield,
   Users,
@@ -99,10 +99,10 @@ const LeaderboardsPage: React.FC = () => {
   useEffect(() => {
     const fetchLeaderboardData = async () => {
       if (!selectedGame) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Fetch player rankings
         const { data: playerData, error: playerError } = await supabase
@@ -117,19 +117,19 @@ const LeaderboardsPage: React.FC = () => {
           `)
           .eq('game_id', selectedGame)
           .order('elo_rating', { ascending: false });
-        
+
         if (playerError) throw playerError;
-        
+
         // Calculate win rate and format data
         const formattedPlayerData = playerData.map(player => ({
           ...player,
-          winRate: player.wins + player.losses > 0 
-            ? Math.round((player.wins / (player.wins + player.losses)) * 100) 
+          winRate: player.wins + player.losses > 0
+            ? Math.round((player.wins / (player.wins + player.losses)) * 100)
             : 0
         }));
-        
+
         setPlayerRankings(formattedPlayerData);
-        
+
         // Fetch team rankings
         const { data: teamData, error: teamError } = await supabase
           .from('team_rankings')
@@ -141,19 +141,19 @@ const LeaderboardsPage: React.FC = () => {
           `)
           .eq('game_id', selectedGame)
           .order('elo_rating', { ascending: false });
-        
+
         if (teamError) throw teamError;
-        
+
         // Calculate win rate and format data
         const formattedTeamData = teamData.map(team => ({
           ...team,
-          winRate: team.wins + team.losses > 0 
-            ? Math.round((team.wins / (team.wins + team.losses)) * 100) 
+          winRate: team.wins + team.losses > 0
+            ? Math.round((team.wins / (team.wins + team.losses)) * 100)
             : 0
         }));
-        
+
         setTeamRankings(formattedTeamData);
-        
+
         // Fetch recent matches
         const { data: matchData, error: matchError } = await supabase
           .from('match_results')
@@ -168,14 +168,14 @@ const LeaderboardsPage: React.FC = () => {
           .eq('game_id', selectedGame)
           .order('match_date', { ascending: false })
           .limit(10);
-        
+
         if (matchError) throw matchError;
-        
+
         // Format match data to include winner/loser names
         const formattedMatchData = matchData.map(match => {
           let winner_name = '';
           let loser_name = '';
-          
+
           if (match.is_team_match) {
             winner_name = match.winner_team?.name || 'Unknown Team';
             loser_name = match.loser_team?.name || 'Unknown Team';
@@ -183,14 +183,14 @@ const LeaderboardsPage: React.FC = () => {
             winner_name = match.winner_player?.username || match.winner_player?.email.split('@')[0] || 'Unknown Player';
             loser_name = match.loser_player?.username || match.loser_player?.email.split('@')[0] || 'Unknown Player';
           }
-          
+
           return {
             ...match,
             winner_name,
             loser_name
           };
         });
-        
+
         setRecentMatches(formattedMatchData);
         setIsLoading(false);
       } catch (error) {
@@ -199,7 +199,7 @@ const LeaderboardsPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchLeaderboardData();
   }, [selectedGame]);
 
@@ -221,7 +221,7 @@ const LeaderboardsPage: React.FC = () => {
   // Get unique rank tiers for filter
   const getUniqueTiers = () => {
     const tiers = new Set<string>();
-    
+
     if (viewType === 'players') {
       playerRankings.forEach(player => {
         if (player.rank_tier) {
@@ -238,7 +238,7 @@ const LeaderboardsPage: React.FC = () => {
         }
       });
     }
-    
+
     return Array.from(tiers).sort();
   };
 
@@ -277,11 +277,11 @@ const LeaderboardsPage: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Game Leaderboards</h1>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {games.map(game => (
-          <Card 
-            key={game.id} 
+          <Card
+            key={game.id}
             className={`cursor-pointer transition-all ${
               selectedGame === game.id ? 'border-primary-500 shadow-glow' : ''
             }`}
@@ -289,10 +289,10 @@ const LeaderboardsPage: React.FC = () => {
           >
             <CardContent className="p-4 flex items-center">
               {game.image_url ? (
-                <img 
-                  src={game.image_url} 
-                  alt={game.name} 
-                  className="w-12 h-12 object-cover rounded-md mr-3" 
+                <img
+                  src={game.image_url}
+                  alt={game.name}
+                  className="w-12 h-12 object-cover rounded-md mr-3"
                 />
               ) : (
                 <div className="w-12 h-12 bg-gray-200 dark:bg-dark-200 rounded-md mr-3 flex items-center justify-center">
@@ -309,7 +309,7 @@ const LeaderboardsPage: React.FC = () => {
           </Card>
         ))}
       </div>
-      
+
       {/* Selected Game Leaderboard */}
       {selectedGame && (
         <div className="space-y-6">
@@ -317,7 +317,7 @@ const LeaderboardsPage: React.FC = () => {
             <h2 className="text-xl font-bold text-white">
               {getGameName(selectedGame)} Leaderboard
             </h2>
-            
+
             <div className="flex flex-col md:flex-row gap-3">
               <div className="flex space-x-2">
                 <Button
@@ -337,7 +337,7 @@ const LeaderboardsPage: React.FC = () => {
                   Teams
                 </Button>
               </div>
-              
+
               <div className="flex gap-2">
                 <div className="w-48">
                   <Input
@@ -347,7 +347,7 @@ const LeaderboardsPage: React.FC = () => {
                     leftIcon={<Search className="h-4 w-4 text-gray-400" />}
                   />
                 </div>
-                
+
                 <div className="w-40">
                   <Select
                     value={rankFilter}
@@ -365,7 +365,7 @@ const LeaderboardsPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
               <Card>
@@ -445,8 +445,8 @@ const LeaderboardsPage: React.FC = () => {
                               <TableCell className="text-center">
                                 <div className="inline-flex items-center">
                                   <span className={
-                                    player.winRate >= 60 ? 'text-success-400' : 
-                                    player.winRate >= 45 ? 'text-gray-300' : 
+                                    player.winRate >= 60 ? 'text-success-400' :
+                                    player.winRate >= 45 ? 'text-gray-300' :
                                     'text-error-400'
                                   }>
                                     {player.winRate}%
@@ -508,8 +508,8 @@ const LeaderboardsPage: React.FC = () => {
                               <TableCell className="text-center">
                                 <div className="inline-flex items-center">
                                   <span className={
-                                    team.winRate >= 60 ? 'text-success-400' : 
-                                    team.winRate >= 45 ? 'text-gray-300' : 
+                                    team.winRate >= 60 ? 'text-success-400' :
+                                    team.winRate >= 45 ? 'text-gray-300' :
                                     'text-error-400'
                                   }>
                                     {team.winRate}%
@@ -525,7 +525,7 @@ const LeaderboardsPage: React.FC = () => {
                 </CardContent>
               </Card>
             </div>
-            
+
             <div>
               <Card>
                 <CardHeader>
@@ -546,7 +546,7 @@ const LeaderboardsPage: React.FC = () => {
                   ) : (
                     <div className="space-y-3">
                       {recentMatches.map(match => (
-                        <div 
+                        <div
                           key={match.id}
                           className="p-3 bg-dark-200 rounded-lg border border-dark-200 hover:border-dark-100"
                         >
@@ -558,21 +558,21 @@ const LeaderboardsPage: React.FC = () => {
                               {formatDate(match.match_date)}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
                               <div className="text-sm text-primary-300 font-medium">{match.winner_name}</div>
                             </div>
-                            
+
                             <div className="mx-2 text-xs px-1.5 py-0.5 bg-dark-300 rounded text-white font-mono">
                               {match.score_winner}-{match.score_loser}
                             </div>
-                            
+
                             <div className="flex-1 text-right">
                               <div className="text-sm text-gray-400">{match.loser_name}</div>
                             </div>
                           </div>
-                          
+
                           <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
                             <span>+{match.elo_change} ELO</span>
                             {match.tournament_id && (

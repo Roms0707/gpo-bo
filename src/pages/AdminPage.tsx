@@ -37,13 +37,13 @@ const AdminPage: React.FC = () => {
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Modal states
   const [isAddAdminModalOpen, setIsAddAdminModalOpen] = useState(false);
   const [isEditAdminModalOpen, setIsEditAdminModalOpen] = useState(false);
   const [isDeleteAdminModalOpen, setIsDeleteAdminModalOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
-  
+
   // Form states
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
@@ -51,11 +51,11 @@ const AdminPage: React.FC = () => {
   const [newAdminCountry, setNewAdminCountry] = useState('');
   const [editAdminRole, setEditAdminRole] = useState<'admin' | 'super_admin' | 'master_admin'>('admin');
   const [editAdminCountry, setEditAdminCountry] = useState('');
-  
+
   const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
   const [isUpdatingAdmin, setIsUpdatingAdmin] = useState(false);
   const [isDeletingAdmin, setIsDeletingAdmin] = useState(false);
-  
+
   // Pagination states
   const [displayedAdmins, setDisplayedAdmins] = useState<AdminUser[]>([]);
   const [showAllAdmins, setShowAllAdmins] = useState(false);
@@ -70,7 +70,7 @@ const AdminPage: React.FC = () => {
   const fetchAdminUsers = async () => {
     try {
       setIsLoading(true);
-      
+
       const { data, error } = await supabase
         .from('users')
         .select('id, email, role, country, created_at')
@@ -78,19 +78,19 @@ const AdminPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       // Sort to put current user first, then others by creation date
       const sortedData = (data as AdminUser[]).sort((a, b) => {
         // Current user always comes first
         if (a.id === user?.id) return -1;
         if (b.id === user?.id) return 1;
-        
+
         // For others, sort by creation date (newest first)
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-      
+
       setAdminUsers(sortedData);
-      
+
       // Set initial display (first 5 users)
       setDisplayedAdmins(sortedData.slice(0, INITIAL_DISPLAY_COUNT));
       setShowAllAdmins(sortedData.length <= INITIAL_DISPLAY_COUNT);
@@ -104,10 +104,10 @@ const AdminPage: React.FC = () => {
 
   const handleViewMore = async () => {
     setIsLoadingMore(true);
-    
+
     // Simulate loading delay for better UX
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     setDisplayedAdmins(adminUsers);
     setShowAllAdmins(true);
     setIsLoadingMore(false);
@@ -152,7 +152,7 @@ const AdminPage: React.FC = () => {
 
       // Call the Edge Function to create the admin user
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         throw new Error('No active session');
       }
@@ -229,7 +229,7 @@ const AdminPage: React.FC = () => {
 
       // Call the Edge Function to delete the admin user
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         throw new Error('No active session');
       }
@@ -464,7 +464,7 @@ const AdminPage: React.FC = () => {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {/* View More Button */}
               {!showAllAdmins && adminUsers.length > INITIAL_DISPLAY_COUNT && (
                 <div className="flex justify-center pt-4">
@@ -478,7 +478,7 @@ const AdminPage: React.FC = () => {
                   </Button>
                 </div>
               )}
-              
+
               {/* View Less Button */}
               {showAllAdmins && adminUsers.length > INITIAL_DISPLAY_COUNT && (
                 <div className="flex justify-center pt-4">
@@ -517,7 +517,7 @@ const AdminPage: React.FC = () => {
                 <div className="text-2xl font-bold text-white">{systemInfo.totalUsers}</div>
                 <div className="text-sm text-gray-400">Total Users</div>
               </div>
-              
+
               <div className="text-center">
                 <div className="flex justify-center mb-2">
                   <Settings className="h-8 w-8 text-accent-500" />
@@ -525,7 +525,7 @@ const AdminPage: React.FC = () => {
                 <div className="text-2xl font-bold text-white">{systemInfo.totalTournaments}</div>
                 <div className="text-sm text-gray-400">Total Tournaments</div>
               </div>
-              
+
               <div className="text-center">
                 <div className="flex justify-center mb-2">
                   <Monitor className="h-8 w-8 text-success-500" />
@@ -533,7 +533,7 @@ const AdminPage: React.FC = () => {
                 <div className="text-2xl font-bold text-white">{systemInfo.activeTournaments}</div>
                 <div className="text-sm text-gray-400">Active Tournaments</div>
               </div>
-              
+
               <div className="text-center">
                 <div className="flex justify-center mb-2">
                   <Users className="h-8 w-8 text-secondary-500" />
@@ -556,8 +556,8 @@ const AdminPage: React.FC = () => {
         title="Add Administrator"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 setIsAddAdminModalOpen(false);
                 resetAddAdminForm();
@@ -565,7 +565,7 @@ const AdminPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleCreateAdmin}
               isLoading={isCreatingAdmin}
               leftIcon={<Plus size={16} />}
@@ -584,7 +584,7 @@ const AdminPage: React.FC = () => {
             placeholder="admin@example.com"
             required
           />
-          
+
           <Input
             label="Password"
             type="password"
@@ -651,8 +651,8 @@ const AdminPage: React.FC = () => {
         title="Edit Administrator"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 setIsEditAdminModalOpen(false);
                 setSelectedAdmin(null);
@@ -660,7 +660,7 @@ const AdminPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleEditAdmin}
               isLoading={isUpdatingAdmin}
               leftIcon={<Edit size={16} />}
@@ -739,8 +739,8 @@ const AdminPage: React.FC = () => {
         title="Delete Administrator"
         footer={
           <div className="flex justify-end space-x-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 setIsDeleteAdminModalOpen(false);
                 setSelectedAdmin(null);
@@ -748,7 +748,7 @@ const AdminPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               variant="danger"
               onClick={handleDeleteAdmin}
               isLoading={isDeletingAdmin}
@@ -770,7 +770,7 @@ const AdminPage: React.FC = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="bg-dark-200 p-3 rounded-md">
               <p className="text-sm text-gray-400">Administrator Email:</p>
               <p className="font-medium text-white">{selectedAdmin.email}</p>

@@ -13,14 +13,14 @@
       - `is_auto_generated` (boolean) - Flag for auto vs manual creation
       - `keywords` (text array) - Keywords used for video matching
       - `created_at`, `updated_at` (timestamps)
-    
+
     - `playlist_videos`
       - `id` (uuid, primary key) - Unique junction identifier
       - `playlist_id` (uuid, foreign key) - Reference to playlist
       - `content_id` (uuid, foreign key to game_contents) - Reference to video
       - `position` (integer) - Video order within playlist
       - `created_at` (timestamp)
-    
+
     - `user_video_progress`
       - `id` (uuid, primary key) - Unique progress identifier
       - `user_id` (uuid, foreign key to auth.users) - The user
@@ -141,28 +141,28 @@ CREATE POLICY "Users can delete their own video progress"
   USING (auth.uid() = user_id);
 
 -- Create indexes for efficient queries
-CREATE INDEX IF NOT EXISTS idx_video_playlists_game_id 
+CREATE INDEX IF NOT EXISTS idx_video_playlists_game_id
   ON video_playlists(game_id);
 
-CREATE INDEX IF NOT EXISTS idx_video_playlists_category 
+CREATE INDEX IF NOT EXISTS idx_video_playlists_category
   ON video_playlists(category);
 
-CREATE INDEX IF NOT EXISTS idx_playlist_videos_playlist_id 
+CREATE INDEX IF NOT EXISTS idx_playlist_videos_playlist_id
   ON playlist_videos(playlist_id);
 
-CREATE INDEX IF NOT EXISTS idx_playlist_videos_content_id 
+CREATE INDEX IF NOT EXISTS idx_playlist_videos_content_id
   ON playlist_videos(content_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_video_progress_user_id 
+CREATE INDEX IF NOT EXISTS idx_user_video_progress_user_id
   ON user_video_progress(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_video_progress_content_id 
+CREATE INDEX IF NOT EXISTS idx_user_video_progress_content_id
   ON user_video_progress(content_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_video_progress_user_content 
+CREATE INDEX IF NOT EXISTS idx_user_video_progress_user_content
   ON user_video_progress(user_id, content_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_video_progress_last_watched 
+CREATE INDEX IF NOT EXISTS idx_user_video_progress_last_watched
   ON user_video_progress(user_id, last_watched_at DESC);
 
 -- Create updated_at trigger for video_playlists

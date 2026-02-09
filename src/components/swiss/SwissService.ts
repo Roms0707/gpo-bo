@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { saveBracket } from '../bracket/BracketService';
 
 export const fetchSoloPlayers = async (
-  tournamentData: any, 
+  tournamentData: any,
   userIdSet: Set<string>,
   tournamentId: string,
   setSqlQuery?: (query: string) => void
@@ -12,22 +12,22 @@ export const fetchSoloPlayers = async (
   console.log(`🔍 SWISS DEBUG: Starting fetchSoloPlayers`);
   console.log(`🔍 SWISS DEBUG: Initial validUserIds size: ${userIdSet.size}`);
   console.log(`🔍 SWISS DEBUG: First 5 valid user IDs:`, Array.from(userIdSet).slice(0, 5));
-  
+
   const sqlQuery = `
-SELECT 
+SELECT
   tr.user_id,
   u.id,
   u.email,
   u.username
-FROM 
+FROM
   tournament_registrations tr
-JOIN 
+JOIN
   users u ON tr.user_id = u.id
-WHERE 
+WHERE
   tr.tournament_id = '${tournamentId}'
   AND tr.status = 'approved'
   `;
-  
+
   if (setSqlQuery) {
     setSqlQuery(sqlQuery);
   }
@@ -51,7 +51,7 @@ WHERE
   }
 
   console.log(`🔍 SWISS DEBUG: Found ${registrations?.length || 0} approved registrations`);
-  
+
   // Double-check that all registration user IDs are in the validUserIds set
   // If not, add them to ensure we don't miss any valid users
   if (registrations && registrations.length > 0) {
@@ -63,7 +63,7 @@ WHERE
         console.log(`🔍 SWISS DEBUG: Added missing user ID to validUserIds: ${reg.user.id}`);
       }
     });
-    
+
     if (addedCount > 0) {
       console.log(`🔍 SWISS DEBUG: Added ${addedCount} missing user IDs to validUserIds set`);
       console.log(`🔍 SWISS DEBUG: New validUserIds size: ${userIdSet.size}`);
@@ -84,7 +84,7 @@ WHERE
   }) || [];
 
   console.log(`🔍 SWISS DEBUG: Valid registrations after filtering: ${validRegistrations.length}`);
-  
+
   // Log all valid user IDs from registrations for debugging
   console.log(`🔍 SWISS DEBUG: Valid registration user IDs:`, validRegistrations.map(reg => reg.user.id));
 
@@ -110,7 +110,7 @@ WHERE
   if (tournamentData.game_id && formattedPlayers.length > 0) {
     console.log(`🔍 SWISS DEBUG: Fetching ELO ratings for game ${tournamentData.game_id}`);
     const approvedPlayerIds = formattedPlayers.map(p => p.id);
-    
+
     const { data: rankingsData, error: rankingsError } = await supabase
       .from('player_rankings')
       .select('user_id, elo_rating, game_id')
@@ -144,83 +144,83 @@ WHERE
     name: p.name,
     valid: userIdSet.has(p.id)
   })));
-  
+
   return formattedPlayers;
 };
 
 export const fetchTeams = async (
-  tournamentData: any, 
+  tournamentData: any,
   userIdSet: Set<string>,
   tournamentId: string
 ): Promise<any[]> => {
   console.log(`🔍 SWISS DEBUG: Starting fetchTeams`);
   console.log(`🔍 SWISS DEBUG: Initial validUserIds size: ${userIdSet.size}`);
-  
+
   // SQL query for debugging
   const sqlQuery = `
 WITH approved_registrations AS (
-  SELECT 
+  SELECT
     tr.user_id,
     tr.team_id,
     tr.status
-  FROM 
+  FROM
     tournament_registrations tr
-  WHERE 
+  WHERE
     tr.tournament_id = '${tournamentId}'
     AND tr.status = 'approved'
 ),
 team_captains AS (
-  SELECT 
+  SELECT
     tm.team_id,
     tm.user_id AS captain_id
-  FROM 
+  FROM
     team_members tm
-  WHERE 
+  WHERE
     tm.role = 'captain'
     AND tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
 ),
 team_member_counts AS (
-  SELECT 
+  SELECT
     tm.team_id,
     COUNT(tm.user_id) AS member_count
-  FROM 
+  FROM
     team_members tm
-  WHERE 
+  WHERE
     tm.team_id IN (SELECT DISTINCT team_id FROM approved_registrations WHERE team_id IS NOT NULL)
-  GROUP BY 
+  GROUP BY
     tm.team_id
 )
-SELECT 
+SELECT
   t.id,
   t.name,
   tc.captain_id,
   tmc.member_count,
-  CASE 
+  CASE
     WHEN EXISTS (
-      SELECT 1 FROM approved_registrations ar 
+      SELECT 1 FROM approved_registrations ar
       WHERE ar.user_id = tc.captain_id AND ar.team_id = t.id
     ) THEN true
     ELSE false
   END AS captain_approved,
-  CASE 
+  CASE
     WHEN tmc.member_count >= ${tournamentData.max_players_per_team || 5} THEN true
     ELSE false
   END AS has_enough_members,
   ${tournamentData.max_players_per_team || 5} AS required_members
-FROM 
+FROM
   teams t
-LEFT JOIN 
+LEFT JOIN
   team_captains tc ON t.id = tc.team_id
-LEFT JOIN 
+LEFT JOIN
   team_member_counts tmc ON t.id = tmc.team_id
-WHERE 
+WHERE
   t.tournament_id = '${tournamentId}'
-ORDER BY 
+ORDER BY
   tmc.member_count DESC, t.name ASC
   `;
-  
+
   console.log(`🔍 SWISS DEBUG: SQL Query for teams:`, sqlQuery);
-  
+
   // Fetch teams for this tournament
   const { data: teamsData, error: teamsError } = await supabase
     .from('teams')
@@ -230,7 +230,7 @@ ORDER BY
       captain_id
     `)
     .eq('tournament_id', tournamentId);
-    
+
   if (teamsError) {
     console.error('🔍 SWISS DEBUG: Error fetching teams:', teamsError);
     throw teamsError;
@@ -247,18 +247,18 @@ ORDER BY
       role
     `)
     .in('team_id', teamsData.map(t => t.id));
-    
+
   if (teamMembersError) {
     console.error('🔍 SWISS DEBUG: Error fetching team members:', teamMembersError);
     throw teamMembersError;
   }
 
   console.log(`🔍 SWISS DEBUG: Found ${teamMembers.length} team members`);
-  
+
   // Get all team member user IDs and ensure they're in the validUserIds set
   const teamMemberUserIds = teamMembers.map(m => m.user_id);
   let addedCount = 0;
-  
+
   teamMemberUserIds.forEach(userId => {
     if (userId && !userIdSet.has(userId)) {
       userIdSet.add(userId);
@@ -266,7 +266,7 @@ ORDER BY
       console.log(`🔍 SWISS DEBUG: Added missing team member ID to validUserIds: ${userId}`);
     }
   });
-  
+
   if (addedCount > 0) {
     console.log(`🔍 SWISS DEBUG: Added ${addedCount} missing team member IDs to validUserIds set`);
     console.log(`🔍 SWISS DEBUG: New validUserIds size: ${userIdSet.size}`);
@@ -282,7 +282,7 @@ ORDER BY
     `)
     .eq('tournament_id', tournamentId)
     .eq('status', 'approved');
-    
+
   if (registrationsError) {
     console.error('🔍 SWISS DEBUG: Error fetching approved registrations:', registrationsError);
     throw registrationsError;
@@ -292,7 +292,7 @@ ORDER BY
 
   // Create a set of approved user IDs
   const approvedUserIds = new Set(approvedRegistrations.map(reg => reg.user_id));
-  
+
   // Add approved user IDs to validUserIds set if they're not already there
   let approvedAddedCount = 0;
   approvedRegistrations.forEach(reg => {
@@ -302,7 +302,7 @@ ORDER BY
       console.log(`🔍 SWISS DEBUG: Added missing approved user ID to validUserIds: ${reg.user_id}`);
     }
   });
-  
+
   if (approvedAddedCount > 0) {
     console.log(`🔍 SWISS DEBUG: Added ${approvedAddedCount} missing approved user IDs to validUserIds set`);
     console.log(`🔍 SWISS DEBUG: New validUserIds size: ${userIdSet.size}`);
@@ -313,20 +313,20 @@ ORDER BY
     // Find the captain
     const captain = teamMembers.find(tm => tm.team_id === team.id && tm.role === 'captain');
     const captainId = captain?.user_id || team.captain_id;
-    
+
     // Count team members
     const memberCount = teamMembers.filter(tm => tm.team_id === team.id).length;
-    
+
     // Check if captain is approved
     const requiredMembers = tournamentData.max_players_per_team || 5;
     const captainApproved = captainId ? approvedUserIds.has(captainId) && userIdSet.has(captainId) : false;
     const hasEnoughMembers = memberCount >= requiredMembers;
-    
+
     // Team is approved if captain is approved AND it has enough members
     const isApproved = captainApproved && hasEnoughMembers;
-    
+
     console.log(`🔍 SWISS DEBUG: Team ${team.name} - Captain: ${captainId}, Members: ${memberCount}/${requiredMembers}, Captain approved: ${captainApproved}, Enough members: ${hasEnoughMembers}, Final approved: ${isApproved}`);
-    
+
     if (captainId && !userIdSet.has(captainId)) {
       console.log(`🔍 SWISS DEBUG: ⚠️ Captain ID ${captainId} for team ${team.name} is not in validUserIds set!`);
     }
@@ -349,13 +349,13 @@ ORDER BY
       isEliminated: false
     };
   }).filter(team => team.isApproved);
-  
+
   console.log(`🔍 SWISS DEBUG: Approved teams after filtering: ${processedTeams.length}`);
   console.log(`🔍 SWISS DEBUG: Team captain IDs:`, processedTeams.map(t => `${t.name} (captain: ${t.captain_id})`));
 
   // Sort by team strength/ELO if available, otherwise by name
   processedTeams.sort((a, b) => a.name.localeCompare(b.name));
-  
+
   // Reassign seeds after filtering and sorting
   const finalTeams = processedTeams.map((team, index) => ({
     ...team,
@@ -367,7 +367,7 @@ ORDER BY
     captainId: t.captain_id,
     valid: t.captain_id ? userIdSet.has(t.captain_id) : false
   })));
-  
+
   return finalTeams;
 };
 
@@ -594,8 +594,8 @@ export const generateFirstRound = async (
 };
 
 export const generateNextRound = async (
-  participants: any[], 
-  existingMatches: any[], 
+  participants: any[],
+  existingMatches: any[],
   tournamentData: any,
   tournamentId: string,
   currentRound: number,
@@ -606,7 +606,7 @@ export const generateNextRound = async (
     console.log(`🔍 SWISS DEBUG: Current round: ${currentRound}, Next round: ${currentRound + 1}`);
     console.log(`🔍 SWISS DEBUG: Participants count: ${participants.length}`);
     console.log(`🔍 SWISS DEBUG: Valid user IDs count: ${validUserIds.size}`);
-    
+
     // Check if we've reached the maximum number of rounds for this tournament size
     const maxRounds = 5; // Maximum of 5 rounds for Swiss tournaments
     if (currentRound >= maxRounds) {
@@ -614,47 +614,47 @@ export const generateNextRound = async (
       toast.info(`Maximum rounds (${maxRounds}) reached for this tournament. Time to determine the winner!`);
       return [];
     }
-    
+
     // Check if 50% of participants are already qualified
     const qualifiedCount = participants.filter(p => p.wins >= 3).length;
     const totalParticipants = participants.length;
-    
+
     if (qualifiedCount >= Math.ceil(totalParticipants / 2)) {
       console.log(`🔍 SWISS DEBUG: ${qualifiedCount} participants (${Math.round(qualifiedCount/totalParticipants*100)}%) have qualified, which is at least 50% of the total ${totalParticipants}`);
       toast.info(`${qualifiedCount} participants have qualified (50% threshold reached). Ready for knockout stage!`);
       return [];
     }
-    
+
     // Verify all participant IDs are in validUserIds before pairing
     let invalidParticipants = 0;
     participants.forEach((p, index) => {
       const participantId = tournamentData.type === 'team' ? p.captain_id : p.id;
       const isValid = participantId && validUserIds.has(participantId);
-      
+
       if (!isValid) {
         invalidParticipants++;
         console.log(`🔍 SWISS DEBUG: ⚠️ Invalid participant ${index}: ${p.name}, ID: ${participantId}`);
       }
     });
-    
+
     if (invalidParticipants > 0) {
       console.log(`🔍 SWISS DEBUG: ⚠️ Found ${invalidParticipants} invalid participants before pairing!`);
     }
-    
+
     // Filter out eliminated participants (3 losses)
     const activeParticipants = participants.filter(p => p.losses < 3 && p.wins < 3);
     console.log(`🔍 SWISS DEBUG: ${participants.length - activeParticipants.length} participants filtered out (qualified or eliminated)`);
     console.log(`🔍 SWISS DEBUG: ${activeParticipants.length} active participants remaining for pairing`);
-    
+
     // Sort participants by points (wins), then by ELO
     const sortedParticipants = [...activeParticipants].sort((a, b) => {
       const pointsA = a.points || 0;
       const pointsB = b.points || 0;
-      
+
       if (pointsA !== pointsB) {
         return pointsB - pointsA; // Higher points first
       }
-      
+
       return (b.elo || 1000) - (a.elo || 1000); // Higher ELO first
     });
 
@@ -697,11 +697,11 @@ export const generateNextRound = async (
 
     // Build a comprehensive list of all previous opponents for each participant
     const allOpponents = new Map<string, Set<string>>();
-    
+
     // Initialize opponent sets
     sortedParticipants.forEach(participant => {
-      const participantId = tournamentData.type === 'team' 
-        ? participant.captain_id 
+      const participantId = tournamentData.type === 'team'
+        ? participant.captain_id
         : participant.id;
       if (participantId) {
         allOpponents.set(participantId, new Set());
@@ -720,7 +720,7 @@ export const generateNextRound = async (
 
     // Group participants by their win count
     const participantsByWins: Record<number, any[]> = {};
-    
+
     sortedParticipants.forEach(participant => {
       const wins = participant.wins || 0;
       if (!participantsByWins[wins]) {
@@ -728,7 +728,7 @@ export const generateNextRound = async (
       }
       participantsByWins[wins].push(participant);
     });
-    
+
     // Log the distribution of participants by win count
     Object.entries(participantsByWins).forEach(([wins, participants]) => {
       console.log(`🔍 SWISS DEBUG: ${participants.length} participants with ${wins} win(s)`);
@@ -737,57 +737,57 @@ export const generateNextRound = async (
     // Swiss pairing algorithm with improved opponent checking
     // First try to pair participants with the same number of wins
     const winCounts = Object.keys(participantsByWins).map(Number).sort((a, b) => b - a);
-    
+
     for (const winCount of winCounts) {
       const participantsWithSameWins = participantsByWins[winCount];
-      
+
       // Randomize the order within each win group to avoid predictable pairings
       const shuffled = [...participantsWithSameWins].sort(() => Math.random() - 0.5);
-      
+
       console.log(`🔍 SWISS DEBUG: Attempting to pair ${shuffled.length} participants with ${winCount} win(s)`);
-      
+
       while (shuffled.length >= 2) {
         const participant1 = shuffled[0];
-        const participant1Id = tournamentData.type === 'team' 
-          ? participant1.captain_id 
+        const participant1Id = tournamentData.type === 'team'
+          ? participant1.captain_id
           : participant1.id;
-        
+
         if (!participant1Id || paired.has(participant1Id)) {
           shuffled.shift(); // Remove and skip this participant
           continue;
         }
-        
+
         // Find a valid opponent who hasn't played against participant1 yet
         let opponentIndex = -1;
-        
+
         for (let i = 1; i < shuffled.length; i++) {
           const candidate = shuffled[i];
-          const candidateId = tournamentData.type === 'team' 
-            ? candidate.captain_id 
+          const candidateId = tournamentData.type === 'team'
+            ? candidate.captain_id
             : candidate.id;
-          
+
           if (!candidateId || paired.has(candidateId)) continue;
-          
+
           // Check if they haven't played before
           const hasPlayedBefore = allOpponents.get(participant1Id)?.has(candidateId) || false;
           const bothValid = validUserIds.has(participant1Id) && validUserIds.has(candidateId);
-          
+
           if (!hasPlayedBefore && bothValid) {
             opponentIndex = i;
             break;
           }
         }
-        
+
         // If no valid opponent found, allow a rematch as last resort
         if (opponentIndex === -1) {
           for (let i = 1; i < shuffled.length; i++) {
             const candidate = shuffled[i];
-            const candidateId = tournamentData.type === 'team' 
-              ? candidate.captain_id 
+            const candidateId = tournamentData.type === 'team'
+              ? candidate.captain_id
               : candidate.id;
-            
+
             if (!candidateId || paired.has(candidateId)) continue;
-            
+
             if (validUserIds.has(participant1Id) && validUserIds.has(candidateId)) {
               opponentIndex = i;
               console.log(`🔍 SWISS DEBUG: Allowing rematch between ${participant1.name} and ${candidate.name} as no fresh opponents available`);
@@ -795,13 +795,13 @@ export const generateNextRound = async (
             }
           }
         }
-        
+
         if (opponentIndex !== -1) {
           const participant2 = shuffled[opponentIndex];
-          const participant2Id = tournamentData.type === 'team' 
-            ? participant2.captain_id 
+          const participant2Id = tournamentData.type === 'team'
+            ? participant2.captain_id
             : participant2.id;
-          
+
           // Create the match
           const matchData = {
             tournament_id: tournamentId,
@@ -812,13 +812,13 @@ export const generateNextRound = async (
             winner_id: null,
             is_draw: false
           };
-          
+
           newMatches.push(matchData);
           paired.add(participant1Id);
           paired.add(participant2Id);
-          
+
           console.log(`🔍 SWISS DEBUG: Created match: ${participant1.name} (${participant1.wins}W-${participant1.losses}L) vs ${participant2.name} (${participant2.wins}W-${participant2.losses}L)`);
-          
+
           // Remove both participants from the pool
           shuffled.splice(opponentIndex, 1);
           shuffled.shift();
@@ -829,56 +829,56 @@ export const generateNextRound = async (
         }
       }
     }
-    
+
     // If we still have unpaired participants with different win counts, try to pair them
     const remainingParticipants = sortedParticipants.filter(p => {
       const id = tournamentData.type === 'team' ? p.captain_id : p.id;
       return id && !paired.has(id) && validUserIds.has(id);
     });
-    
+
     if (remainingParticipants.length >= 2) {
       console.log(`🔍 SWISS DEBUG: Attempting to pair ${remainingParticipants.length} remaining participants with different win counts`);
-      
+
       while (remainingParticipants.length >= 2) {
         const participant1 = remainingParticipants[0];
-        const participant1Id = tournamentData.type === 'team' 
-          ? participant1.captain_id 
+        const participant1Id = tournamentData.type === 'team'
+          ? participant1.captain_id
           : participant1.id;
-        
+
         // Find best opponent
         let bestOpponentIndex = 1; // Default to next participant
         let bestOpponentScore = Infinity; // Lower is better (difference in wins)
-        
+
         for (let i = 1; i < remainingParticipants.length; i++) {
           const candidate = remainingParticipants[i];
-          const candidateId = tournamentData.type === 'team' 
-            ? candidate.captain_id 
+          const candidateId = tournamentData.type === 'team'
+            ? candidate.captain_id
             : candidate.id;
-          
+
           // Skip invalid candidates
           if (!candidateId || !validUserIds.has(candidateId)) continue;
-          
+
           // Calculate how close their win counts are
           const winDifference = Math.abs((candidate.wins || 0) - (participant1.wins || 0));
-          
+
           // Check if they've played before
           const hasPlayedBefore = allOpponents.get(participant1Id)?.has(candidateId) || false;
-          
+
           // Prefer opponents with closer win counts who haven't played before
           const score = winDifference * 10 + (hasPlayedBefore ? 100 : 0);
-          
+
           if (score < bestOpponentScore) {
             bestOpponentScore = score;
             bestOpponentIndex = i;
           }
         }
-        
+
         // Create match with best opponent
         const participant2 = remainingParticipants[bestOpponentIndex];
-        const participant2Id = tournamentData.type === 'team' 
-          ? participant2.captain_id 
+        const participant2Id = tournamentData.type === 'team'
+          ? participant2.captain_id
           : participant2.id;
-        
+
         const matchData = {
           tournament_id: tournamentId,
           round: nextRound,
@@ -888,11 +888,11 @@ export const generateNextRound = async (
           winner_id: null,
           is_draw: false
         };
-        
+
         newMatches.push(matchData);
-        
+
         console.log(`🔍 SWISS DEBUG: Created match between remaining participants: ${participant1.name} (${participant1.wins}W-${participant1.losses}L) vs ${participant2.name} (${participant2.wins}W-${participant2.losses}L)`);
-        
+
         // Remove both participants
         remainingParticipants.splice(bestOpponentIndex, 1);
         remainingParticipants.shift();
@@ -905,7 +905,7 @@ export const generateNextRound = async (
 
     if (newMatches.length > 0) {
       console.log(`🔍 SWISS DEBUG: Inserting ${newMatches.length} matches into database`);
-      
+
       const { data: insertedMatches, error } = await supabase
         .from('tournament_matches')
         .insert(newMatches)
@@ -918,10 +918,10 @@ export const generateNextRound = async (
 
       console.log(`🔍 SWISS DEBUG: Successfully inserted matches for round ${nextRound}`);
       console.log(`🔍 SWISS DEBUG: ===== NEXT ROUND GENERATION COMPLETE =====`);
-      
+
       return insertedMatches;
     }
-    
+
     console.log(`🔍 SWISS DEBUG: No matches created for round ${nextRound}`);
     return [];
   } catch (error) {
@@ -1002,8 +1002,8 @@ export const updateParticipantStandings = (participants: any[], matches: any[], 
 };
 
 export const handleWinnerSelected = async (
-  matchId: string, 
-  winnerId: string, 
+  matchId: string,
+  winnerId: string,
   matches: any[],
   tournament: any,
   updateMatches: (matches: any[]) => void,
@@ -1025,7 +1025,7 @@ export const handleWinnerSelected = async (
     if (error) throw error;
 
     // Update local state
-    const updatedMatches = matches.map(m => 
+    const updatedMatches = matches.map(m =>
       m.id === matchId ? { ...m, winner_id: winnerId } : m
     );
 
@@ -1046,11 +1046,11 @@ export const handleWinnerSelected = async (
           .select('id, captain_id')
           .in('captain_id', [winnerId, loserId])
           .eq('tournament_id', tournament.id);
-        
+
         if (!teamError && teamData && teamData.length === 2) {
           const winnerTeam = teamData.find(t => t.captain_id === winnerId);
           const loserTeam = teamData.find(t => t.captain_id === loserId);
-          
+
           if (winnerTeam && loserTeam) {
             await updateTeamRankings(
               winnerTeam.id,
@@ -1066,7 +1066,7 @@ export const handleWinnerSelected = async (
 
     // Update participant standings
     const updatedParticipants = updateParticipantStandings(participants, updatedMatches, tournament.type);
-    
+
     // Update state
     updateMatches(updatedMatches);
     updateParticipants(updatedParticipants);
@@ -1084,14 +1084,14 @@ export const handleWinnerSelected = async (
 export const getMaxAllowedParticipants = (totalParticipants: number): number => {
   // If max_nb_players is set, use that as the limit
   const swissLimits = [8, 16, 32, 64, 128, 256];
-  
+
   // Find the largest limit that is less than or equal to total participants
   for (let i = swissLimits.length - 1; i >= 0; i--) {
     if (totalParticipants >= swissLimits[i]) {
       return swissLimits[i];
     }
   }
-  
+
   // If less than 8 participants, return the total (minimum for Swiss)
   return totalParticipants >= 2 ? Math.min(totalParticipants, 8) : totalParticipants;
 };

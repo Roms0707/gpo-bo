@@ -5,7 +5,7 @@
     - Inserts new record into `bigfloetoli` table
     - bigflo: "442 Formation - FIFA"
     - oli: M3U8 video stream URL from Galaxy API (video ID: 3123756)
-  
+
   2. Notes
     - Uses ON CONFLICT to prevent duplicate inserts if migration runs multiple times
     - This is additional content data for the Jul page

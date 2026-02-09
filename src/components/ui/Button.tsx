@@ -9,20 +9,20 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   rightIcon?: React.ReactNode;
 }
 
-const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
+const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  size = 'md',
   isLoading = false,
   fullWidth = false,
   leftIcon,
   rightIcon,
   className = '',
   disabled,
-  ...props 
+  ...props
 }) => {
   const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
-  
+
   const variants = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 shadow-sm hover:shadow-glow',
     secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 shadow-sm',
@@ -30,15 +30,15 @@ const Button: React.FC<ButtonProps> = ({
     ghost: 'bg-transparent hover:bg-gray-100 dark:hover:bg-dark-200 text-gray-900 dark:text-white',
     danger: 'bg-error-600 text-white hover:bg-error-700 shadow-sm',
   };
-  
+
   const sizes = {
     sm: 'h-8 px-3 text-xs',
     md: 'h-10 px-4 py-2',
     lg: 'h-12 px-6 py-3 text-lg',
   };
-  
+
   const widthClass = fullWidth ? 'w-full' : '';
-  
+
   return (
     <button
       className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${widthClass} ${className}`}

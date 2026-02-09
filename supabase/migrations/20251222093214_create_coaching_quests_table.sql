@@ -71,11 +71,11 @@ CREATE POLICY "Users can delete their own quests"
   TO authenticated
   USING (auth.uid() = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_quests_user 
+CREATE INDEX IF NOT EXISTS idx_coaching_quests_user
   ON coaching_quests(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_quests_user_game_status 
+CREATE INDEX IF NOT EXISTS idx_coaching_quests_user_game_status
   ON coaching_quests(user_id, game_id, status);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_quests_session 
+CREATE INDEX IF NOT EXISTS idx_coaching_quests_session
   ON coaching_quests(session_id);

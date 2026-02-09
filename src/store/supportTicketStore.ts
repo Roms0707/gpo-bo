@@ -68,7 +68,7 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
   fetchTickets: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('support_tickets')
         .select(`
@@ -85,13 +85,13 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       set({ tickets: data as SupportTicket[], isLoading: false });
     } catch (error) {
       console.error('Error fetching support tickets:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred fetching support tickets',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -99,32 +99,32 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
   updateTicketStatus: async (id, status) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { error } = await supabase
         .from('support_tickets')
         .update({ status })
         .eq('id', id);
 
       if (error) throw error;
-      
+
       // Update the ticket in the local state
-      const updatedTickets = get().tickets.map(ticket => 
+      const updatedTickets = get().tickets.map(ticket =>
         ticket.id === id ? { ...ticket, status } : ticket
       );
-      
+
       // Also update the selected ticket if it's the one being updated
       const selectedTicket = get().selectedTicket;
       if (selectedTicket && selectedTicket.id === id) {
         set({ selectedTicket: { ...selectedTicket, status } });
       }
-      
+
       set({ tickets: updatedTickets, isLoading: false });
       toast.success(`Ticket status updated to ${status}`);
     } catch (error) {
       console.error('Error updating ticket status:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating ticket status',
-        isLoading: false 
+        isLoading: false
       });
       toast.error('Failed to update ticket status');
     }
@@ -133,7 +133,7 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
   deleteTicket: async (id) => {
     try {
       set({ isDeleting: true, error: null });
-      
+
       // First delete all associated messages
       const { error: messagesError } = await supabase
         .from('ticket_messages')
@@ -141,7 +141,7 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
         .eq('ticket_id', id);
 
       if (messagesError) throw messagesError;
-      
+
       // Then delete the ticket itself
       const { error } = await supabase
         .from('support_tickets')
@@ -149,21 +149,21 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
         .eq('id', id);
 
       if (error) throw error;
-      
+
       // Update the local state by removing the deleted ticket
-      set({ 
+      set({
         tickets: get().tickets.filter(ticket => ticket.id !== id),
         selectedTicket: null,
         ticketMessages: [],
-        isDeleting: false 
+        isDeleting: false
       });
-      
+
       toast.success('Ticket deleted successfully');
     } catch (error) {
       console.error('Error deleting ticket:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred deleting the ticket',
-        isDeleting: false 
+        isDeleting: false
       });
       toast.error('Failed to delete ticket');
     }
@@ -172,7 +172,7 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
   fetchTicketMessages: async (ticketId) => {
     try {
       set({ isLoadingMessages: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('ticket_messages')
         .select(`
@@ -186,13 +186,13 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      
+
       set({ ticketMessages: data as TicketMessage[], isLoadingMessages: false });
     } catch (error) {
       console.error('Error fetching ticket messages:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred fetching ticket messages',
-        isLoadingMessages: false 
+        isLoadingMessages: false
       });
     }
   },
@@ -200,11 +200,11 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
   addTicketMessage: async (ticketId, message, isAdminMessage) => {
     try {
       set({ isLoadingMessages: true, error: null });
-      
+
       // Get the current user's ID
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
-      
+
       const { data, error } = await supabase
         .from('ticket_messages')
         .insert({
@@ -223,19 +223,19 @@ export const useSupportTicketStore = create<SupportTicketState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
+
       // Add the new message to the local state
-      set({ 
+      set({
         ticketMessages: [...get().ticketMessages, data as TicketMessage],
-        isLoadingMessages: false 
+        isLoadingMessages: false
       });
-      
+
       toast.success('Message sent successfully');
     } catch (error) {
       console.error('Error adding ticket message:', error);
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred adding ticket message',
-        isLoadingMessages: false 
+        isLoadingMessages: false
       });
       toast.error('Failed to send message');
     }

@@ -4,12 +4,12 @@
   1. Changes to project_configurations table
     - `sp_template` (text): The Smartpages SP Template page identifier used when calling the Smartpages API
     - Works in conjunction with the existing `package_id` column
-    
+
   2. Purpose
     - Enables dynamic subscription redirect URL generation via the Smartpages API
     - When a user without an active subscription is detected, the system calls the Smartpages API
       with the package_id and sp_template to get a personalized redirect URL
-    
+
   3. Notes
     - Only applicable for projects using Kliento authentication (auth_method = 'kliento')
     - Requires `package_id` to also be configured for full functionality

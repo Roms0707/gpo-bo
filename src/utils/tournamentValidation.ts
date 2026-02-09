@@ -288,8 +288,8 @@ export const validateBracketStructure = (
   const bracketSize = getNextPowerOfTwo(participantCount);
   const expectedByes = bracketSize - participantCount;
   const expectedRounds = Math.log2(bracketSize);
-  const r1RealMatches = (participantCount - expectedByes) / 2;
-  const expectedTotalMatches = r1RealMatches + (bracketSize / 2 - 1);
+  const expectedR1Matches = bracketSize / 2;
+  const expectedTotalMatches = bracketSize - 1;
 
   if (!isPowerOfTwo(bracketSize)) {
     errors.push(`Bracket size ${bracketSize} is not a power of 2`);
@@ -303,8 +303,13 @@ export const validateBracketStructure = (
   }
 
   const round1Matches = matches.filter(m => m.round === 1);
-  if (round1Matches.length !== r1RealMatches) {
-    warnings.push(`Round 1: expected ${r1RealMatches} real matches, got ${round1Matches.length}`);
+  if (round1Matches.length !== expectedR1Matches) {
+    warnings.push(`Round 1: expected ${expectedR1Matches} matches (including BYEs), got ${round1Matches.length}`);
+  }
+
+  const r1ByeMatches = round1Matches.filter(m => m.is_bye);
+  if (r1ByeMatches.length !== expectedByes) {
+    warnings.push(`Round 1: expected ${expectedByes} BYE matches, got ${r1ByeMatches.length}`);
   }
 
   for (let round = 2; round <= expectedRounds; round++) {
@@ -313,12 +318,6 @@ export const validateBracketStructure = (
     if (actualMatchesInRound !== expectedMatchesInRound) {
       errors.push(`Round ${round}: expected ${expectedMatchesInRound} matches, got ${actualMatchesInRound}`);
     }
-  }
-
-  const r2Matches = matches.filter(m => m.round === 2);
-  const r2WithByePlayers = r2Matches.filter(m => m.player1_id !== null || m.player2_id !== null);
-  if (r2WithByePlayers.length < expectedByes && expectedByes > 0) {
-    warnings.push(`R2 should have ${expectedByes} pre-seeded BYE players, found ${r2WithByePlayers.length}`);
   }
 
   const allPlayersInBracket = new Set<string>();
@@ -339,7 +338,7 @@ export const validateBracketStructure = (
       participantCount,
       bracketSize,
       expectedByes,
-      actualByeMatches: expectedByes,
+      actualByeMatches: r1ByeMatches.length,
       totalMatches,
       expectedMatches: expectedTotalMatches,
       totalRounds: rounds.length

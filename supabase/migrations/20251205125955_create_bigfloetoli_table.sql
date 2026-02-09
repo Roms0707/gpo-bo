@@ -7,7 +7,7 @@
       - `bigflo` (text) - First column
       - `oli` (text) - Second column
       - `created_at` (timestamptz) - Timestamp of record creation
-      
+
   2. Security
     - Enable RLS on `bigfloetoli` table
     - Add policies for authenticated users to manage their data

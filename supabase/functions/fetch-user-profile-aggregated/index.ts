@@ -185,13 +185,13 @@ Deno.serve(async (req) => {
 
     if (tournamentRegistrations && tournamentRegistrations.length > 0) {
       tournamentStats.total = tournamentRegistrations.length;
-      
+
       for (const registration of tournamentRegistrations) {
         if (registration.tournaments) {
           const tournament = registration.tournaments;
           const startDate = new Date(tournament.start_date);
           const endDate = new Date(tournament.end_date);
-          
+
           if (now > endDate) {
             tournamentStats.completed++;
           } else if (now >= startDate && now <= endDate) {
@@ -205,13 +205,13 @@ Deno.serve(async (req) => {
 
     // 8. Process game rankings (combine player and team rankings)
     const gameRankings = [];
-    
+
     // Add player rankings
     if (playerRankings && playerRankings.length > 0) {
       for (const ranking of playerRankings) {
         const totalMatches = ranking.wins + ranking.losses;
         const winRate = totalMatches > 0 ? Math.round((ranking.wins / totalMatches) * 100) : 0;
-        
+
         gameRankings.push({
           game_name: ranking.games?.name || 'Unknown Game',
           rank: 1, // This would need to be calculated based on actual ranking logic
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
       for (const ranking of teamRankings) {
         const totalMatches = ranking.wins + ranking.losses;
         const winRate = totalMatches > 0 ? Math.round((ranking.wins / totalMatches) * 100) : 0;
-        
+
         gameRankings.push({
           game_name: ranking.games?.name || 'Unknown Game',
           rank: 1, // This would need to be calculated based on actual ranking logic
@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
       is_fortnite_validated: userData.is_fortnite_validated,
       fortnite_validation_data: userData.fortnite_validation_data,
       created_at: userData.created_at,
-      
+
       // Aggregated data
       gaming_accounts: gamingAccounts || [],
       game_rankings: gameRankings,

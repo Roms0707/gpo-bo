@@ -42,9 +42,9 @@ serve(async (req) => {
   );
 
   try {
-    const { 
-      steamId64, 
-      includeBans = false, 
+    const {
+      steamId64,
+      includeBans = false,
       includeGames = false,
       includeLevel = false,
       includeGameStats = false,
@@ -111,7 +111,7 @@ serve(async (req) => {
     }
 
     const profileResponseData = await profileResponse.json();
-    
+
     if (profileResponseData.response && profileResponseData.response.players && profileResponseData.response.players.length > 0) {
       profileData = profileResponseData.response.players[0];
       console.log(`[Steam API] Profile data obtained for: ${profileData.personaname}`);
@@ -130,7 +130,7 @@ serve(async (req) => {
 
       try {
         const bansResponse = await fetch(bansUrl);
-        
+
         if (bansResponse.ok) {
           const bansResponseData = await bansResponse.json();
           if (bansResponseData.players && bansResponseData.players.length > 0) {
@@ -152,7 +152,7 @@ serve(async (req) => {
 
       try {
         const gamesResponse = await fetch(gamesUrl);
-        
+
         if (gamesResponse.ok) {
           const gamesResponseData = await gamesResponse.json();
           if (gamesResponseData.response && gamesResponseData.response.games) {
@@ -160,7 +160,7 @@ serve(async (req) => {
             const sortedGames = gamesResponseData.response.games
               .sort((a: any, b: any) => (b.playtime_forever || 0) - (a.playtime_forever || 0))
               .slice(0, 10);
-            
+
             gamesData = {
               game_count: gamesResponseData.response.game_count,
               games: sortedGames
@@ -182,7 +182,7 @@ serve(async (req) => {
 
       try {
         const levelResponse = await fetch(levelUrl);
-        
+
         if (levelResponse.ok) {
           const levelResponseData = await levelResponse.json();
           if (levelResponseData.response && typeof levelResponseData.response.player_level === 'number') {
@@ -206,9 +206,9 @@ serve(async (req) => {
         try {
           const gameStatsUrl = `https://api.steampowered.com/ISteamUserStats/GetUserStatsForGame/v0002/?appid=${appId}&key=${STEAM_API_KEY}&steamid=${steamId64}`;
           console.log(`[Steam API] Fetching stats for app ID: ${appId}`);
-          
+
           const gameStatsResponse = await fetch(gameStatsUrl);
-          
+
           if (gameStatsResponse.ok) {
             const gameStatsResponseData = await gameStatsResponse.json();
             if (gameStatsResponseData.playerstats) {

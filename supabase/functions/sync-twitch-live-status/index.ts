@@ -40,11 +40,11 @@ const extractTwitchChannelName = (twitchUrl: string): string | null => {
   try {
     const url = new URL(twitchUrl);
     const pathParts = url.pathname.split('/').filter(part => part.length > 0);
-    
+
     if (pathParts.length > 0) {
       return pathParts[pathParts.length - 1];
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error extracting Twitch channel name:', error);
@@ -82,12 +82,12 @@ const getTwitchAccessToken = async (clientId: string, clientSecret: string): Pro
 
 // Helper function to check if channels are live
 const checkChannelsLiveStatus = async (
-  channelNames: string[], 
-  clientId: string, 
+  channelNames: string[],
+  clientId: string,
   accessToken: string
 ): Promise<Map<string, boolean>> => {
   const statusMap = new Map<string, boolean>();
-  
+
   try {
     // Twitch API allows checking up to 100 channels at once
     const chunks = [];
@@ -98,7 +98,7 @@ const checkChannelsLiveStatus = async (
     for (const chunk of chunks) {
       const userLogins = chunk.join('&user_login=');
       const streamsUrl = `https://api.twitch.tv/helix/streams?user_login=${userLogins}`;
-      
+
       const response = await fetch(streamsUrl, {
         headers: {
           'Client-ID': clientId,
@@ -114,10 +114,10 @@ const checkChannelsLiveStatus = async (
       }
 
       const streamData: TwitchStreamResponse = await response.json();
-      
+
       // Mark all channels in chunk as offline first
       chunk.forEach(channel => statusMap.set(channel, false));
-      
+
       // Then mark live channels as true
       streamData.data.forEach(stream => {
         statusMap.set(stream.user_login.toLowerCase(), true);
@@ -215,8 +215,8 @@ serve(async (req) => {
     if (!tournaments || tournaments.length === 0) {
       console.log("[Twitch Sync] No tournaments with Twitch URLs found");
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           stats: { total_checked: 0, live_channels: 0, offline_channels: 0, errors: 0 }
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -263,12 +263,12 @@ serve(async (req) => {
     // Update database with live status
     for (const [channelName, tournamentIds] of channelMap.entries()) {
       const isLive = liveStatusMap.get(channelName) || false;
-      
+
       try {
         // Update all tournaments for this channel
         const { error: updateError } = await supabase
           .from('tournaments')
-          .update({ 
+          .update({
             is_twitch_live: isLive,
             twitch_last_checked: new Date().toISOString()
           })
@@ -303,7 +303,7 @@ serve(async (req) => {
     if (nonOngoingTournaments.length > 0) {
       const { error: offlineUpdateError } = await supabase
         .from('tournaments')
-        .update({ 
+        .update({
           is_twitch_live: false,
           twitch_last_checked: new Date().toISOString()
         })

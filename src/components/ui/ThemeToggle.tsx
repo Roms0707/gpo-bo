@@ -9,10 +9,10 @@ interface ThemeToggleProps {
   className?: string;
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ 
-  size = 'md', 
+const ThemeToggle: React.FC<ThemeToggleProps> = ({
+  size = 'md',
   variant = 'icon',
-  className = '' 
+  className = ''
 }) => {
   const { theme, toggleTheme } = useTheme();
 

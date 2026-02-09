@@ -57,15 +57,15 @@ CREATE POLICY "Service role can manage keyword mappings"
   WITH CHECK (true);
 
 -- Create index for active mappings
-CREATE INDEX IF NOT EXISTS idx_playlist_keyword_mappings_active 
+CREATE INDEX IF NOT EXISTS idx_playlist_keyword_mappings_active
   ON playlist_keyword_mappings(is_active, priority DESC);
 
 -- Seed initial keyword mappings for common gaming topics
 
 -- Fundamentals Category
 INSERT INTO playlist_keyword_mappings (playlist_name, category, keywords, priority, description_template)
-VALUES 
-  ('Fundamentals', 'fundamentals', 
+VALUES
+  ('Fundamentals', 'fundamentals',
    ARRAY['beginner', 'basic', 'fundamental', 'start', 'getting started', 'introduction', 'intro', 'tutorial', 'learn', 'first', 'new player', 'newbie', 'débutant', 'débuter', 'apprendre'],
    100,
    'Essential basics to get you started and build a strong foundation for improvement.'
@@ -81,7 +81,7 @@ VALUES
    'Learn essential movement techniques to outmaneuver opponents.'
   );
 
--- Game Knowledge Category  
+-- Game Knowledge Category
 INSERT INTO playlist_keyword_mappings (playlist_name, category, keywords, priority, description_template)
 VALUES
   ('Map Knowledge', 'knowledge',

@@ -1,8 +1,8 @@
 /*
   # MagicUI Profile Frame System Overhaul
-  
+
   This migration completely replaces the existing profile customization system
-  with a new MagicUI-powered effect system featuring animated borders, 
+  with a new MagicUI-powered effect system featuring animated borders,
   shine effects, particles, and meteors.
 
   1. Schema Changes
@@ -432,4 +432,3 @@ INSERT INTO profile_badges (name, description, badge_type, position, rarity, css
 CREATE INDEX IF NOT EXISTS idx_profile_frames_magicui ON profile_frames USING gin (magicui_effects)
 
 CREATE INDEX IF NOT EXISTS idx_profile_badges_magicui ON profile_badges USING gin (magicui_effects)
-

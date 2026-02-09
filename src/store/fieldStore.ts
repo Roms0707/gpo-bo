@@ -24,19 +24,19 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   fetchFields: async () => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournament_fields')
         .select('*')
         .order('name', { ascending: true });
 
       if (error) throw error;
-      
+
       set({ fields: data, isLoading: false });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred fetching fields',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -44,7 +44,7 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   createField: async (field) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournament_fields')
         .insert([field])
@@ -52,15 +52,15 @@ export const useFieldStore = create<FieldState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         fields: [...get().fields, data],
-        isLoading: false 
+        isLoading: false
       });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred creating field',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -68,7 +68,7 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   updateField: async (id, field) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { data, error } = await supabase
         .from('tournament_fields')
         .update(field)
@@ -77,15 +77,15 @@ export const useFieldStore = create<FieldState>((set, get) => ({
         .single();
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         fields: get().fields.map(f => f.id === id ? data : f),
-        isLoading: false 
+        isLoading: false
       });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred updating field',
-        isLoading: false 
+        isLoading: false
       });
     }
   },
@@ -93,22 +93,22 @@ export const useFieldStore = create<FieldState>((set, get) => ({
   deleteField: async (id) => {
     try {
       set({ isLoading: true, error: null });
-      
+
       const { error } = await supabase
         .from('tournament_fields')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-      
-      set({ 
+
+      set({
         fields: get().fields.filter(f => f.id !== id),
-        isLoading: false 
+        isLoading: false
       });
     } catch (error) {
-      set({ 
+      set({
         error: error instanceof Error ? error.message : 'An error occurred deleting field',
-        isLoading: false 
+        isLoading: false
       });
     }
   },

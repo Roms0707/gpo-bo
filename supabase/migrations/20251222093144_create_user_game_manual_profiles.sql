@@ -65,8 +65,8 @@ CREATE POLICY "Users can delete their own game profiles"
   TO authenticated
   USING (auth.uid() = user_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_game_manual_profiles_user_game 
+CREATE INDEX IF NOT EXISTS idx_user_game_manual_profiles_user_game
   ON user_game_manual_profiles(user_id, game_id);
 
-CREATE INDEX IF NOT EXISTS idx_user_game_manual_profiles_user 
+CREATE INDEX IF NOT EXISTS idx_user_game_manual_profiles_user
   ON user_game_manual_profiles(user_id);

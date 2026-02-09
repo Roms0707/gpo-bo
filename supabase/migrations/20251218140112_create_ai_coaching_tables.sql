@@ -12,7 +12,7 @@
       - `session_title` (text) - Auto-generated title from first message
       - `status` (text) - Session status: active, completed
       - `created_at`, `updated_at` (timestamps)
-    
+
     - `coaching_content_recommendations`
       - `id` (uuid, primary key) - Unique recommendation identifier
       - `session_id` (uuid, foreign key) - The coaching session
@@ -20,7 +20,7 @@
       - `reason` (text) - Why the AI recommended this content
       - `was_watched` (boolean) - Whether user watched the video
       - `created_at` (timestamp)
-    
+
     - `user_coaching_goals`
       - `id` (uuid, primary key) - Unique goal identifier
       - `user_id` (uuid, foreign key to auth.users) - The user
@@ -192,16 +192,16 @@ CREATE POLICY "Users can delete their own coaching goals"
   USING (auth.uid() = user_id);
 
 -- Create indexes for efficient lookups
-CREATE INDEX IF NOT EXISTS idx_coaching_sessions_user_game 
+CREATE INDEX IF NOT EXISTS idx_coaching_sessions_user_game
   ON ai_coaching_sessions(user_id, game_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_sessions_status 
+CREATE INDEX IF NOT EXISTS idx_coaching_sessions_status
   ON ai_coaching_sessions(user_id, status);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_recommendations_session 
+CREATE INDEX IF NOT EXISTS idx_coaching_recommendations_session
   ON coaching_content_recommendations(session_id);
 
-CREATE INDEX IF NOT EXISTS idx_coaching_goals_user_game 
+CREATE INDEX IF NOT EXISTS idx_coaching_goals_user_game
   ON user_coaching_goals(user_id, game_id);
 
 -- Create updated_at trigger for ai_coaching_sessions

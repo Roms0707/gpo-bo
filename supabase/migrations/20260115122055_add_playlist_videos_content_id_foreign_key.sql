@@ -11,6 +11,6 @@
     - Enables the `video:content_id(...)` syntax in Supabase queries
 */
 
-ALTER TABLE IF EXISTS playlist_videos 
-ADD CONSTRAINT playlist_videos_content_id_fkey 
+ALTER TABLE IF EXISTS playlist_videos
+ADD CONSTRAINT playlist_videos_content_id_fkey
 FOREIGN KEY (content_id) REFERENCES game_contents(id) ON DELETE CASCADE;

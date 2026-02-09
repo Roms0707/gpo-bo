@@ -57,7 +57,7 @@ const TournamentRulesModal: React.FC<TournamentRulesModalProps> = ({
       ['clean']
     ],
   };
-  
+
   const quillFormats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
@@ -97,8 +97,8 @@ const TournamentRulesModal: React.FC<TournamentRulesModalProps> = ({
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleSave} 
+            <Button
+              onClick={handleSave}
               isLoading={isLoading}
               disabled={!hasChanges || isLoading}
               leftIcon={<Save size={16} />}
@@ -113,22 +113,22 @@ const TournamentRulesModal: React.FC<TournamentRulesModalProps> = ({
         <p className="text-sm text-gray-400">
           Define the rules for this tournament. These rules will be visible to all participants.
         </p>
-        
+
         <div className="bg-white rounded-md">
-          <ReactQuill 
+          <ReactQuill
             theme="snow"
             value={rules}
             onChange={handleRulesChange}
             modules={quillModules}
             formats={quillFormats}
-            style={{ 
-              height: '400px', 
+            style={{
+              height: '400px',
               marginBottom: '50px',
               borderRadius: '0.375rem'
             }}
           />
         </div>
-        
+
         <div className="bg-dark-200 p-3 rounded-md text-sm text-gray-400">
           <p>
             <strong>Tips:</strong>

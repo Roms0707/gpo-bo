@@ -38,7 +38,7 @@ BEGIN
 END $$;
 
 UPDATE game_trailers
-SET 
+SET
   typewriter_phrase_1 = 'Welcome To the Arena',
   typewriter_phrase_2 = 'Welcome to {brandName}'
 WHERE is_default = true

@@ -122,7 +122,7 @@ updated_at = now()
 WHERE game_id IN (SELECT id FROM games WHERE LOWER(name) LIKE '%dota%');
 
 INSERT INTO game_coaching_ui_config (game_id, game_category, character_field_label, character_field_placeholder, stats_platforms, rank_tiers, quick_prompts)
-SELECT 
+SELECT
   g.id,
   'battle_royale',
   'Preferred Loadouts',

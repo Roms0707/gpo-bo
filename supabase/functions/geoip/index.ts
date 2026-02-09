@@ -137,14 +137,14 @@ Deno.serve(async (req: Request) => {
     for (const service of geoipServices) {
       try {
         console.log(`[GeoIP] Trying ${service.name} for IP: ${clientIP}`);
-        
+
         const geoResponse = await fetch(service.url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; EsportZone/1.0)',
             'Accept': 'application/json'
           }
         });
-        
+
         if (!geoResponse.ok) {
           console.warn(`[GeoIP] ${service.name} returned status: ${geoResponse.status}`);
           lastError = `${service.name} returned status ${geoResponse.status}`;
@@ -153,17 +153,17 @@ Deno.serve(async (req: Request) => {
 
         const geoData = await geoResponse.json();
         console.log(`[GeoIP] ${service.name} response:`, JSON.stringify(geoData));
-        
+
         // Handle potential error responses
         if (geoData.error || geoData.status === 'fail') {
           console.warn(`[GeoIP] ${service.name} returned error:`, geoData.error || geoData.message);
           lastError = geoData.error || geoData.message || `${service.name} returned error`;
           continue;
         }
-        
+
         // Parse the response using the service-specific parser
         const parsedData = service.parseResponse(geoData);
-        
+
         // Validate that we got useful data
         if (!parsedData.country_code || parsedData.country_code === "XX") {
           console.warn(`[GeoIP] ${service.name} returned invalid country code`);
@@ -202,7 +202,7 @@ Deno.serve(async (req: Request) => {
         continue;
       }
     }
-    
+
     // If all services failed, return fallback
     console.warn(`[GeoIP] All services failed, using fallback. Last error: ${lastError}`);
 
@@ -229,7 +229,7 @@ Deno.serve(async (req: Request) => {
 
   } catch (error) {
     console.error("[GeoIP] Unexpected error:", error);
-    
+
     // Return a fallback response with error info
     const errorResponse: GeoIPResponse = {
       success: false,

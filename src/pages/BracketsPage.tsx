@@ -68,7 +68,7 @@ const BracketsPage: React.FC = () => {
 
   const getBracketLink = (tournament: Tournament) => {
     if (!tournament.tournament_format) return `/tournaments/${tournament.id}/bracket`;
-    
+
     if (tournament.tournament_format.includes('Swiss')) {
       return `/tournaments/${tournament.id}/swiss-bracket`;
     } else if (tournament.tournament_format.includes('Round Robin')) {
@@ -80,7 +80,7 @@ const BracketsPage: React.FC = () => {
 
   const getFormatBadge = (format: string | undefined) => {
     if (!format) return null;
-    
+
     if (format.includes('Swiss')) {
       return <Badge variant="primary" className="text-xs">Swiss</Badge>;
     } else if (format.includes('Round Robin')) {
@@ -88,7 +88,7 @@ const BracketsPage: React.FC = () => {
     } else if (format.includes('Single Elimination')) {
       return <Badge variant="accent" className="text-xs">Single Elimination</Badge>;
     }
-    
+
     return <Badge variant="primary" className="text-xs">{format}</Badge>;
   };
 
@@ -136,15 +136,15 @@ const BracketsPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tournaments.map((tournament) => (
-            <Card 
+            <Card
               key={tournament.id}
               className="group hover:shadow-lg transition-all duration-200 cursor-pointer"
               onClick={() => navigate(getBracketLink(tournament))}
             >
               <div className="relative h-40 bg-gradient-to-r from-dark-300 to-dark-100 rounded-t-lg overflow-hidden">
                 {tournament.header_url ? (
-                  <img 
-                    src={tournament.header_url} 
+                  <img
+                    src={tournament.header_url}
                     alt={tournament.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                   />
@@ -154,13 +154,13 @@ const BracketsPage: React.FC = () => {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                
+
                 {/* Tournament Icon */}
                 <div className="absolute bottom-4 left-4 flex items-center space-x-3">
                   {tournament.icon_url ? (
-                    <img 
-                      src={tournament.icon_url} 
-                      alt="" 
+                    <img
+                      src={tournament.icon_url}
+                      alt=""
                       className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-lg"
                     />
                   ) : (
@@ -182,7 +182,7 @@ const BracketsPage: React.FC = () => {
                   </Badge>
                 </div>
               </div>
-              
+
               <CardContent className="p-4">
                 <div className="flex flex-wrap gap-2 mb-3">
                   <Badge variant={tournament.type === 'solo' ? 'accent' : 'secondary'} className="text-xs">
@@ -198,9 +198,9 @@ const BracketsPage: React.FC = () => {
                       </>
                     )}
                   </Badge>
-                  
+
                   {getFormatBadge(tournament.tournament_format)}
-                  
+
                   {tournament.game && (
                     <Badge variant="primary" className="text-xs">
                       <GameController className="h-3 w-3 mr-1" />
@@ -208,7 +208,7 @@ const BracketsPage: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                
+
                 <div className="space-y-2 text-sm text-gray-400">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2" />
@@ -219,9 +219,9 @@ const BracketsPage: React.FC = () => {
                     <span>Ends: {formatDate(tournament.end_date)}</span>
                   </div>
                 </div>
-                
+
                 <div className="mt-4 flex justify-end">
-                  <Button 
+                  <Button
                     size="sm"
                     leftIcon={<Eye size={16} />}
                     onClick={(e) => {

@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
     for (const registration of registrations) {
       try {
         const tournament = registration.tournaments as { id: string; title: string; discord_server_id: string | null };
-        
+
         if (!tournament?.discord_server_id) {
           console.log(`[discord-join-warning] Tournament ${registration.tournament_id} has no Discord server, skipping`);
           continue;
