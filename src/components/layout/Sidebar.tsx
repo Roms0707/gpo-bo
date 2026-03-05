@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Image, Trophy, LifeBuoy, FileText, Sparkles, Palette, BrainCircuit } from 'lucide-react';
+import { Gamepad2, ListChecks, Settings, LogOut, ClipboardList, BarChart2, TowerControl as GameController, Trophy, LifeBuoy, FileText, Sparkles, Palette, BrainCircuit, Zap } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useSupportTicketStore } from '../../store/supportTicketStore';
 import NotificationBadge from '../ui/NotificationBadge';
@@ -43,11 +43,7 @@ const Sidebar: React.FC = () => {
       icon: <Sparkles size={20} />,
       label: 'Gamification',
     },
-    {
-      to: '/contents',
-      icon: <Image size={20} />,
-      label: 'Contents',
-    },
+
     {
       to: '/support-tickets',
       icon: <LifeBuoy size={20} />,
@@ -79,14 +75,19 @@ const Sidebar: React.FC = () => {
       label: 'Coaching Monitor',
     },
     {
-      to: '/admin',
-      icon: <Settings size={20} />,
-      label: 'Admin',
+      to: '/admin/grind-zone-quiz',
+      icon: <Zap size={20} />,
+      label: 'Grind Zone Quiz',
     },
     {
       to: '/admin/project-configurations',
       icon: <Palette size={20} />,
       label: 'Project Configs',
+    },
+    {
+      to: '/admin',
+      icon: <Settings size={20} />,
+      label: 'Admin',
     },
   ];
 
@@ -101,6 +102,9 @@ const Sidebar: React.FC = () => {
       return canAccessGamification();
     }
     if (link.to === '/admin/coaching-analytics') {
+      return canAccessCoachingAnalytics();
+    }
+    if (link.to === '/admin/grind-zone-quiz') {
       return canAccessCoachingAnalytics();
     }
     return true;

@@ -8,6 +8,7 @@ export const countries = [
   { value: 'CI', label: 'Côte d\'Ivoire', flag: '🇨🇮', dialCode: '+225', format: 'XX XX XX XX XX' },
   { value: 'CM', label: 'Cameroun', flag: '🇨🇲', dialCode: '+237', format: 'X XX XX XX XX' },
   { value: 'EG', label: 'Égypte', flag: '🇪🇬', dialCode: '+20', format: 'XXX XXX XXXX' },
+  { value: 'ET', label: 'Éthiopie', flag: '🇪🇹', dialCode: '+251', format: 'XX XXX XXXX' },
   { value: 'GA', label: 'Gabon', flag: '🇬🇦', dialCode: '+241', format: 'X XX XX XX' },
   { value: 'GH', label: 'Ghana', flag: '🇬🇭', dialCode: '+233', format: 'XX XXX XXXX' },
   { value: 'GN', label: 'Guinée', flag: '🇬🇳', dialCode: '+224', format: 'XX XX XX XX' },

@@ -80,9 +80,9 @@ export const parsePhoneValue = (value: any): PhoneNumber | null => {
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
-      if (parsed.countryCode && parsed.phoneNumber) {
+      if ('countryCode' in parsed && parsed.phoneNumber) {
         return {
-          countryCode: parsed.countryCode,
+          countryCode: parsed.countryCode || '',
           phoneNumber: parsed.phoneNumber,
           fullNumber: parsed.fullNumber || `${getCountryByCode(parsed.countryCode)?.dialCode || ''}${parsed.phoneNumber}`
         };
@@ -105,9 +105,9 @@ export const parsePhoneValue = (value: any): PhoneNumber | null => {
     }
   }
 
-  if (typeof value === 'object' && value.countryCode && value.phoneNumber) {
+  if (typeof value === 'object' && 'countryCode' in value && value.phoneNumber) {
     return {
-      countryCode: value.countryCode,
+      countryCode: value.countryCode || '',
       phoneNumber: value.phoneNumber,
       fullNumber: value.fullNumber || `${getCountryByCode(value.countryCode)?.dialCode || ''}${value.phoneNumber}`
     };
@@ -120,6 +120,10 @@ export const formatPhoneForDisplay = (value: any): string => {
   const parsed = parsePhoneValue(value);
   if (!parsed) return '-';
 
+  if (!parsed.countryCode) {
+    return parsed.fullNumber || parsed.phoneNumber || '-';
+  }
+
   const country = getCountryByCode(parsed.countryCode);
   if (!country) return parsed.fullNumber;
 
@@ -128,8 +132,17 @@ export const formatPhoneForDisplay = (value: any): string => {
 };
 
 export const formatPhoneForStorage = (countryCode: string, phoneNumber: string): string => {
-  const country = getCountryByCode(countryCode);
   const cleaned = cleanPhoneNumber(phoneNumber);
+
+  if (!countryCode) {
+    return JSON.stringify({
+      countryCode: '',
+      phoneNumber: cleaned,
+      fullNumber: cleaned
+    });
+  }
+
+  const country = getCountryByCode(countryCode);
   const fullNumber = `${country?.dialCode || ''}${cleaned}`;
 
   return JSON.stringify({

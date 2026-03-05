@@ -8,6 +8,7 @@ import {
   markAllNotificationsAsRead,
   subscribeToPlayerNotifications
 } from '../services/playerMatchNotificationService';
+import { t } from '../utils/i18n';
 
 interface UseMatchNotificationsOptions {
   userId?: string;
@@ -58,7 +59,7 @@ export const useMatchNotifications = (
       setUnreadCount(unreadCountData);
     } catch (err) {
       console.error('Error fetching notifications:', err);
-      setError('Erreur lors du chargement des notifications');
+      setError(t('notif.loading_error'));
     } finally {
       setIsLoading(false);
     }

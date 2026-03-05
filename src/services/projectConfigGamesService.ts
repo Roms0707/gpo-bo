@@ -104,14 +104,26 @@ export const updateSortOrders = async (
   updates: { id: string; sort_order: number }[]
 ): Promise<{ error: Error | null }> => {
   try {
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('project_config_games')
-        .update({ sort_order: update.sort_order })
-        .eq('id', update.id);
+    const results = await Promise.all(
+      updates.map((update) =>
+        supabase
+          .from('project_config_games')
+          .update({ sort_order: update.sort_order })
+          .eq('id', update.id)
+          .select('id')
+      )
+    );
 
-      if (error) throw error;
+    const failed = results.find((r) => r.error);
+    if (failed?.error) throw failed.error;
+
+    const unaffected = results.filter((r) => !r.data || r.data.length === 0);
+    if (unaffected.length > 0) {
+      throw new Error(
+        `Sort order update failed: ${unaffected.length} of ${updates.length} rows were not updated (possible RLS policy issue)`
+      );
     }
+
     return { error: null };
   } catch (error) {
     console.error('Error updating sort orders:', error);

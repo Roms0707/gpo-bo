@@ -6,6 +6,8 @@ export interface TournamentValidation {
   bracketSize?: number;
   numberOfByes?: number;
   numberOfRounds?: number;
+  isOverCapacity?: boolean;
+  overCapacityCount?: number;
 }
 
 export const getNextPowerOfTwo = (n: number): number => {
@@ -123,14 +125,8 @@ export const validateTournamentLaunch = (
     };
   }
 
-  // Validate that participantCount doesn't exceed maxNbPlayers if set
-  if (maxNbPlayers && participantCount > maxNbPlayers) {
-    return {
-      isValid: false,
-      message: `Le nombre de participants (${participantCount}) dépasse la capacité maximale configurée (${maxNbPlayers})`,
-      minRequired
-    };
-  }
+  const isOverCapacity = !!(maxNbPlayers && participantCount > maxNbPlayers);
+  const overCapacityCount = isOverCapacity ? participantCount - maxNbPlayers! : 0;
 
   const structure = calculateBracketStructure(participantCount, tournamentFormat, maxNbPlayers);
 
@@ -173,7 +169,9 @@ export const validateTournamentLaunch = (
     minRequired,
     bracketSize: structure.bracketSize,
     numberOfByes: structure.byes,
-    numberOfRounds: structure.rounds
+    numberOfRounds: structure.rounds,
+    isOverCapacity,
+    overCapacityCount
   };
 };
 

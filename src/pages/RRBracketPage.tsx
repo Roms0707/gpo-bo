@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import { ArrowLeft, AlertTriangle, Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { saveBracket } from '../components/bracket/BracketService';
+import { useTournamentStore } from '../store/tournamentStore';
 import { Player, Team, Tournament, Match } from '../components/roundrobin/types';
 import TournamentOverview from '../components/roundrobin/TournamentOverview';
 import KnockoutStageCard from '../components/roundrobin/KnockoutStageCard';
@@ -241,7 +242,7 @@ const RRBracketPage: React.FC = () => {
 
         // Update tournament state
         if (tournament) {
-          setTournament({ ...tournament, bracket_status: 'live' });
+          setTournament({ ...tournament, bracket_status: 'live', status: 'active' });
         }
 
         toast.success('Bracket is now live! Players can start competing.');
@@ -260,13 +261,8 @@ const RRBracketPage: React.FC = () => {
     try {
       setIsUpdatingBracketStatus(true);
 
-      // Update tournament bracket status to draft
-      const { error } = await supabase
-        .from('tournaments')
-        .update({ bracket_status: 'draft' })
-        .eq('id', id);
-
-      if (error) throw error;
+      const { updateBracketStatus } = useTournamentStore.getState();
+      await updateBracketStatus(id, 'draft');
 
       setIsDraftMode(true);
 

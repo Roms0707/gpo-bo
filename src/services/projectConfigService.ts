@@ -40,6 +40,8 @@ export interface ProjectConfiguration {
   default_trailer_url: string | null;
   typewriter_phrase_1: string | null;
   typewriter_phrase_2: string | null;
+  country_code: string | null;
+  language_code: string | null;
   extra_metadata: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -54,6 +56,8 @@ export interface ProjectConfiguration {
   privacy_policy_url: string | null;
   legal_notice_url: string | null;
   contact_url: string | null;
+  snowplow_enabled: boolean;
+  snowplow_app_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -87,6 +91,8 @@ export interface CreateProjectConfigData {
   default_trailer_url?: string | null;
   typewriter_phrase_1?: string | null;
   typewriter_phrase_2?: string | null;
+  country_code?: string | null;
+  language_code?: string | null;
   extra_metadata?: Record<string, any>;
   support_email: string;
   legal_email: string;
@@ -101,6 +107,8 @@ export interface CreateProjectConfigData {
   privacy_policy_url?: string | null;
   legal_notice_url?: string | null;
   contact_url?: string | null;
+  snowplow_enabled?: boolean;
+  snowplow_app_id?: string | null;
 }
 
 export interface UpdateProjectConfigData extends Partial<CreateProjectConfigData> {
@@ -750,6 +758,8 @@ export const duplicateProjectConfiguration = async (
       kliento_otp_sms_template: sourceConfig.kliento_otp_sms_template,
       default_phone_country_iso: sourceConfig.default_phone_country_iso,
       default_phone_country_code: sourceConfig.default_phone_country_code,
+      country_code: sourceConfig.country_code,
+      language_code: sourceConfig.language_code,
       extra_metadata: sourceConfig.extra_metadata || {},
       support_email: sourceConfig.support_email,
       legal_email: sourceConfig.legal_email,
@@ -764,6 +774,7 @@ export const duplicateProjectConfiguration = async (
       privacy_policy_url: sourceConfig.privacy_policy_url,
       legal_notice_url: sourceConfig.legal_notice_url,
       contact_url: sourceConfig.contact_url,
+      snowplow_app_id: sourceConfig.snowplow_app_id,
     };
 
     const { data, error } = await supabase

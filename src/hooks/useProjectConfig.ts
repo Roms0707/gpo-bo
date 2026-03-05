@@ -28,7 +28,7 @@ export function useProjectConfig(): UseProjectConfigReturn {
 
       const currentDomain = getCurrentDomain();
       setDetectedDomain(currentDomain);
-      const isDev = currentDomain === 'localhost' || currentDomain === '127.0.0.1';
+      const isDev = currentDomain === 'localhost' || currentDomain === '127.0.0.1' || currentDomain.endsWith('.webcontainer.io') || currentDomain.endsWith('.local-credentialless.webcontainer.io');
 
       if (isDev) {
         console.log('[useProjectConfig] Development mode detected');

@@ -21,6 +21,8 @@ export interface ProjectConfiguration {
   kliento_auth_type: KlientoAuthType | null;
   default_phone_country_iso: string | null;
   default_phone_country_code: string | null;
+  country_code: string | null;
+  language_code: string | null;
   extra_metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -45,6 +47,8 @@ export interface CreateProjectConfigData {
   kliento_auth_type?: KlientoAuthType | null;
   default_phone_country_iso?: string | null;
   default_phone_country_code?: string | null;
+  country_code?: string | null;
+  language_code?: string | null;
   extra_metadata?: Record<string, any>;
 }
 

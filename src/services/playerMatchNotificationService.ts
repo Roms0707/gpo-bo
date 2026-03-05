@@ -1,4 +1,7 @@
 import { supabase } from '../lib/supabase';
+import { t } from '../utils/i18n';
+
+export type NotificationType = 'match_starting' | 'match_result' | 'next_opponent' | 'bracket_ready';
 
 export interface PlayerMatchNotification {
   id: string;
@@ -6,7 +9,7 @@ export interface PlayerMatchNotification {
   tournament_id: string;
   match_id: string | null;
   round_number: number;
-  notification_type: 'match_starting' | 'match_result' | 'next_opponent';
+  notification_type: NotificationType;
   opponent_id: string | null;
   opponent_game_ids: Record<string, string>;
   match_result: 'won' | 'lost' | 'draw' | null;
@@ -21,7 +24,7 @@ export interface PlayerMatchNotificationInsert {
   tournament_id: string;
   match_id?: string | null;
   round_number: number;
-  notification_type: 'match_starting' | 'match_result' | 'next_opponent';
+  notification_type: NotificationType;
   opponent_id?: string | null;
   opponent_game_ids?: Record<string, string>;
   match_result?: 'won' | 'lost' | 'draw' | null;
@@ -155,8 +158,8 @@ export const notifyMatchStarting = async (
     const player1GameIds = await getOpponentGameIds(player2Id, gameId);
     const player2GameIds = await getOpponentGameIds(player1Id, gameId);
 
-    const player1Username = player1GameIds.username || 'Adversaire';
-    const player2Username = player2GameIds.username || 'Adversaire';
+    const player1Username = player1GameIds.username || 'Opponent';
+    const player2Username = player2GameIds.username || 'Opponent';
 
     await createPlayerNotification({
       user_id: player1Id,
@@ -166,7 +169,7 @@ export const notifyMatchStarting = async (
       notification_type: 'match_starting',
       opponent_id: player2Id,
       opponent_game_ids: player2GameIds,
-      message: `Votre match du ${roundName} commence ! Adversaire: ${player2Username}. Ajoutez-le en ami pour l'inviter dans le jeu.`,
+      message: 'notif.match_starting',
       metadata: {
         tournament_title: tournamentTitle,
         round_name: roundName,
@@ -182,7 +185,7 @@ export const notifyMatchStarting = async (
       notification_type: 'match_starting',
       opponent_id: player1Id,
       opponent_game_ids: player1GameIds,
-      message: `Votre match du ${roundName} commence ! Adversaire: ${player1Username}. Ajoutez-le en ami pour l'inviter dans le jeu.`,
+      message: 'notif.match_starting',
       metadata: {
         tournament_title: tournamentTitle,
         round_name: roundName,
@@ -215,8 +218,8 @@ export const notifyMatchResult = async (
       const player1GameIds = await getOpponentGameIds(loserId, gameId);
       const player2GameIds = await getOpponentGameIds(winnerId, gameId);
 
-      const player1Username = player1GameIds.username || 'Adversaire';
-      const player2Username = player2GameIds.username || 'Adversaire';
+      const player1Username = player1GameIds.username || 'Opponent';
+      const player2Username = player2GameIds.username || 'Opponent';
 
       await createPlayerNotification({
         user_id: winnerId,
@@ -227,7 +230,7 @@ export const notifyMatchResult = async (
         opponent_id: loserId,
         opponent_game_ids: player1GameIds,
         match_result: 'draw',
-        message: `Match nul contre ${player1Username} au ${roundName} du tournoi "${tournamentTitle}".`,
+        message: 'notif.match_result_draw',
         metadata: {
           tournament_title: tournamentTitle,
           round_name: roundName,
@@ -244,7 +247,7 @@ export const notifyMatchResult = async (
         opponent_id: winnerId,
         opponent_game_ids: player2GameIds,
         match_result: 'draw',
-        message: `Match nul contre ${player2Username} au ${roundName} du tournoi "${tournamentTitle}".`,
+        message: 'notif.match_result_draw',
         metadata: {
           tournament_title: tournamentTitle,
           round_name: roundName,
@@ -255,8 +258,8 @@ export const notifyMatchResult = async (
       const winnerGameIds = await getOpponentGameIds(loserId, gameId);
       const loserGameIds = await getOpponentGameIds(winnerId, gameId);
 
-      const winnerOpponentUsername = winnerGameIds.username || 'Adversaire';
-      const loserOpponentUsername = loserGameIds.username || 'Adversaire';
+      const winnerOpponentUsername = winnerGameIds.username || 'Opponent';
+      const loserOpponentUsername = loserGameIds.username || 'Opponent';
 
       await createPlayerNotification({
         user_id: winnerId,
@@ -267,7 +270,7 @@ export const notifyMatchResult = async (
         opponent_id: loserId,
         opponent_game_ids: winnerGameIds,
         match_result: 'won',
-        message: `Félicitations ! Vous avez gagné contre ${winnerOpponentUsername} au ${roundName} du tournoi "${tournamentTitle}".`,
+        message: 'notif.match_result_won',
         metadata: {
           tournament_title: tournamentTitle,
           round_name: roundName,
@@ -284,7 +287,7 @@ export const notifyMatchResult = async (
         opponent_id: winnerId,
         opponent_game_ids: loserGameIds,
         match_result: 'lost',
-        message: `Vous avez perdu contre ${loserOpponentUsername} au ${roundName} du tournoi "${tournamentTitle}". Merci d'avoir participé !`,
+        message: 'notif.match_result_lost',
         metadata: {
           tournament_title: tournamentTitle,
           round_name: roundName,
@@ -314,7 +317,7 @@ export const notifyNextOpponent = async (
 ): Promise<void> => {
   try {
     const opponentGameIds = await getOpponentGameIds(opponentId, gameId);
-    const opponentUsername = opponentGameIds.username || 'Adversaire';
+    const opponentUsername = opponentGameIds.username || 'Opponent';
 
     await createPlayerNotification({
       user_id: playerId,
@@ -324,7 +327,7 @@ export const notifyNextOpponent = async (
       notification_type: 'next_opponent',
       opponent_id: opponentId,
       opponent_game_ids: opponentGameIds,
-      message: `Prochain adversaire pour le ${nextRoundName}: ${opponentUsername}. Préparez-vous !`,
+      message: 'notif.next_opponent',
       metadata: {
         tournament_title: tournamentTitle,
         round_name: nextRoundName,
@@ -494,7 +497,7 @@ export const formatGameIds = (gameIds: OpponentGameIds): Array<{ label: string; 
   const formatted: Array<{ label: string; value: string }> = [];
 
   const labelMap: Record<string, string> = {
-    username: 'Nom d\'utilisateur',
+    username: t('notif.label_username'),
     steam_id: 'Steam ID',
     freefire_nickname: 'Free Fire',
     ow2_battle_net_id: 'Overwatch 2 Battle.net',

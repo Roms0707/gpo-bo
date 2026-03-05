@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Bell, Check, CheckCheck, Copy, Trophy, Users } from 'lucide-react';
+import { X, Bell, Check, CheckCheck, Copy, Trophy, Users, GitBranch } from 'lucide-react';
 import { useMatchNotifications } from '../../hooks/useMatchNotifications';
 import {
   PlayerMatchNotification,
@@ -9,10 +9,18 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import Badge from '../ui/Badge';
 import toast from 'react-hot-toast';
+import { t, getLocale } from '../../utils/i18n';
 
 interface MatchNotificationPanelProps {
   userId: string;
   tournamentId?: string;
+}
+
+function resolveMessage(notification: PlayerMatchNotification): string {
+  if (notification.message.startsWith('notif.')) {
+    return t(notification.message, notification.metadata);
+  }
+  return notification.message;
 }
 
 export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
@@ -38,9 +46,9 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copié dans le presse-papier`);
+      toast.success(t('notif.copied', { label }));
     } catch (err) {
-      toast.error('Erreur lors de la copie');
+      toast.error(t('notif.copy_error'));
     }
   };
 
@@ -52,6 +60,8 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
         return <Trophy className="w-5 h-5 text-yellow-400" />;
       case 'next_opponent':
         return <Users className="w-5 h-5 text-green-400" />;
+      case 'bracket_ready':
+        return <GitBranch className="w-5 h-5 text-cyan-400" />;
       default:
         return <Bell className="w-5 h-5" />;
     }
@@ -62,11 +72,11 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
 
     switch (result) {
       case 'won':
-        return <Badge variant="success">Victoire</Badge>;
+        return <Badge variant="success">{t('notif.result_won')}</Badge>;
       case 'lost':
-        return <Badge variant="danger">Défaite</Badge>;
+        return <Badge variant="danger">{t('notif.result_lost')}</Badge>;
       case 'draw':
-        return <Badge variant="warning">Match nul</Badge>;
+        return <Badge variant="warning">{t('notif.result_draw')}</Badge>;
       default:
         return null;
     }
@@ -80,7 +90,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
-    toast.success('Toutes les notifications ont été marquées comme lues');
+    toast.success(t('notif.all_marked_read'));
   };
 
   return (
@@ -88,7 +98,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        aria-label="Notifications"
+        aria-label={t('notif.panel_title')}
       >
         <Bell className="w-6 h-6 text-gray-600 dark:text-gray-300" />
         {unreadCount > 0 && (
@@ -111,7 +121,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                 <div className="flex items-center gap-2">
                   <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Notifications
+                    {t('notif.panel_title')}
                   </h3>
                   {unreadCount > 0 && (
                     <Badge variant="danger">{unreadCount}</Badge>
@@ -135,7 +145,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
-                    Non lues
+                    {t('notif.filter_unread')}
                   </button>
                   <button
                     onClick={() => setFilter('all')}
@@ -145,7 +155,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
-                    Toutes
+                    {t('notif.filter_all')}
                   </button>
                 </div>
 
@@ -155,7 +165,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                     className="ml-auto text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
                   >
                     <CheckCheck className="w-4 h-4" />
-                    Tout marquer comme lu
+                    {t('notif.mark_all_read')}
                   </button>
                 )}
               </div>
@@ -173,8 +183,8 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                   <Bell className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>
                     {filter === 'unread'
-                      ? 'Aucune nouvelle notification'
-                      : 'Aucune notification'}
+                      ? t('notif.empty_unread')
+                      : t('notif.empty_all')}
                   </p>
                 </div>
               ) : (
@@ -201,7 +211,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                                 ? 'font-semibold text-gray-900 dark:text-white'
                                 : 'text-gray-700 dark:text-gray-300'
                             }`}>
-                              {notification.message}
+                              {resolveMessage(notification)}
                             </p>
                             {!notification.is_read && (
                               <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-1" />
@@ -218,7 +228,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                             Object.keys(notification.opponent_game_ids).length > 0 && (
                               <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
                                 <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                                  Identifiants de l'adversaire:
+                                  {t('notif.opponent_ids_label')}
                                 </p>
                                 <div className="space-y-1">
                                   {formatGameIds(notification.opponent_game_ids).map((gameId) => (
@@ -239,7 +249,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                                             copyToClipboard(gameId.value, gameId.label);
                                           }}
                                           className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                          aria-label={`Copier ${gameId.label}`}
+                                          aria-label={`Copy ${gameId.label}`}
                                         >
                                           <Copy className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                                         </button>
@@ -251,7 +261,7 @@ export const MatchNotificationPanel: React.FC<MatchNotificationPanelProps> = ({
                             )}
 
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {new Date(notification.created_at).toLocaleString('fr-FR', {
+                            {new Date(notification.created_at).toLocaleString(getLocale(), {
                               day: 'numeric',
                               month: 'short',
                               hour: '2-digit',

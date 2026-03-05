@@ -955,7 +955,7 @@ const FullScreenBracketPage: React.FC = () => {
         setIsDraftMode(false);
 
         if (tournament) {
-          setTournament({ ...tournament, bracket_status: 'live' });
+          setTournament({ ...tournament, bracket_status: 'live', status: 'active' });
         }
 
         const started = await startRoundTimer(id, 1);

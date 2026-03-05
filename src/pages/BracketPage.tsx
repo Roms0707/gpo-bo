@@ -63,6 +63,7 @@ import {
 } from '../services/roundTimerService';
 import { deleteTimersForTournament } from '../services/roundTimerService';
 import { deleteNotificationsForTournament, getRoundName } from '../services/roundNotificationService';
+import { prepareTournamentForBracket } from '../services/bracketLaunchService';
 
 const BracketPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -241,10 +242,27 @@ const BracketPage: React.FC = () => {
       }
 
       console.log('Tournament loaded:', tournamentData.title, 'Format:', tournamentData.tournament_format);
-      setTournament(tournamentData);
+
+      let activeTournamentData = tournamentData;
+
+      if (!tournamentData.bracket_launched_at) {
+        const registrationEndDate = tournamentData.registration_end_date
+          ? new Date(tournamentData.registration_end_date)
+          : null;
+        const now = new Date();
+
+        if (registrationEndDate && now > registrationEndDate) {
+          const result = await prepareTournamentForBracket(id);
+          if (result.success) {
+            activeTournamentData = result.tournament;
+          }
+        }
+      }
+
+      setTournament(activeTournamentData);
 
       // For Battle Royale tournaments, check completion status and skip bracket generation
-      if (tournamentData.tournament_format?.toLowerCase().includes('battle royale')) {
+      if (activeTournamentData.tournament_format?.toLowerCase().includes('battle royale')) {
         console.log('Battle Royale tournament detected');
         await checkBattleRoyaleCompletion();
         setIsLoading(false);
@@ -252,9 +270,9 @@ const BracketPage: React.FC = () => {
       }
 
       // Check if this is a Round Robin tournament that has NOT transitioned to knockout
-      if (tournamentData.tournament_format &&
-          tournamentData.tournament_format.includes('Round Robin') &&
-          !tournamentData.tournament_format.includes('Single Elimination Knockout')) {
+      if (activeTournamentData.tournament_format &&
+          activeTournamentData.tournament_format.includes('Round Robin') &&
+          !activeTournamentData.tournament_format.includes('Single Elimination Knockout')) {
         console.log('Redirecting to Round Robin bracket page');
         setHasRedirected(true);
         navigate(`/tournaments/${id}/rr-bracket`);
@@ -262,9 +280,9 @@ const BracketPage: React.FC = () => {
       }
 
       // Check if this is a Swiss tournament that has NOT transitioned to knockout
-      if (tournamentData.tournament_format &&
-          tournamentData.tournament_format.includes('Swiss') &&
-          !tournamentData.tournament_format.includes('Single Elimination Knockout')) {
+      if (activeTournamentData.tournament_format &&
+          activeTournamentData.tournament_format.includes('Swiss') &&
+          !activeTournamentData.tournament_format.includes('Single Elimination Knockout')) {
         console.log('Redirecting to Swiss bracket page');
         setHasRedirected(true);
         navigate(`/tournaments/${id}/swiss-bracket`);
@@ -286,10 +304,10 @@ const BracketPage: React.FC = () => {
       // Fetch participants (players or teams) based on tournament type
       let participants: Player[] | Team[] = [];
 
-      if (tournamentData.type === 'solo') {
-        participants = await fetchSoloPlayers(tournamentData, userIdSet);
+      if (activeTournamentData.type === 'solo') {
+        participants = await fetchSoloPlayers(activeTournamentData, userIdSet);
       } else {
-        participants = await fetchTeams(tournamentData, userIdSet);
+        participants = await fetchTeams(activeTournamentData, userIdSet);
       }
 
       // If we have existing matches, use them
@@ -297,7 +315,7 @@ const BracketPage: React.FC = () => {
         setMatches(existingMatches);
         setEditableMatches(existingMatches);
         setBracketAlreadyGenerated(true);
-        setIsDraftMode(tournamentData.bracket_status === 'draft');
+        setIsDraftMode(activeTournamentData.bracket_status === 'draft');
 
         // Check if tournament is already completed
         checkForTournamentWinner(existingMatches);
@@ -306,13 +324,13 @@ const BracketPage: React.FC = () => {
         if (participants.length > 0) {
           try {
             console.log(`Generating bracket for ${participants.length} participants...`);
-            console.log(`Max players configured: ${tournamentData.max_nb_players || 'not set'}`);
+            console.log(`Max players configured: ${activeTournamentData.max_nb_players || 'not set'}`);
             const generatedMatches = generateProfessionalBracket(
               participants,
               id!,
-              tournamentData.type,
+              activeTournamentData.type,
               userIdSet,
-              tournamentData.max_nb_players
+              activeTournamentData.max_nb_players
             );
             console.log(`Generated ${generatedMatches.length} matches`);
 
@@ -1462,6 +1480,13 @@ ORDER BY
     try {
       setIsUpdatingBracketStatus(true);
 
+      if (!tournament?.bracket_launched_at) {
+        const result = await prepareTournamentForBracket(id);
+        if (result.success) {
+          setTournament(result.tournament);
+        }
+      }
+
       // Save the current editable matches and set bracket status to live
       const savedMatches = await saveBracket(editableMatches, validUserIds, id, 'live');
 
@@ -1471,7 +1496,7 @@ ORDER BY
 
         // Update tournament state
         if (tournament) {
-          setTournament({ ...tournament, bracket_status: 'live' });
+          setTournament({ ...tournament, bracket_status: 'live', status: 'active' });
         }
 
         // Start Round 1 with timer and notifications

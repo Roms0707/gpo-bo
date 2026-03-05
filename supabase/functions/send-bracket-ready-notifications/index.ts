@@ -128,25 +128,22 @@ Deno.serve(async (req: Request) => {
     const totalParticipants = registrations.length;
     const tournamentImage = tournamentData.header_url || tournamentData.image;
 
-    const message = `Le bracket du tournoi "${tournamentData.title}" est maintenant disponible ! Consultez votre position et préparez-vous pour votre premier match.`;
-
     const notifications = registrations.map((reg) => {
       const opponentId = playerOpponentMap.get(reg.user_id) || null;
 
       return {
         user_id: reg.user_id,
         tournament_id: tournament_id,
-        round_number: 0,
+        round_number: 1,
         notification_type: 'bracket_ready',
-        message: message,
+        message: 'notif.bracket_ready',
         metadata: {
           tournament_title: tournamentData.title,
           total_participants: totalParticipants,
           tournament_start_time: tournamentData.startDate,
           tournament_image: tournamentImage,
-          opponent_id: opponentId,
         },
-        opponent_user_id: opponentId,
+        opponent_id: opponentId,
         team_id: reg.team_id || null,
         is_read: false,
       };

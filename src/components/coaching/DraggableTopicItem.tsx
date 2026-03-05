@@ -1,19 +1,23 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Trash2, Power } from 'lucide-react';
+import { GripVertical, Trash2, Power, Video } from 'lucide-react';
 import type { CoachingConfig } from '../../types/coaching';
 
 interface DraggableTopicItemProps {
   config: CoachingConfig;
+  contentLinkCount?: number;
   onToggle: (id: string, isActive: boolean) => void;
   onDelete: (id: string) => void;
+  onManageContent?: (config: CoachingConfig) => void;
 }
 
 const DraggableTopicItem: React.FC<DraggableTopicItemProps> = ({
   config,
+  contentLinkCount = 0,
   onToggle,
   onDelete,
+  onManageContent,
 }) => {
   const {
     attributes,
@@ -56,6 +60,20 @@ const DraggableTopicItem: React.FC<DraggableTopicItemProps> = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {onManageContent && (
+          <button
+            onClick={() => onManageContent(config)}
+            className="relative p-1.5 rounded-md text-gray-500 hover:text-primary-400 hover:bg-primary-500/10 transition-colors"
+            title="Manage linked content"
+          >
+            <Video className="h-4 w-4" />
+            {contentLinkCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-primary-500 text-white text-[10px] font-bold px-1">
+                {contentLinkCount}
+              </span>
+            )}
+          </button>
+        )}
         <button
           onClick={() => onToggle(config.id, !config.is_active)}
           className={`p-1.5 rounded-md transition-colors ${

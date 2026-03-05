@@ -417,9 +417,13 @@ export const saveBracket = async (
 
     // Update the tournament's bracket_status if provided
     if (bracketStatus && tournamentId) {
+      const updatePayload: Record<string, string> = { bracket_status: bracketStatus };
+      if (bracketStatus === 'live') {
+        updatePayload.status = 'active';
+      }
       const { error: statusError } = await supabase
         .from('tournaments')
-        .update({ bracket_status: bracketStatus })
+        .update(updatePayload)
         .eq('id', tournamentId);
 
       if (statusError) {
@@ -1139,7 +1143,8 @@ export const resetTournamentBracket = async (tournamentId: string): Promise<bool
       .update({
         bracket_status: null,
         bracket_launched_at: null,
-        actual_participants: null
+        actual_participants: null,
+        status: 'upcoming'
       })
       .eq('id', tournamentId);
 

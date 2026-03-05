@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { ProjectConfiguration } from '../services/projectConfigService';
 import { useProjectConfig } from '../hooks/useProjectConfig';
 import { updateFavicon } from '../utils/favicon';
-import { ConfigLoadingScreen } from '../components/ui/ConfigLoadingScreen';
-import { ConfigErrorScreen } from '../components/ui/ConfigErrorScreen';
 
 interface ProjectConfigContextValue {
   config: ProjectConfiguration | null;
@@ -34,14 +32,6 @@ export function ProjectConfigProvider({ children }: ProjectConfigProviderProps) 
 
     console.log('[ProjectConfigContext] Applied configuration:', config.config_name);
   }, [config]);
-
-  if (loading) {
-    return <ConfigLoadingScreen />;
-  }
-
-  if (error || !config) {
-    return <ConfigErrorScreen error={error || new Error('Configuration not found')} onRetry={refreshConfig} />;
-  }
 
   return (
     <ProjectConfigContext.Provider value={{ config, loading, error, refreshConfig }}>

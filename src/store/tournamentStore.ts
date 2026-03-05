@@ -67,7 +67,9 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
         const endDate = new Date(tournament.end_date);
 
         let status: 'upcoming' | 'active' | 'past';
-        if (now < startDate) {
+        if (tournament.bracket_status === 'live') {
+          status = 'active';
+        } else if (now < startDate) {
           status = 'upcoming';
         } else if (now >= startDate && now <= endDate) {
           status = 'active';
@@ -292,9 +294,14 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
+      const updatePayload: Record<string, string | null> = { bracket_status: status };
+      if (status === 'live') {
+        updatePayload.status = 'active';
+      }
+
       const { data, error } = await supabase
         .from('tournaments')
-        .update({ bracket_status: status })
+        .update(updatePayload)
         .eq('id', id)
         .select()
         .single();
@@ -304,7 +311,7 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
       // Update the tournament in the list
       const currentTournaments = get().tournaments;
       const updatedTournaments = currentTournaments.map(t =>
-        t.id === id ? { ...t, bracket_status: status } : t
+        t.id === id ? { ...t, bracket_status: status, ...(status === 'live' ? { status: 'active' as const } : {}) } : t
       );
 
       set({
@@ -552,7 +559,8 @@ export const useTournamentStore = create<TournamentState>((set, get) => ({
             ...t,
             bracket_status: null,
             bracket_launched_at: null,
-            actual_participants: null
+            actual_participants: null,
+            status: 'upcoming' as const
           } : t
         );
 

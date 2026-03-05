@@ -677,44 +677,6 @@ export interface Database {
           created_at?: string
         }
       }
-      game_contents: {
-        Row: {
-          id: string
-          game_id: string
-          title: string
-          description: string | null
-          content_type: 'image' | 'video' | 'playlist' | 'news'
-          content_url: string
-          created_at: string | null
-          playlist_image_url: string | null
-          article_text: string | null
-          article_image_url: string | null
-        }
-        Insert: {
-          id?: string
-          game_id: string
-          title: string
-          description?: string | null
-          content_type: 'image' | 'video' | 'playlist' | 'news'
-          content_url: string
-          created_at?: string | null
-          playlist_image_url?: string | null
-          article_text?: string | null
-          article_image_url?: string | null
-        }
-        Update: {
-          id?: string
-          game_id?: string
-          title?: string
-          description?: string | null
-          content_type?: 'image' | 'video' | 'playlist' | 'news'
-          content_url?: string
-          created_at?: string | null
-          playlist_image_url?: string | null
-          article_text?: string | null
-          article_image_url?: string | null
-        }
-      }
       tournament_reports: {
         Row: {
           id: string
@@ -1514,7 +1476,7 @@ export interface Database {
           tournament_id: string
           match_id: string | null
           round_number: number
-          notification_type: 'match_starting' | 'match_result' | 'next_opponent'
+          notification_type: 'match_starting' | 'match_result' | 'next_opponent' | 'bracket_ready'
           opponent_id: string | null
           opponent_game_ids: Json
           match_result: 'won' | 'lost' | 'draw' | null
@@ -1529,7 +1491,7 @@ export interface Database {
           tournament_id: string
           match_id?: string | null
           round_number: number
-          notification_type: 'match_starting' | 'match_result' | 'next_opponent'
+          notification_type: 'match_starting' | 'match_result' | 'next_opponent' | 'bracket_ready'
           opponent_id?: string | null
           opponent_game_ids?: Json
           match_result?: 'won' | 'lost' | 'draw' | null
@@ -1544,7 +1506,7 @@ export interface Database {
           tournament_id?: string
           match_id?: string | null
           round_number?: number
-          notification_type?: 'match_starting' | 'match_result' | 'next_opponent'
+          notification_type?: 'match_starting' | 'match_result' | 'next_opponent' | 'bracket_ready'
           opponent_id?: string | null
           opponent_game_ids?: Json
           match_result?: 'won' | 'lost' | 'draw' | null

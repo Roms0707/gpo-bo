@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core';
 import {
   SortableContext,
-  rectSortingStrategy,
+  verticalListSortingStrategy,
   useSortable,
   arrayMove,
 } from '@dnd-kit/sortable';
@@ -18,7 +18,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X, AlertTriangle, Gamepad2 } from 'lucide-react';
 import { Game } from '../../types/galaxyRubricMapping';
 import { LinkedGame } from '../../services/projectConfigGamesService';
-import Badge from '../ui/Badge';
 import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface LinkedGamesPanelProps {
@@ -29,14 +28,14 @@ interface LinkedGamesPanelProps {
   onReorder: (reorderedGames: LinkedGame[]) => void;
 }
 
-interface SortableGameCardProps {
+interface SortableGameRowProps {
   linkedGame: LinkedGame;
   isSelected: boolean;
   onSelect: () => void;
   onUnlink: () => void;
 }
 
-const SortableGameCard: React.FC<SortableGameCardProps> = ({
+const SortableGameRow: React.FC<SortableGameRowProps> = ({
   linkedGame,
   isSelected,
   onSelect,
@@ -63,37 +62,24 @@ const SortableGameCard: React.FC<SortableGameCardProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-lg border-2 transition-all overflow-hidden ${
-        isDragging ? 'opacity-50 shadow-xl z-10' : ''
+      className={`group flex items-center gap-2 px-3 py-2 transition-all border-l-2 ${
+        isDragging ? 'opacity-50 z-10 bg-dark-200' : ''
       } ${
         isSelected
-          ? 'border-primary-500 bg-primary-500/10 shadow-lg shadow-primary-500/10'
-          : hasNoRubrics
-          ? 'border-warning-500/30 bg-dark-400 hover:border-warning-500/50'
-          : 'border-dark-200 bg-dark-400 hover:border-dark-100'
+          ? 'border-l-primary-500 bg-primary-500/10'
+          : 'border-l-transparent hover:bg-dark-200'
       }`}
     >
-      <div className="absolute top-1 left-1 right-1 flex items-center justify-between z-10">
-        <button
-          {...attributes}
-          {...listeners}
-          className="p-1 cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 bg-dark-400/80 rounded"
-        >
-          <GripVertical size={14} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onUnlink();
-          }}
-          className="p-1 text-gray-500 hover:text-error-400 bg-dark-400/80 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <X size={14} />
-        </button>
-      </div>
+      <button
+        {...attributes}
+        {...listeners}
+        className="flex-shrink-0 p-0.5 cursor-grab active:cursor-grabbing text-gray-600 hover:text-gray-400"
+      >
+        <GripVertical size={12} />
+      </button>
 
-      <button onClick={onSelect} className="w-full text-left">
-        <div className="w-full h-16 bg-dark-200 flex items-center justify-center overflow-hidden">
+      <button onClick={onSelect} className="flex-1 flex items-center gap-2 min-w-0 text-left">
+        <div className="w-7 h-7 flex-shrink-0 bg-dark-200 rounded overflow-hidden flex items-center justify-center">
           {game.image_url ? (
             <img
               src={game.image_url}
@@ -104,29 +90,35 @@ const SortableGameCard: React.FC<SortableGameCardProps> = ({
               }}
             />
           ) : (
-            <Gamepad2 className="h-6 w-6 text-gray-600" />
+            <Gamepad2 className="h-3.5 w-3.5 text-gray-600" />
           )}
         </div>
-        <div className="p-2 space-y-1">
+        <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-white truncate">{game.name}</p>
           <div className="flex items-center gap-1">
             {hasNoRubrics ? (
-              <span className="inline-flex items-center gap-1 text-[10px] text-warning-400">
-                <AlertTriangle size={10} />
+              <span className="inline-flex items-center gap-0.5 text-[9px] text-warning-400">
+                <AlertTriangle size={8} />
                 No rubrics
               </span>
             ) : (
-              <Badge variant="success" className="text-[10px] px-1.5 py-0">
+              <span className="text-[9px] text-emerald-400 font-medium">
                 {mappingCount} rubric{mappingCount !== 1 ? 's' : ''}
-              </Badge>
+              </span>
             )}
           </div>
         </div>
       </button>
 
-      {isSelected && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" />
-      )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onUnlink();
+        }}
+        className="flex-shrink-0 p-1 text-gray-600 hover:text-error-400 rounded opacity-0 group-hover:opacity-100 transition-all"
+      >
+        <X size={12} />
+      </button>
     </div>
   );
 };
@@ -172,10 +164,10 @@ const LinkedGamesPanel: React.FC<LinkedGamesPanelProps> = ({
 
   if (linkedGames.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <Gamepad2 className="h-10 w-10 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">No games linked yet</p>
-        <p className="text-xs mt-1">Add games from the carousel above</p>
+      <div className="text-center py-6 px-4">
+        <Gamepad2 className="h-8 w-8 mx-auto mb-2 text-gray-600 opacity-50" />
+        <p className="text-xs text-gray-500">No games linked</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">Use + to add games</p>
       </div>
     );
   }
@@ -189,11 +181,11 @@ const LinkedGamesPanel: React.FC<LinkedGamesPanelProps> = ({
       >
         <SortableContext
           items={linkedGames.map((g) => g.linkId)}
-          strategy={rectSortingStrategy}
+          strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div className="py-1">
             {linkedGames.map((linkedGame) => (
-              <SortableGameCard
+              <SortableGameRow
                 key={linkedGame.linkId}
                 linkedGame={linkedGame}
                 isSelected={selectedGameId === linkedGame.game.id}

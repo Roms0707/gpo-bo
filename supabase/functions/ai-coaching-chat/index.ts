@@ -16,6 +16,24 @@ interface CoachingConfig {
   display_order: number;
 }
 
+interface ContentLink {
+  id: string;
+  coaching_config_id: string;
+  game_id: string;
+  rubric_id: string;
+  rubric_name: string | null;
+  content_category: string;
+  display_order: number;
+  is_active: boolean;
+}
+
+interface RecommendedContent {
+  topic: string;
+  rubric_id: string;
+  rubric_name: string | null;
+  content_category: string;
+}
+
 interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
@@ -147,7 +165,34 @@ function detectTopics(message: string, topicPriorities: string[], gameId: string
   return detectedTopics;
 }
 
-function assembleSystemPrompt(configs: CoachingConfig[]): string {
+function buildTopicContentMap(
+  configs: CoachingConfig[],
+  contentLinks: ContentLink[]
+): Map<string, ContentLink[]> {
+  const configIdToTopic = new Map<string, string>();
+  for (const c of configs) {
+    if (c.config_key === "topic_priority" || c.config_key === "behavior_toggle") {
+      configIdToTopic.set(c.id, c.config_value);
+    }
+  }
+
+  const topicToLinks = new Map<string, ContentLink[]>();
+  for (const link of contentLinks) {
+    const topicName = configIdToTopic.get(link.coaching_config_id);
+    if (topicName) {
+      const existing = topicToLinks.get(topicName) || [];
+      existing.push(link);
+      topicToLinks.set(topicName, existing);
+    }
+  }
+
+  return topicToLinks;
+}
+
+function assembleSystemPrompt(
+  configs: CoachingConfig[],
+  topicContentMap: Map<string, ContentLink[]>
+): string {
   const activeConfigs = configs.filter((c) => c.is_active);
 
   const promptSections = activeConfigs
@@ -188,7 +233,15 @@ function assembleSystemPrompt(configs: CoachingConfig[]): string {
     systemPrompt += "## Topic Priorities\n";
     systemPrompt += "These are the priority topics for coaching (in order of importance):\n";
     topicPriorities.forEach((topic, index) => {
-      systemPrompt += `${index + 1}. ${topic}\n`;
+      const links = topicContentMap.get(topic) || [];
+      const contentNames = links
+        .filter((l) => l.rubric_name)
+        .map((l) => l.rubric_name);
+      if (contentNames.length > 0) {
+        systemPrompt += `${index + 1}. ${topic} — Related training content: ${contentNames.join(", ")}\n`;
+      } else {
+        systemPrompt += `${index + 1}. ${topic}\n`;
+      }
     });
     systemPrompt += "\n";
   }
@@ -201,7 +254,34 @@ function assembleSystemPrompt(configs: CoachingConfig[]): string {
     systemPrompt += "\n";
   }
 
+  const hasAnyContent = topicContentMap.size > 0;
+  if (hasAnyContent) {
+    systemPrompt += "## Content Recommendation Guidelines\n";
+    systemPrompt += "When discussing a topic that has related training content listed above, naturally mention that relevant training videos or materials are available. Encourage the user to check them out for deeper learning. Do not force content mentions — only include them when directly relevant to the conversation.\n\n";
+  }
+
   return systemPrompt || "You are a helpful gaming coach. Provide clear, actionable advice to help players improve.";
+}
+
+function getRecommendedContent(
+  detectedTopics: string[],
+  topicContentMap: Map<string, ContentLink[]>
+): RecommendedContent[] {
+  const recommendations: RecommendedContent[] = [];
+
+  for (const topic of detectedTopics) {
+    const links = topicContentMap.get(topic) || [];
+    for (const link of links) {
+      recommendations.push({
+        topic,
+        rubric_id: link.rubric_id,
+        rubric_name: link.rubric_name,
+        content_category: link.content_category,
+      });
+    }
+  }
+
+  return recommendations;
 }
 
 Deno.serve(async (req: Request) => {
@@ -242,23 +322,40 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: configs, error: configError } = await supabase
-      .from("coaching_ai_config")
-      .select("*")
-      .eq("game_id", game_id)
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+    const [configResult, contentLinksResult] = await Promise.all([
+      supabase
+        .from("coaching_ai_config")
+        .select("*")
+        .eq("game_id", game_id)
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+      supabase
+        .from("coaching_topic_content_links")
+        .select("*")
+        .eq("game_id", game_id)
+        .eq("is_active", true)
+        .order("display_order", { ascending: true }),
+    ]);
 
-    if (configError) {
-      console.error("Error fetching configs:", configError);
+    if (configResult.error) {
+      console.error("Error fetching configs:", configResult.error);
+    }
+    if (contentLinksResult.error) {
+      console.error("Error fetching content links:", contentLinksResult.error);
     }
 
-    const systemPrompt = assembleSystemPrompt((configs as CoachingConfig[]) || []);
+    const configs = (configResult.data as CoachingConfig[]) || [];
+    const contentLinks = (contentLinksResult.data as ContentLink[]) || [];
 
-    const topicPriorities = (configs as CoachingConfig[] || [])
+    const topicContentMap = buildTopicContentMap(configs, contentLinks);
+    const systemPrompt = assembleSystemPrompt(configs, topicContentMap);
+
+    const topicPriorities = configs
       .filter((c) => c.config_key === "topic_priority")
       .map((c) => c.config_value);
     const detectedTopics = detectTopics(message, topicPriorities, game_id);
+
+    const recommendedContent = getRecommendedContent(detectedTopics, topicContentMap);
 
     const messages: ChatMessage[] = [
       { role: "system", content: systemPrompt },
@@ -319,12 +416,30 @@ Deno.serve(async (req: Request) => {
       if (analyticsError) {
         console.error("Error logging analytics:", analyticsError);
       }
+
+      if (recommendedContent.length > 0 && session_id) {
+        const recommendations = recommendedContent.map((rc) => ({
+          session_id,
+          content_id: rc.rubric_id,
+          reason: rc.topic,
+          was_watched: false,
+        }));
+
+        const { error: recError } = await supabase
+          .from("coaching_content_recommendations")
+          .insert(recommendations);
+
+        if (recError) {
+          console.error("Error logging content recommendations:", recError);
+        }
+      }
     }
 
     return new Response(
       JSON.stringify({
         message: aiMessage,
         detected_topics: detectedTopics,
+        recommended_content: recommendedContent,
         session_id: session_id || null,
       }),
       {

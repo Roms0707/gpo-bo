@@ -1,3 +1,5 @@
+import { formatPhoneForDisplay } from './phoneUtils';
+
 export type FieldValue = Record<string, string>;
 
 export function parseFieldValue(value: any): FieldValue {
@@ -32,7 +34,7 @@ export function formatFieldValueForDisplay(value: any): string {
   }
 
   if ('fullNumber' in parsed && 'countryCode' in parsed) {
-    return parsed.fullNumber || '';
+    return formatPhoneForDisplay(parsed);
   }
 
   if (Object.keys(parsed).length === 1 && 'value' in parsed) {
@@ -49,7 +51,7 @@ export function formatFieldValueForModal(value: any): Array<{ key: string; value
 
   if ('fullNumber' in parsed && 'countryCode' in parsed && 'phoneNumber' in parsed) {
     return [
-      { key: 'Phone Number', value: parsed.fullNumber || '' }
+      { key: 'Phone Number', value: formatPhoneForDisplay(parsed) }
     ];
   }
 

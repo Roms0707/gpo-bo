@@ -198,7 +198,8 @@ export const toggleCoachingConfigActive = async (
 };
 
 export const assembleSystemPromptPreview = (
-  configs: CoachingConfig[]
+  configs: CoachingConfig[],
+  contentLinkCounts?: Record<string, number>
 ): string => {
   const activeConfigs = configs.filter((c) => c.is_active);
 
@@ -210,14 +211,12 @@ export const assembleSystemPromptPreview = (
     .filter((c) => c.config_key === 'emphasis_areas')
     .map((c) => c.config_value);
 
-  const topicPriorities = activeConfigs
+  const topicPriorityConfigs = activeConfigs
     .filter((c) => c.config_key === 'topic_priority')
-    .sort((a, b) => a.display_order - b.display_order)
-    .map((c) => c.config_value);
+    .sort((a, b) => a.display_order - b.display_order);
 
-  const behaviorToggles = activeConfigs
-    .filter((c) => c.config_key === 'behavior_toggle')
-    .map((c) => c.config_value);
+  const behaviorToggleConfigs = activeConfigs
+    .filter((c) => c.config_key === 'behavior_toggle');
 
   let preview = '# AI Coach Configuration Preview\n\n';
 
@@ -237,18 +236,28 @@ export const assembleSystemPromptPreview = (
     preview += '\n';
   }
 
-  if (topicPriorities.length > 0) {
+  if (topicPriorityConfigs.length > 0) {
     preview += '## Topic Priorities (in order)\n';
-    topicPriorities.forEach((topic, index) => {
-      preview += `${index + 1}. ${topic}\n`;
+    topicPriorityConfigs.forEach((config, index) => {
+      const count = contentLinkCounts?.[config.id] || 0;
+      if (count > 0) {
+        preview += `${index + 1}. ${config.config_value} [${count} video${count !== 1 ? 's' : ''} linked]\n`;
+      } else {
+        preview += `${index + 1}. ${config.config_value}\n`;
+      }
     });
     preview += '\n';
   }
 
-  if (behaviorToggles.length > 0) {
+  if (behaviorToggleConfigs.length > 0) {
     preview += '## Active Behaviors\n';
-    behaviorToggles.forEach((behavior) => {
-      preview += `- ${behavior}\n`;
+    behaviorToggleConfigs.forEach((config) => {
+      const count = contentLinkCounts?.[config.id] || 0;
+      if (count > 0) {
+        preview += `- ${config.config_value} [${count} video${count !== 1 ? 's' : ''} linked]\n`;
+      } else {
+        preview += `- ${config.config_value}\n`;
+      }
     });
     preview += '\n';
   }

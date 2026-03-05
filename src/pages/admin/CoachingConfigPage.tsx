@@ -1,11 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Settings,
   Plus,
   Trash2,
   Edit,
   Save,
-  X,
   Gamepad2,
   FileText,
   Target,
@@ -37,6 +35,7 @@ import Input from '../../components/ui/Input';
 import ConfigToggle from '../../components/coaching/ConfigToggle';
 import DraggableTopicItem from '../../components/coaching/DraggableTopicItem';
 import PromptPreview from '../../components/coaching/PromptPreview';
+import TopicContentLinksModal from '../../components/coaching/TopicContentLinksModal';
 import {
   fetchCoachingConfigs,
   fetchCoachingConfigsByKey,
@@ -47,8 +46,10 @@ import {
   updateTopicPriorityOrder,
   assembleSystemPromptPreview,
 } from '../../services/coachingConfigService';
+import { getContentLinkCountsByConfig } from '../../services/coachingTopicContentService';
+import { fetchDefaultConfiguration, ProjectConfiguration } from '../../services/projectConfigService';
 import { supabase } from '../../lib/supabase';
-import type { CoachingConfig, ConfigKeyType } from '../../types/coaching';
+import type { CoachingConfig } from '../../types/coaching';
 import toast from 'react-hot-toast';
 
 interface Game {
@@ -63,12 +64,14 @@ const CoachingConfigPage: React.FC = () => {
   const [games, setGames] = useState<Game[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfiguration | null>(null);
 
   const [promptSections, setPromptSections] = useState<CoachingConfig[]>([]);
   const [emphasisAreas, setEmphasisAreas] = useState<CoachingConfig[]>([]);
   const [topicPriorities, setTopicPriorities] = useState<CoachingConfig[]>([]);
   const [behaviorToggles, setBehaviorToggles] = useState<CoachingConfig[]>([]);
   const [allConfigs, setAllConfigs] = useState<CoachingConfig[]>([]);
+  const [contentLinkCounts, setContentLinkCounts] = useState<Record<string, number>>({});
 
   const [isAddPromptModalOpen, setIsAddPromptModalOpen] = useState(false);
   const [isEditPromptModalOpen, setIsEditPromptModalOpen] = useState(false);
@@ -76,8 +79,10 @@ const CoachingConfigPage: React.FC = () => {
   const [isAddTopicModalOpen, setIsAddTopicModalOpen] = useState(false);
   const [isAddToggleModalOpen, setIsAddToggleModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isContentLinksModalOpen, setIsContentLinksModalOpen] = useState(false);
 
   const [selectedConfig, setSelectedConfig] = useState<CoachingConfig | null>(null);
+  const [contentLinksConfig, setContentLinksConfig] = useState<CoachingConfig | null>(null);
   const [newPromptText, setNewPromptText] = useState('');
   const [newEmphasisText, setNewEmphasisText] = useState('');
   const [newTopicText, setNewTopicText] = useState('');
@@ -94,13 +99,20 @@ const CoachingConfigPage: React.FC = () => {
 
   useEffect(() => {
     loadGames();
+    loadProjectConfig();
   }, []);
 
   useEffect(() => {
     if (selectedGameId) {
       loadConfigs();
+      loadContentLinkCounts();
     }
   }, [selectedGameId]);
+
+  const loadProjectConfig = async () => {
+    const { data } = await fetchDefaultConfiguration();
+    setProjectConfig(data);
+  };
 
   const loadGames = async () => {
     try {
@@ -149,6 +161,12 @@ const CoachingConfigPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadContentLinkCounts = async () => {
+    if (!selectedGameId) return;
+    const { data } = await getContentLinkCountsByConfig(selectedGameId);
+    setContentLinkCounts(data);
   };
 
   const handleAddPromptSection = async () => {
@@ -317,6 +335,7 @@ const CoachingConfigPage: React.FC = () => {
       setIsDeleteModalOpen(false);
       setConfigToDelete(null);
       loadConfigs();
+      loadContentLinkCounts();
     } catch (error) {
       console.error('Error deleting config:', error);
       toast.error('Failed to delete configuration');
@@ -358,8 +377,18 @@ const CoachingConfigPage: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const openContentLinksModal = (config: CoachingConfig) => {
+    setContentLinksConfig(config);
+    setIsContentLinksModalOpen(true);
+  };
+
+  const handleContentLinksChanged = () => {
+    loadContentLinkCounts();
+  };
+
   const selectedGame = games.find((g) => g.id === selectedGameId);
-  const previewContent = assembleSystemPromptPreview(allConfigs);
+  const previewContent = assembleSystemPromptPreview(allConfigs, contentLinkCounts);
+  const hasCampaignId = !!projectConfig?.campaign_id;
 
   if (isLoading && games.length === 0) {
     return (
@@ -542,11 +571,13 @@ const CoachingConfigPage: React.FC = () => {
                         <DraggableTopicItem
                           key={topic.id}
                           config={topic}
+                          contentLinkCount={contentLinkCounts[topic.id] || 0}
                           onToggle={handleToggleConfig}
                           onDelete={(id) => {
                             const config = topicPriorities.find((t) => t.id === id);
                             if (config) openDeleteModal(config);
                           }}
+                          onManageContent={hasCampaignId ? openContentLinksModal : undefined}
                         />
                       ))}
                     </div>
@@ -583,6 +614,8 @@ const CoachingConfigPage: React.FC = () => {
                       label={toggle.config_value}
                       isActive={toggle.is_active}
                       onChange={(isActive) => handleToggleConfig(toggle.id, isActive)}
+                      contentLinkCount={contentLinkCounts[toggle.id] || 0}
+                      onManageContent={hasCampaignId ? () => openContentLinksModal(toggle) : undefined}
                     />
                   ))}
                 </div>
@@ -845,6 +878,23 @@ const CoachingConfigPage: React.FC = () => {
           )}
         </div>
       </Modal>
+
+      {contentLinksConfig && projectConfig?.campaign_id && (
+        <TopicContentLinksModal
+          isOpen={isContentLinksModalOpen}
+          onClose={() => {
+            setIsContentLinksModalOpen(false);
+            setContentLinksConfig(null);
+          }}
+          configId={contentLinksConfig.id}
+          configValue={contentLinksConfig.config_value}
+          gameId={selectedGameId}
+          campaignId={projectConfig.campaign_id}
+          countryCode={projectConfig.country_code}
+          languageCode={projectConfig.language_code}
+          onLinksChanged={handleContentLinksChanged}
+        />
+      )}
     </div>
   );
 };

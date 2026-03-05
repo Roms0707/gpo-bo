@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import {
   GalaxyRubricMapping,
   CreateGalaxyRubricMappingData,
+  ContentCategory,
 } from '../types/galaxyRubricMapping';
 import toast from 'react-hot-toast';
 
@@ -20,6 +21,27 @@ export const fetchMappingsByProject = async (
     return { data: data as GalaxyRubricMapping[], error: null };
   } catch (error) {
     console.error('Error fetching rubric mappings by project:', error);
+    return { data: null, error: error as Error };
+  }
+};
+
+export const fetchProjectLevelMappings = async (
+  projectConfigId: string
+): Promise<{ data: GalaxyRubricMapping[] | null; error: Error | null }> => {
+  try {
+    const { data, error } = await supabase
+      .from('galaxy_rubric_mappings')
+      .select('*')
+      .eq('project_config_id', projectConfigId)
+      .eq('scope', 'project')
+      .is('game_id', null)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return { data: data as GalaxyRubricMapping[], error: null };
+  } catch (error) {
+    console.error('Error fetching project-level rubric mappings:', error);
     return { data: null, error: error as Error };
   }
 };
@@ -47,17 +69,25 @@ export const fetchMappingsByGame = async (
 
 export const checkMappingExists = async (
   projectConfigId: string,
-  gameId: string,
-  rubricId: string
+  gameId: string | null,
+  rubricId: string,
+  contentCategory: ContentCategory = 'tips'
 ): Promise<{ exists: boolean; error: Error | null }> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('galaxy_rubric_mappings')
       .select('id')
       .eq('project_config_id', projectConfigId)
-      .eq('game_id', gameId)
       .eq('rubric_id', rubricId)
-      .maybeSingle();
+      .eq('content_category', contentCategory);
+
+    if (gameId) {
+      query = query.eq('game_id', gameId);
+    } else {
+      query = query.is('game_id', null);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
 
@@ -74,8 +104,9 @@ export const createRubricMapping = async (
   try {
     const existsCheck = await checkMappingExists(
       mappingData.project_config_id,
-      mappingData.game_id,
-      mappingData.rubric_id
+      mappingData.game_id || null,
+      mappingData.rubric_id,
+      mappingData.content_category
     );
 
     if (existsCheck.error) {
@@ -83,18 +114,28 @@ export const createRubricMapping = async (
     }
 
     if (existsCheck.exists) {
-      throw new Error('This rubric is already mapped to this game');
+      const target = mappingData.scope === 'project' ? 'this project' : 'this game';
+      throw new Error(`This rubric is already mapped to ${target}`);
     }
+
+    const insertData = {
+      project_config_id: mappingData.project_config_id,
+      game_id: mappingData.game_id || null,
+      rubric_id: mappingData.rubric_id,
+      rubric_name: mappingData.rubric_name || null,
+      scope: mappingData.scope,
+      content_category: mappingData.content_category,
+      display_on_frontend: mappingData.display_on_frontend ?? true,
+    };
 
     const { data, error } = await supabase
       .from('galaxy_rubric_mappings')
-      .insert([mappingData])
+      .insert([insertData])
       .select()
       .single();
 
     if (error) throw error;
 
-    toast.success('Rubric mapping created successfully');
     return { data: data as GalaxyRubricMapping, error: null };
   } catch (error) {
     console.error('Error creating rubric mapping:', error);
@@ -114,11 +155,30 @@ export const deleteRubricMapping = async (
 
     if (error) throw error;
 
-    toast.success('Rubric mapping deleted successfully');
     return { error: null };
   } catch (error) {
     console.error('Error deleting rubric mapping:', error);
     toast.error('Failed to delete rubric mapping');
+    return { error: error as Error };
+  }
+};
+
+export const toggleDisplayOnFrontend = async (
+  id: string,
+  displayOnFrontend: boolean
+): Promise<{ error: Error | null }> => {
+  try {
+    const { error } = await supabase
+      .from('galaxy_rubric_mappings')
+      .update({ display_on_frontend: displayOnFrontend })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return { error: null };
+  } catch (error) {
+    console.error('Error toggling display_on_frontend:', error);
+    toast.error('Failed to update frontend visibility');
     return { error: error as Error };
   }
 };
@@ -145,53 +205,47 @@ export const bulkDeleteMappingsByGame = async (
   }
 };
 
-export const bulkCreateRubricMappings = async (
-  mappings: CreateGalaxyRubricMappingData[]
-): Promise<{ data: GalaxyRubricMapping[] | null; error: Error | null }> => {
+export const bulkDeleteProjectMappings = async (
+  projectConfigId: string
+): Promise<{ error: Error | null }> => {
   try {
-    if (mappings.length === 0) {
-      return { data: [], error: null };
-    }
-
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('galaxy_rubric_mappings')
-      .upsert(mappings, {
-        onConflict: 'project_config_id,game_id,rubric_id',
-        ignoreDuplicates: true,
-      })
-      .select();
+      .delete()
+      .eq('project_config_id', projectConfigId)
+      .eq('scope', 'project')
+      .is('game_id', null);
 
     if (error) throw error;
 
-    const createdCount = data?.length || 0;
-    if (createdCount > 0) {
-      toast.success(`${createdCount} rubric mapping(s) created successfully`);
-    } else {
-      toast.success('Rubric mappings already exist');
-    }
-    return { data: data as GalaxyRubricMapping[], error: null };
+    toast.success('All project-level rubric mappings deleted successfully');
+    return { error: null };
   } catch (error) {
-    console.error('Error bulk creating rubric mappings:', error);
-    toast.error('Failed to create rubric mappings');
-    return { data: null, error: error as Error };
+    console.error('Error bulk deleting project rubric mappings:', error);
+    toast.error('Failed to delete rubric mappings');
+    return { error: error as Error };
   }
 };
 
 export const getMappingCountByProject = async (
   projectConfigId: string
-): Promise<{ count: number; error: Error | null }> => {
+): Promise<{ count: number; gameCount: number; projectCount: number; error: Error | null }> => {
   try {
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from('galaxy_rubric_mappings')
-      .select('*', { count: 'exact', head: true })
+      .select('scope')
       .eq('project_config_id', projectConfigId);
 
     if (error) throw error;
 
-    return { count: count || 0, error: null };
+    const all = data || [];
+    const gameCount = all.filter((m) => m.scope === 'game').length;
+    const projectCount = all.filter((m) => m.scope === 'project').length;
+
+    return { count: all.length, gameCount, projectCount, error: null };
   } catch (error) {
     console.error('Error getting mapping count:', error);
-    return { count: 0, error: error as Error };
+    return { count: 0, gameCount: 0, projectCount: 0, error: error as Error };
   }
 };
 

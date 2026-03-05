@@ -14,6 +14,8 @@ interface PhoneInputProps {
   value?: { countryCode: string; phoneNumber: string };
   onChange: (countryCode: string, phoneNumber: string) => void;
   eligibleCountries?: string | null;
+  configCountryIso?: string | null;
+  noPrefix?: boolean;
   required?: boolean;
   disabled?: boolean;
   error?: string;
@@ -25,17 +27,21 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
   eligibleCountries,
+  configCountryIso,
+  noPrefix = false,
   required = false,
   disabled = false,
   error: externalError,
   label,
   placeholder
 }) => {
-  const availableCountries = getEligibleCountriesList(eligibleCountries);
-  const defaultCountry = getFirstEligibleCountry(eligibleCountries);
+  const lockedCountry = configCountryIso ? getCountryByCode(configCountryIso) : null;
 
-  const [selectedCountry, setSelectedCountry] = useState<Country>(
-    value?.countryCode ? getCountryByCode(value.countryCode) || defaultCountry! : defaultCountry!
+  const availableCountries = lockedCountry ? [lockedCountry] : getEligibleCountriesList(eligibleCountries);
+  const defaultCountry = lockedCountry || getFirstEligibleCountry(eligibleCountries);
+
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(
+    noPrefix ? null : (value?.countryCode ? getCountryByCode(value.countryCode) || defaultCountry : defaultCountry)
   );
   const [phoneNumber, setPhoneNumber] = useState(value?.phoneNumber || '');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -45,7 +51,15 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const isSingleCountry = availableCountries.length === 1;
 
   useEffect(() => {
-    if (value?.countryCode && value.countryCode !== selectedCountry.value) {
+    if (noPrefix) return;
+    if (lockedCountry) {
+      if (selectedCountry?.value !== lockedCountry.value) {
+        setSelectedCountry(lockedCountry);
+        onChange(lockedCountry.value, phoneNumber);
+      }
+      return;
+    }
+    if (value?.countryCode && value.countryCode !== selectedCountry?.value) {
       const country = getCountryByCode(value.countryCode);
       if (country) {
         setSelectedCountry(country);
@@ -54,7 +68,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     if (value?.phoneNumber !== phoneNumber) {
       setPhoneNumber(value?.phoneNumber || '');
     }
-  }, [value]);
+  }, [value, lockedCountry, noPrefix]);
 
   const handleCountryChange = (country: Country) => {
     setSelectedCountry(country);
@@ -65,10 +79,19 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     }
   };
 
-  const validateAndSetError = (phone: string, country: Country) => {
+  const validateAndSetError = (phone: string, country: Country | null) => {
     const cleaned = cleanPhoneNumber(phone);
     if (!required && cleaned.length === 0) {
       setInternalError(undefined);
+      return;
+    }
+
+    if (noPrefix || !country) {
+      if (cleaned.length === 0 && required) {
+        setInternalError('Phone number is required');
+      } else {
+        setInternalError(undefined);
+      }
       return;
     }
 
@@ -76,11 +99,27 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     setInternalError(validation.isValid ? undefined : validation.error);
   };
 
+  const handleNoPrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    const cleaned = cleanPhoneNumber(input);
+    if (cleaned.length <= 20) {
+      setPhoneNumber(cleaned);
+      onChange('', cleaned);
+      if (touched) {
+        validateAndSetError(cleaned, null);
+      }
+    }
+  };
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (noPrefix) {
+      handleNoPrefixChange(e);
+      return;
+    }
     const input = e.target.value;
     const cleaned = cleanPhoneNumber(input);
 
-    if (cleaned.length <= selectedCountry.format.replace(/[^X]/g, '').length + 2) {
+    if (selectedCountry && cleaned.length <= selectedCountry.format.replace(/[^X]/g, '').length + 2) {
       setPhoneNumber(cleaned);
       onChange(selectedCountry.value, cleaned);
 
@@ -95,8 +134,54 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     validateAndSetError(phoneNumber, selectedCountry);
   };
 
-  const formattedNumber = phoneNumber ? formatPhoneNumber(phoneNumber, selectedCountry.format) : '';
+  const formattedNumber = (phoneNumber && selectedCountry && !noPrefix)
+    ? formatPhoneNumber(phoneNumber, selectedCountry.format)
+    : phoneNumber;
   const displayError = externalError || internalError;
+
+  if (noPrefix) {
+    return (
+      <div className="w-full">
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {label}
+            {required && <span className="text-error-500 ml-1">*</span>}
+          </label>
+        )}
+
+        <input
+          type="tel"
+          value={phoneNumber}
+          onChange={handlePhoneChange}
+          onBlur={handleBlur}
+          disabled={disabled}
+          placeholder={placeholder || 'Enter phone number'}
+          className={`
+            w-full px-3 py-2
+            border rounded-md
+            ${displayError ? 'border-error-500' : 'border-gray-300 dark:border-gray-600'}
+            bg-white dark:bg-dark-200
+            text-gray-900 dark:text-white
+            placeholder-gray-400 dark:placeholder-gray-500
+            focus:outline-none focus:ring-1
+            ${displayError
+              ? 'focus:ring-error-500 focus:border-error-500'
+              : 'focus:ring-primary-500 focus:border-primary-500'
+            }
+            disabled:bg-gray-100 dark:disabled:bg-dark-300 disabled:cursor-not-allowed
+            transition-colors
+          `}
+        />
+
+        {displayError && (
+          <div className="mt-1 flex items-center text-sm text-error-500">
+            <AlertCircle className="h-4 w-4 mr-1" />
+            {displayError}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -125,9 +210,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
               h-[42px]
             `}
           >
-            <span className="text-2xl">{selectedCountry.flag}</span>
+            <span className="text-2xl">{selectedCountry?.flag}</span>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {selectedCountry.dialCode}
+              {selectedCountry?.dialCode}
             </span>
             {!isSingleCountry && (
               <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
@@ -149,7 +234,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                     className={`
                       w-full flex items-center space-x-3 px-4 py-2 text-left
                       hover:bg-gray-100 dark:hover:bg-dark-100
-                      ${selectedCountry.value === country.value ? 'bg-primary-50 dark:bg-primary-900/20' : ''}
+                      ${selectedCountry?.value === country.value ? 'bg-primary-50 dark:bg-primary-900/20' : ''}
                       transition-colors
                     `}
                   >
@@ -175,7 +260,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={handlePhoneChange}
           onBlur={handleBlur}
           disabled={disabled}
-          placeholder={placeholder || selectedCountry.format.replace(/X/g, '0')}
+          placeholder={placeholder || (selectedCountry ? selectedCountry.format.replace(/X/g, '0') : '')}
           className={`
             flex-1 px-3 py-2
             border rounded-r-md

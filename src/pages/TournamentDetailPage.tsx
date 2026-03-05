@@ -16,6 +16,7 @@ import { fetchProjectConfigurationByConfigId, ProjectConfiguration } from '../se
 import Table, { TableHeader, TableBody, TableRow, TableHead, TableCell } from '../components/ui/Table';
 import toast from 'react-hot-toast';
 import { getRegistrationStatus, getRegistrationStatusLabel, getRegistrationStatusColor } from '../utils/tournamentValidation';
+import { formatFieldValueForDisplay } from '../utils/fieldValueUtils';
 
 type Tournament = Database['public']['Tables']['tournaments']['Row'];
 type TournamentFieldValue = Database['public']['Tables']['tournament_field_values']['Row'];
@@ -813,7 +814,7 @@ const TournamentDetailPage: React.FC = () => {
                             {fieldValue.field.name}
                           </p>
                           <p className="text-gray-700 dark:text-gray-300">
-                            {fieldValue.value}
+                            {formatFieldValueForDisplay(fieldValue.value)}
                           </p>
                         </div>
                       </div>

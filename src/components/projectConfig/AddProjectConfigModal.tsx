@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info, X, Globe, FileText } from 'lucide-react';
+import { Plus, ArrowLeft, ArrowRight, CheckCircle, AlertCircle, AlertTriangle, Mail, MessageCircle, Phone, Info, X, Globe, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -80,8 +80,13 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
   const [packageId, setPackageId] = useState('');
   const [lpRedirectNoAccount, setLpRedirectNoAccount] = useState('');
   const [serviceId, setServiceId] = useState('');
+  const [countryCode, setCountryCode] = useState('');
+  const [languageCode, setLanguageCode] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [extraMetadata, setExtraMetadata] = useState('{}');
+  const [snowplowEnabled, setSnowplowEnabled] = useState(false);
+  const [snowplowAppId, setSnowplowAppId] = useState('');
+  const [metadataExpanded, setMetadataExpanded] = useState(false);
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [klientoAuthType, setKlientoAuthType] = useState<KlientoAuthType>('password');
   const [klientoOtpSmsTemplate, setKlientoOtpSmsTemplate] = useState(DEFAULT_OTP_SMS_TEMPLATE);
@@ -132,8 +137,13 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
     setPackageId('');
     setLpRedirectNoAccount('');
     setServiceId('');
+    setCountryCode('');
+    setLanguageCode('');
     setIsActive(true);
     setExtraMetadata('{}');
+    setSnowplowEnabled(false);
+    setSnowplowAppId('');
+    setMetadataExpanded(false);
     setAuthMethod('email');
     setKlientoAuthType('password');
     setKlientoOtpSmsTemplate(DEFAULT_OTP_SMS_TEMPLATE);
@@ -404,7 +414,11 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
         package_id: packageId.trim() || null,
         lp_redirect_no_account: lpRedirectNoAccount.trim() || null,
         service_id: serviceId.trim() || null,
+        country_code: countryCode.trim() || null,
+        language_code: languageCode.trim() || null,
         extra_metadata: JSON.parse(extraMetadata),
+        snowplow_enabled: snowplowEnabled,
+        snowplow_app_id: snowplowAppId.trim() || null,
         support_email: supportEmail.trim(),
         legal_email: legalEmail.trim(),
         privacy_email: privacyEmail.trim(),
@@ -542,12 +556,12 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
               <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
                 Authentication Method <span className="text-error-500">*</span>
               </label>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 {AUTH_METHOD_OPTIONS.map((option) => (
                   <label
                     key={option.value}
                     className={`
-                      flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all
+                      flex items-start gap-2 p-2 md:p-3 rounded-lg border cursor-pointer transition-all
                       ${authMethod === option.value
                         ? 'border-primary-500 bg-primary-500/10'
                         : 'border-dark-200 bg-dark-300 hover:border-dark-100'
@@ -560,16 +574,16 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                       value={option.value}
                       checked={authMethod === option.value}
                       onChange={(e) => setAuthMethod(e.target.value as AuthMethod)}
-                      className="mt-1 accent-primary-500"
+                      className="mt-0.5 accent-primary-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <span className={authMethod === option.value ? 'text-primary-500' : 'text-gray-400'}>
                           {option.icon}
                         </span>
                         <span className="font-medium text-white text-sm">{option.label}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{option.description}</p>
+                      <p className="text-xs text-gray-400 mt-0.5 hidden md:block">{option.description}</p>
                     </div>
                   </label>
                 ))}
@@ -1003,29 +1017,90 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
               </>
             )}
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4">
+                <h4 className="text-sm font-medium text-white mb-3">Galaxy API Locale</h4>
+                <p className="text-xs text-gray-400 mb-3">
+                  Country and language codes used for Galaxy content API calls
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input
+                    label="Country Code"
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    placeholder="FR"
+                    helperText="ISO country code (e.g. FR, US, GB)"
+                  />
+                  <Input
+                    label="Language Code"
+                    value={languageCode}
+                    onChange={(e) => setLanguageCode(e.target.value)}
+                    placeholder="fr"
+                    helperText="ISO language code (e.g. fr, en, es)"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4">
+                <h4 className="text-sm font-medium text-white mb-3">Snowplow Analytics</h4>
+                <p className="text-xs text-gray-400 mb-3">
+                  Configure Snowplow analytics tracking for this tenant
+                </p>
+                <div className="mb-3">
+                  <Checkbox
+                    id="add-snowplow-enabled"
+                    checked={snowplowEnabled}
+                    onChange={(e) => setSnowplowEnabled(e.target.checked)}
+                    label="Enable Snowplow Tracking"
+                    description="Activate Snowplow analytics event collection for this tenant"
+                  />
+                </div>
+                <Input
+                  label="Snowplow App ID"
+                  value={snowplowAppId}
+                  onChange={(e) => setSnowplowAppId(e.target.value)}
+                  placeholder="orange-arena-tn"
+                  helperText="Unique application identifier for Snowplow tracking (optional)"
+                  disabled={!snowplowEnabled}
+                />
+              </div>
+            </div>
+
             <div className="mt-3 md:mt-4">
-              <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+              <button
+                type="button"
+                onClick={() => setMetadataExpanded(!metadataExpanded)}
+                className="flex items-center gap-2 text-xs md:text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                {metadataExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 Extra Metadata (JSON)
-              </label>
-              <textarea
-                value={extraMetadata}
-                onChange={(e) => setExtraMetadata(e.target.value)}
-                className={`
-                  w-full px-3 py-2 min-h-[100px] md:min-h-[120px] font-mono text-xs md:text-sm
-                  bg-dark-300
-                  border ${errors.extraMetadata ? 'border-error-500' : 'border-dark-200'}
-                  rounded-lg
-                  text-white
-                  focus:outline-none focus:ring-2 focus:ring-primary-500
-                `}
-                placeholder='{"key": "value"}'
-              />
-              {errors.extraMetadata && (
-                <p className="text-xs text-error-500 mt-1">{errors.extraMetadata}</p>
+                {extraMetadata !== '{}' && !metadataExpanded && (
+                  <span className="text-xs text-gray-500 font-normal ml-1">-- configured</span>
+                )}
+              </button>
+              {metadataExpanded && (
+                <div className="mt-2">
+                  <textarea
+                    value={extraMetadata}
+                    onChange={(e) => setExtraMetadata(e.target.value)}
+                    className={`
+                      w-full px-3 py-2 min-h-[80px] md:min-h-[100px] font-mono text-xs md:text-sm
+                      bg-dark-300
+                      border ${errors.extraMetadata ? 'border-error-500' : 'border-dark-200'}
+                      rounded-lg
+                      text-white
+                      focus:outline-none focus:ring-2 focus:ring-primary-500
+                    `}
+                    placeholder='{"key": "value"}'
+                  />
+                  {errors.extraMetadata && (
+                    <p className="text-xs text-error-500 mt-1">{errors.extraMetadata}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">
+                    Additional configuration data in JSON format
+                  </p>
+                </div>
               )}
-              <p className="text-xs text-gray-400 mt-1">
-                Additional configuration data in JSON format
-              </p>
             </div>
           </div>
         );
@@ -1179,50 +1254,42 @@ const AddProjectConfigModal: React.FC<AddProjectConfigModalProps> = ({
                   />
                 </div>
 
-                <Input
-                  label="Phone Number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  error={errors.phoneNumber}
-                  placeholder="+1 (555) 123-4567"
-                  helperText="Company contact phone number"
-                  required
-                />
-
-                <div>
-                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
-                    Company Address <span className="text-error-500">*</span>
-                  </label>
-                  <textarea
-                    value={companyAddress}
-                    onChange={(e) => setCompanyAddress(e.target.value)}
-                    className={`
-                      w-full px-3 py-2 min-h-[80px] text-xs md:text-sm
-                      bg-dark-300
-                      border ${errors.companyAddress ? 'border-error-500' : 'border-dark-200'}
-                      rounded-lg
-                      text-white
-                      focus:outline-none focus:ring-2 focus:ring-primary-500
-                    `}
-                    placeholder="123 Main Street, Suite 100, City, State, ZIP"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <Input
+                    label="Phone Number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    error={errors.phoneNumber}
+                    placeholder="+1 (555) 123-4567"
+                    helperText="Company contact phone number"
+                    required
                   />
-                  {errors.companyAddress && (
-                    <p className="text-xs text-error-500 mt-1">{errors.companyAddress}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    Full company address ({companyAddress.length} characters)
-                  </p>
-                </div>
 
-                <div className="bg-dark-200 border border-dark-100 rounded-lg p-3 md:p-4 mb-4">
-                  <h4 className="text-sm font-medium text-white mb-2">Community Links</h4>
-                  <p className="text-xs text-gray-400">
-                    Social and community links displayed on the Contact page
-                  </p>
+                  <div>
+                    <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
+                      Company Address <span className="text-error-500">*</span>
+                    </label>
+                    <textarea
+                      value={companyAddress}
+                      onChange={(e) => setCompanyAddress(e.target.value)}
+                      className={`
+                        w-full px-3 py-2 min-h-[60px] text-xs md:text-sm
+                        bg-dark-300
+                        border ${errors.companyAddress ? 'border-error-500' : 'border-dark-200'}
+                        rounded-lg
+                        text-white
+                        focus:outline-none focus:ring-2 focus:ring-primary-500
+                      `}
+                      placeholder="123 Main Street, Suite 100, City, State, ZIP"
+                    />
+                    {errors.companyAddress && (
+                      <p className="text-xs text-error-500 mt-1">{errors.companyAddress}</p>
+                    )}
+                  </div>
                 </div>
 
                 <Input
-                  label="Discord Invite URL"
+                  label="Discord Invite URL (Community)"
                   value={discordUrl}
                   onChange={(e) => setDiscordUrl(e.target.value)}
                   error={errors.discordUrl}

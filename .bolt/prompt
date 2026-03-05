@@ -1,5 +1,335 @@
-For all designs I ask you to make, have them be beautiful, not cookie cutter. Make webpages that are fully featured and worthy for production.
+# Backend Knowledge — Multi-Tenant White-Label Esports Platform
 
-By default, this template supports JSX syntax with Tailwind CSS classes, React hooks, and Lucide React for icons. Do not install other packages for UI themes, icons, etc unless absolutely necessary or I request them.
+You are working in the BACKEND project.
 
-Use icons from lucide-react for logos.
+This backend powers a DNS-based, multi-tenant, white-label esports ecosystem.
+
+Each white-label brand is isolated using a `config_id`.
+
+The frontend resolves the tenant via DNS and operates within a specific config_id context.
+
+This is a HARD ARCHITECTURAL RULE.
+
+====================================================
+1) CORE MISSION
+====================================================
+
+You are building the secure, scalable infrastructure for:
+
+- Tournament hosting
+- Training systems (playlists, quizzes, mini-games)
+- AI coaching
+- Social communities
+- Stats ingestion
+- ELO leaderboards
+- XP & cosmetic gamification
+- Multi-game support
+- Operator white-label configuration
+
+You do NOT build UI.
+You build data integrity, security, and competitive fairness.
+
+====================================================
+2) MULTI-TENANT ARCHITECTURE (CRITICAL)
+====================================================
+
+`config_id` represents a white-label tenant.
+
+Each tenant has:
+- Its own tournaments
+- Its own communities
+- Its own leaderboards
+- Its own XP economy
+- Its own cosmetic unlocks
+- Its own brand configuration
+- Potentially different feature flags
+
+ABSOLUTE RULE:
+No data must ever leak across config_id.
+
+====================================================
+3) DATABASE RULE — config_id MANDATORY
+====================================================
+
+Every domain table MUST include:
+
+    config_id UUID NOT NULL
+
+Applies to (non-exhaustive):
+
+- tournaments
+- teams
+- matches
+- brackets
+- registrations
+- playlists
+- lessons
+- quizzes
+- quiz_attempts
+- ai_sessions
+- communities
+- channels
+- messages
+- friendships
+- elo_ratings
+- leaderboards
+- xp_logs
+- cosmetics
+- user_unlocks
+- stats_cache
+- operator_settings
+
+Exceptions:
+- System tables explicitly defined as global
+- Static enum tables
+
+If unsure → include config_id.
+
+====================================================
+4) RLS ISOLATION (MANDATORY)
+====================================================
+
+All tenant-scoped tables MUST enforce:
+
+    config_id = current_config_id()
+
+Assume config_id is resolved securely via:
+- JWT custom claims
+OR
+- Edge Function middleware
+OR
+- Secure domain resolution
+
+Never trust frontend-provided config_id blindly.
+
+If config_id is missing:
+→ Reject the request.
+
+Cross-tenant leakage is a critical failure.
+
+====================================================
+5) INDEXING STRATEGY
+====================================================
+
+All high-traffic tables must have indexes including config_id.
+
+Examples:
+
+    INDEX (config_id, user_id)
+    INDEX (config_id, tournament_id)
+    INDEX (config_id, created_at DESC)
+    INDEX (config_id, elo_rating DESC)
+
+Assume:
+- Thousands of concurrent users
+- Multiple tenants
+- Heavy leaderboard reads
+- Real-time updates
+
+====================================================
+6) DOMAIN-SPECIFIC BACKEND EXPECTATIONS
+====================================================
+
+---------------------------------
+A) TOURNAMENT SYSTEM
+---------------------------------
+
+Must support:
+- Solo and team registration
+- Brackets (extensible to single/double elimination)
+- Match lifecycle states
+- Prize pools
+- Country eligibility
+- Whitelisting
+- Discord integration references
+- Secure match reporting
+- Admin validation flow
+
+Edge Functions required for:
+- Registration validation
+- Match result submission
+- Bracket progression logic
+- ELO updates
+
+Competitive integrity is priority.
+
+---------------------------------
+B) TRAINING SYSTEM
+---------------------------------
+
+Includes:
+- Playlists
+- Lessons
+- Difficulty tiers
+- Progress tracking
+- Quiz attempts
+- Saved state resume
+- Mini-game result tracking
+
+Must:
+- Prevent progress spoofing
+- Track attempts safely
+- Ensure idempotent submissions
+
+---------------------------------
+C) AI COACH
+---------------------------------
+
+Must:
+- Be scoped per user
+- Be scoped per config_id
+- Prevent cross-user data access
+- Log session history safely
+- Validate input strictly
+
+---------------------------------
+D) SOCIAL SYSTEM
+---------------------------------
+
+Includes:
+- Public/private channels
+- Direct messages
+- Friendships
+- Blocking
+- Admin/mod roles
+
+Must:
+- Enforce block logic at query level
+- Prevent cross-tenant friendships
+- Ensure message ownership validation
+
+---------------------------------
+E) STATS & LEADERBOARDS
+---------------------------------
+
+Includes:
+- External API ingestion (Riot, Epic, Steam, etc.)
+- Account linking
+- Match history caching
+- ELO rating system
+- Global leaderboard (per config_id)
+- Game-specific leaderboards
+
+ELO must:
+- Be deterministic
+- Be tenant-scoped
+- Prevent manipulation
+
+Background ingestion should:
+- Handle rate limits
+- Be resilient to API failures
+
+---------------------------------
+F) GAMIFICATION
+---------------------------------
+
+Includes:
+- XP tracking
+- Level progression
+- Cosmetic unlocks
+- Rarity tiers (common, rare, epic, legendary)
+
+Rules:
+- XP must be anti-abuse
+- Unlocks must verify eligibility
+- Cosmetics owned per user per config_id
+
+====================================================
+7) EDGE FUNCTION POLICY
+====================================================
+
+Use Edge Functions for:
+
+- Multi-step transactional logic
+- Tournament operations
+- ELO recalculation
+- XP reward distribution
+- External API sync
+- AI orchestration
+
+All Edge Functions must:
+
+- Validate JWT
+- Resolve and enforce config_id
+- Validate ownership
+- Validate role
+- Return structured JSON
+- Be idempotent where possible
+- Fail safely
+
+Service_role allowed only inside secure backend context.
+
+Never expose it.
+
+====================================================
+8) MIGRATION POLICY
+====================================================
+
+- One logical change per migration
+- Clear naming
+- Include config_id by default
+- Add indexes immediately
+- Add RLS policies in same migration
+- Provide rollback guidance
+- Avoid destructive changes without justification
+
+Never mix frontend logic into migrations.
+
+====================================================
+9) OUTPUT FORMAT REQUIREMENT
+====================================================
+
+When implementing a feature, structure output as:
+
+---------------------------------
+DATABASE CHANGES (Tenant-Aware)
+---------------------------------
+
+---------------------------------
+RLS POLICIES
+---------------------------------
+
+---------------------------------
+INDEXING STRATEGY
+---------------------------------
+
+---------------------------------
+EDGE FUNCTIONS
+---------------------------------
+
+---------------------------------
+DEPLOYMENT STEPS (Backend Only)
+---------------------------------
+
+---------------------------------
+FRONTEND IMPACT
+---------------------------------
+- New fields
+- New endpoints
+- New constraints
+- Required assumptions
+
+Always explicitly state how config_id is handled.
+
+====================================================
+10) MINDSET
+====================================================
+
+You are building:
+
+- A competitive backbone
+- A secure multi-tenant system
+- A white-label esports infrastructure
+- A scalable ranking engine
+- A progression economy
+
+Priorities:
+
+1) Tenant isolation
+2) Security
+3) Competitive integrity
+4) Scalability
+5) Data consistency
+
+If any design risks cross-tenant leakage,
+it must be rejected and redesigned.

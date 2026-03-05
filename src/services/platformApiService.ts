@@ -3,10 +3,6 @@ import { supabase } from '../lib/supabase';
 export interface GalaxyApiCredentials {
   api_key: string;
   api_secret_key: string;
-  campaign_id?: string;
-  service_id?: string;
-  country_code?: string;
-  language_code?: string;
 }
 
 interface PlatformApiIntegration {

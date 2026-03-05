@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ProjectConfigProvider } from './contexts/ProjectConfigContext';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/layout/Layout';
 import ErrorBoundary from './components/ui/ErrorBoundary';
@@ -18,7 +19,7 @@ import SupportTicketsPage from './pages/SupportTicketsPage';
 import RegistrationsPage from './pages/RegistrationsPage';
 import LeaderboardsPage from './pages/LeaderboardsPage';
 import GameLeaderboardPage from './pages/GameLeaderboardPage';
-import ContentsPage from './pages/ContentsPage';
+
 import BracketPage from './pages/BracketPage';
 import FullScreenBracketPage from './pages/FullScreenBracketPage';
 import SwissBracketPage from './pages/SwissBracketPage';
@@ -42,6 +43,7 @@ import CountryConfigurationPage from './pages/admin/CountryConfigurationPage';
 import ProjectConfigurationsPage from './pages/admin/ProjectConfigurationsPage';
 import CoachingAnalyticsPage from './pages/admin/CoachingAnalyticsPage';
 import CoachingConfigPage from './pages/admin/CoachingConfigPage';
+import GrindZoneQuizPage from './pages/admin/GrindZoneQuizPage';
 
 function App() {
   const { user, checkSession, isLoading } = useAuthStore();
@@ -112,7 +114,9 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <Layout />
+                <ProjectConfigProvider>
+                  <Layout />
+                </ProjectConfigProvider>
               </ProtectedRoute>
             }
           >
@@ -217,6 +221,11 @@ function App() {
               element={<CoachingConfigPage />}
             />
             <Route
+              key="admin-grind-zone-quiz"
+              path="admin/grind-zone-quiz"
+              element={<GrindZoneQuizPage />}
+            />
+            <Route
               key="support-tickets-page"
               path="support-tickets"
               element={<SupportTicketsPage />}
@@ -231,11 +240,7 @@ function App() {
               path="leaderboards/:gameId"
               element={<GameLeaderboardPage />}
             />
-            <Route
-              key="contents-page"
-              path="contents"
-              element={<ContentsPage />}
-            />
+
             <Route
               key="gamification-portal"
               path="gamification"

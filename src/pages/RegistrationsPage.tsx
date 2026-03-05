@@ -14,7 +14,9 @@ import { useTournamentStore } from '../store/tournamentStore';
 import { formatDateWithTime } from '../utils/dateUtils';
 import { parseFieldValue, formatFieldValueForDisplay, formatFieldValueForModal } from '../utils/fieldValueUtils';
 import BracketLaunchModal from '../components/tournament/BracketLaunchModal';
+import type { LaunchMode } from '../components/tournament/BracketLaunchModal';
 import { validateTournamentLaunch } from '../utils/tournamentValidation';
+import { prepareTournamentForBracket } from '../services/bracketLaunchService';
 import CSVExportModal from '../components/tournament/CSVExportModal';
 import { exportPlayersToCSV } from '../utils/csvExportUtils';
 import { useAuthStore } from '../store/authStore';
@@ -961,39 +963,18 @@ ORDER BY
     setIsBracketLaunchModalOpen(true);
   };
 
-  const handleConfirmLaunchBracket = async () => {
+  const handleConfirmLaunchBracket = async (mode: LaunchMode) => {
     if (!selectedTournamentForLaunch) return;
 
     try {
       setIsLaunchingBracket(true);
 
-      const tournamentRegs = registrations.filter(
-        reg => reg.tournament.id === selectedTournamentForLaunch.id && reg.status === 'approved'
-      );
-      const approvedCount = tournamentRegs.length;
+      const useWaitingList = mode === 'use_waiting_list';
+      const result = await prepareTournamentForBracket(selectedTournamentForLaunch.id, useWaitingList);
 
-      const { calculateBracketStructure } = await import('../utils/tournamentValidation');
-      const bracketStructure = calculateBracketStructure(
-        approvedCount,
-        selectedTournamentForLaunch.tournament_format,
-        selectedTournamentForLaunch.max_nb_players
-      );
-
-      const { error: updateError } = await supabase
-        .from('tournaments')
-        .update({
-          initial_max_players: selectedTournamentForLaunch.max_nb_players || approvedCount,
-          actual_participants: approvedCount,
-          max_nb_players: approvedCount,
-          registration_locked: true,
-          bracket_launched_at: new Date().toISOString(),
-          bracket_size: bracketStructure.bracketSize,
-          bracket_byes_count: bracketStructure.byes,
-          uses_lucky_loser: true
-        })
-        .eq('id', selectedTournamentForLaunch.id);
-
-      if (updateError) throw updateError;
+      if (!result.success) {
+        throw new Error('Failed to prepare tournament');
+      }
 
       toast.success('Le tournoi a été préparé pour le lancement!');
       setIsBracketLaunchModalOpen(false);
@@ -1376,22 +1357,43 @@ ORDER BY
                       </p>
                     </div>
 
-                    {canGenerateReports() && (
-                      <Button
-                        size="sm"
-                        leftIcon={<Download size={16} />}
-                        onClick={() => {
-                          const tournament = allTournaments.find(t => t.id === tournamentId);
-                          if (tournament) {
-                            setSelectedTournamentForExport(tournament);
-                            setIsCSVExportModalOpen(true);
-                          }
-                        }}
-                        disabled={regs.length === 0}
-                      >
-                        Export All Players
-                      </Button>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      {tournament.bracket_launched_at ? (
+                        <Button
+                          size="sm"
+                          leftIcon={<Trophy size={16} />}
+                          onClick={() => handleGenerateBracket(tournament)}
+                          variant="primary"
+                        >
+                          View Bracket
+                        </Button>
+                      ) : canLaunchBracket(tournament) ? (
+                        <Button
+                          size="sm"
+                          leftIcon={<Rocket size={16} />}
+                          onClick={() => handleLaunchBracketClick(tournament)}
+                          className="bg-gradient-to-r from-primary-600 to-accent-600 hover:from-primary-700 hover:to-accent-700"
+                        >
+                          Launch Bracket
+                        </Button>
+                      ) : null}
+                      {canGenerateReports() && (
+                        <Button
+                          size="sm"
+                          leftIcon={<Download size={16} />}
+                          onClick={() => {
+                            const tournament = allTournaments.find(t => t.id === tournamentId);
+                            if (tournament) {
+                              setSelectedTournamentForExport(tournament);
+                              setIsCSVExportModalOpen(true);
+                            }
+                          }}
+                          disabled={regs.length === 0}
+                        >
+                          Export All Players
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
 

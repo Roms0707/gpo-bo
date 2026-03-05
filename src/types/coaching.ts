@@ -69,3 +69,34 @@ export type ConfigKeyType =
   | 'emphasis_areas'
   | 'topic_priority'
   | 'behavior_toggle';
+
+export type CoachingContentCategory = 'tips' | 'masterclass' | 'grind_zone' | 'article';
+
+export interface CoachingTopicContentLink {
+  id: string;
+  coaching_config_id: string;
+  game_id: string | null;
+  rubric_id: string;
+  rubric_name: string | null;
+  content_category: CoachingContentCategory;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCoachingContentLinkData {
+  coaching_config_id: string;
+  game_id: string | null;
+  rubric_id: string;
+  rubric_name?: string | null;
+  content_category?: CoachingContentCategory;
+  display_order?: number;
+}
+
+export interface RecommendedContent {
+  topic: string;
+  rubric_id: string;
+  rubric_name: string | null;
+  content_category: string;
+}
