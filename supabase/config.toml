@@ -6,10 +6,6 @@
 # STAGING DATABASE CONFIGURATION (ONLY ALLOWED)
 # ═══════════════════════════════════════════════════════════════════════════
 
-[project]
-# Project reference - STAGING ONLY
-project_id = "jpksnvuiaptymrwnwnhn"
-
 # ═══════════════════════════════════════════════════════════════════════════
 # DATABASE SETTINGS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -50,8 +46,6 @@ api_url = "http://localhost"
 # ═══════════════════════════════════════════════════════════════════════════
 
 [auth]
-# Port for auth service (local)
-port = 54324
 # Site URL - adjust for your environment
 site_url = "http://localhost:5173"
 # Additional redirect URLs
